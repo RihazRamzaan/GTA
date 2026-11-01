@@ -24,6 +24,9 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <Link to="/team" className="hidden font-body text-lg font-semibold text-slate-300 hover:text-neon-cyan sm:block">
+            Team Portal
+          </Link>
           <Link to="/login" className="hidden font-body text-lg font-semibold text-neon-cyan hover:underline sm:block">
             Login
           </Link>
@@ -48,6 +51,9 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+            <Link to="/team" onClick={close} className="text-slate-200 hover:text-neon-cyan">
+              Team Portal
+            </Link>
             <Link to="/login" onClick={close} className="text-neon-cyan">
               Login
             </Link>
