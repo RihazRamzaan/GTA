@@ -30,19 +30,19 @@ export default function TeamNav({ team, currentStatus = 'pending_review', onStat
   ];
 
   return (
-    <div className="mb-6 font-['Rajdhani',sans-serif]">
+    <div className="mb-6 font-body">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <p className="text-xs font-semibold tracking-wider text-cyan-400 uppercase font-mono">
+          <p className="text-xs font-bold tracking-[0.2em] text-neon-cyan uppercase">
             {team?.code || 'TEAM-24'}
           </p>
-          <div className="flex items-center gap-3 mt-0.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-white font-['Orbitron',sans-serif]">
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
               {team?.name || 'Cyber Synapse'}
             </h1>
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${currentBadge.style}`}
+              className={`px-3 py-0.5 rounded-full text-xs font-bold font-body border ${currentBadge.style}`}
             >
               {currentBadge.label}
             </span>
@@ -51,12 +51,12 @@ export default function TeamNav({ team, currentStatus = 'pending_review', onStat
 
         {/* Clean, discreet state selector to preview and test each state */}
         {onStatusChange && (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-sm font-body">
             <span className="text-slate-400 hidden sm:inline">Preview Status:</span>
             <select
               value={currentStatus}
               onChange={(e) => onStatusChange(e.target.value)}
-              className="bg-[#0d0f24] border border-white/20 rounded-lg px-3 py-1.5 text-white text-xs font-semibold focus:outline-none focus:border-cyan-400 transition"
+              className="bg-night-card border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold font-body focus:outline-none focus:border-neon-cyan transition"
               aria-label="Preview registration status"
             >
               <option value="pending_review">⏳ Waiting for Review</option>
@@ -76,7 +76,7 @@ export default function TeamNav({ team, currentStatus = 'pending_review', onStat
             to={link.to}
             end={link.exact}
             className={({ isActive }) =>
-              `px-4 py-2 rounded-lg text-sm font-semibold transition ${
+              `px-4 py-2 rounded-lg text-base font-bold font-body transition ${
                 isActive
                   ? 'bg-white/15 text-white border border-white/20 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'

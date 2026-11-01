@@ -35,7 +35,7 @@ export default function TeamDashboard() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-16 font-['Rajdhani',sans-serif]">
+    <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
       {/* Team Header & Navigation */}
       <TeamNav
         team={team}
