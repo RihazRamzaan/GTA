@@ -11,10 +11,12 @@ import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AgendaPage from '../pages/admin/AgendaPage.jsx';
 import PaymentsPage from '../pages/admin/PaymentsPage.jsx';
 import SubmissionsPage from '../pages/admin/SubmissionsPage.jsx';
+import TeamsPage from '../pages/admin/TeamsPage.jsx';
 
 export const router = createBrowserRouter([{ path: '/', element: <App />, children: [
   { index: true, element: <Home /> }, { path: 'register', element: <Register /> }, { path: 'login', element: <Login /> },
   { path: 'team', element: <TeamDashboard /> }, { path: 'team/payment', element: <PaymentPage /> }, { path: 'team/submission', element: <SubmissionPage /> },
-  { path: 'admin/login', element: <AdminLogin /> }, { path: 'admin', element: <AdminDashboard /> }, { path: 'admin/agenda', element: <AgendaPage /> }, { path: 'admin/payments', element: <PaymentsPage /> }, { path: 'admin/submissions', element: <SubmissionsPage /> },
+  { path: 'admin/login', element: <AdminLogin /> }, { path: 'admin', element: <AdminDashboard /> }, { path: 'admin/agenda', element: <AgendaPage /> }, { path: 'admin/teams', element: <TeamsPage /> }, { path: 'admin/payments', element: <PaymentsPage /> }, { path: 'admin/submissions', element: <SubmissionsPage /> },
   { path: '*', element: <p>Page not found.</p> },
 ]}]);
+
