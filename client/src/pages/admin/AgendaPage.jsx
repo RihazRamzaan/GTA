@@ -1,38 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNav from '../../components/admin/AdminNav.jsx';
+import { getAdminSettings, updateAdminSettings } from '../../api/admin.js';
+
+// Helper to format ISO Date string or Date instance into datetime-local format (YYYY-MM-DDTHH:mm)
+const formatForInput = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+};
 
 export default function AgendaPage() {
-  // Gate Modes: 'auto' | 'force_open' | 'force_closed' (as per Mongoose schema in docs/DATABASE.md)
+  // Gate Modes: 'auto' | 'force_open' | 'force_closed'
   const [registrationMode, setRegistrationMode] = useState('auto');
   const [submissionMode, setSubmissionMode] = useState('auto');
 
-  // Milestone Dates (UTC ISO-8601 strings from EventSettings schema)
+  // Milestone Dates
   const [milestones, setMilestones] = useState({
-    registrationOpensAt: '2026-11-01T00:00',
-    registrationClosesAt: '2026-11-05T23:59',
-    buildingStartsAt: '2026-11-06T09:00',
-    submissionOpensAt: '2026-11-07T12:00',
-    submissionClosesAt: '2026-11-08T18:00',
-    resultsAt: '2026-11-10T15:00',
+    registrationOpensAt: '2026-11-05T00:00',
+    registrationClosesAt: '2026-11-15T23:59',
+    buildingStartsAt: '2026-11-16T09:00',
+    submissionOpensAt: '2026-11-27T12:00',
+    submissionClosesAt: '2026-12-10T18:00',
+    resultsAt: '2026-12-15T15:00',
   });
 
-  const [saveStatus, setSaveStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [saveError, setSaveError] = useState(null);
+
+  // Load current settings from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSettings() {
+      try {
+        setIsLoading(true);
+        const res = await getAdminSettings();
+        if (res.data?.success && res.data?.data && isMounted) {
+          const { registrationMode: regMode, submissionMode: subMode, milestones: ms } = res.data.data;
+          if (regMode) setRegistrationMode(regMode);
+          if (subMode) setSubmissionMode(subMode);
+          if (ms) {
+            setMilestones({
+              registrationOpensAt: formatForInput(ms.registrationOpensAt),
+              registrationClosesAt: formatForInput(ms.registrationClosesAt),
+              buildingStartsAt: formatForInput(ms.buildingStartsAt),
+              submissionOpensAt: formatForInput(ms.submissionOpensAt),
+              submissionClosesAt: formatForInput(ms.submissionClosesAt),
+              resultsAt: formatForInput(ms.resultsAt),
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load server settings, using defaults.', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Helper to compute effective gate status for visual feedback
   const getEffectiveStatus = (mode, openKey, closeKey) => {
-    if (mode === 'force_open') return { isOpen: true, label: 'FORCE OPEN (OVERRIDE)', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
-    if (mode === 'force_closed') return { isOpen: false, label: 'FORCE CLOSED (OVERRIDE)', color: 'text-red-400 bg-red-500/10 border-red-500/30' };
-    
-    // Auto mode simulated against current date
+    if (mode === 'force_open') {
+      return {
+        isOpen: true,
+        label: 'FORCE OPEN (OVERRIDE)',
+        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+      };
+    }
+    if (mode === 'force_closed') {
+      return {
+        isOpen: false,
+        label: 'FORCE CLOSED (OVERRIDE)',
+        color: 'text-red-400 bg-red-500/10 border-red-500/30',
+      };
+    }
+
+    // Auto mode evaluated against current client date
     const now = new Date();
     const opens = new Date(milestones[openKey]);
     const closes = new Date(milestones[closeKey]);
     const isAutoOpen = now >= opens && now <= closes;
 
     return isAutoOpen
-      ? { isOpen: true, label: 'SCHEDULED OPEN (AUTO)', color: 'text-[#00e5ff] bg-[#00e5ff]/10 border-[#00e5ff]/30' }
-      : { isOpen: false, label: 'SCHEDULED CLOSED (AUTO)', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' };
+      ? {
+          isOpen: true,
+          label: 'SCHEDULED OPEN (AUTO)',
+          color: 'text-[#00e5ff] bg-[#00e5ff]/10 border-[#00e5ff]/30',
+        }
+      : {
+          isOpen: false,
+          label: 'SCHEDULED CLOSED (AUTO)',
+          color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+        };
   };
 
   const regStatus = getEffectiveStatus(registrationMode, 'registrationOpensAt', 'registrationClosesAt');
@@ -43,32 +115,58 @@ export default function AgendaPage() {
     setMilestones((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setSaveStatus(null);
+    setSaveError(null);
 
-    // Day 01: Simulation mode
-    setTimeout(() => {
+    try {
+      // Convert formatted datetime-local strings to ISO UTC Date strings
+      const payloadMilestones = {};
+      for (const [key, val] of Object.entries(milestones)) {
+        if (val) {
+          payloadMilestones[key] = new Date(val).toISOString();
+        }
+      }
+
+      const res = await updateAdminSettings({
+        registrationMode,
+        submissionMode,
+        milestones: payloadMilestones,
+      });
+
+      if (res.data?.success) {
+        setSaveStatus('Gate overrides and milestone schedule saved successfully to database.');
+        setTimeout(() => setSaveStatus(null), 5000);
+      } else {
+        setSaveError(res.data?.error?.message || 'Failed to save settings.');
+      }
+    } catch (err) {
+      const errMsg =
+        err.response?.data?.error?.message ||
+        err.message ||
+        'Failed to connect to backend settings endpoint.';
+      setSaveError(errMsg);
+    } finally {
       setIsSaving(false);
-      setSaveStatus('Gate overrides and milestone schedule saved successfully (Day 01 Simulation).');
-      setTimeout(() => setSaveStatus(null), 4000);
-    }, 600);
+    }
   };
 
   const handleReset = () => {
     setRegistrationMode('auto');
     setSubmissionMode('auto');
     setMilestones({
-      registrationOpensAt: '2026-11-01T00:00',
-      registrationClosesAt: '2026-11-05T23:59',
-      buildingStartsAt: '2026-11-06T09:00',
-      submissionOpensAt: '2026-11-07T12:00',
-      submissionClosesAt: '2026-11-08T18:00',
-      resultsAt: '2026-11-10T15:00',
+      registrationOpensAt: '2026-11-05T00:00',
+      registrationClosesAt: '2026-11-15T23:59',
+      buildingStartsAt: '2026-11-16T09:00',
+      submissionOpensAt: '2026-11-27T12:00',
+      submissionClosesAt: '2026-12-10T18:00',
+      resultsAt: '2026-12-15T15:00',
     });
-    setSaveStatus('Reset to default schedule.');
-    setTimeout(() => setSaveStatus(null), 3000);
+    setSaveStatus('Form reset to default schedule. Click "Save Settings" to persist.');
+    setSaveError(null);
+    setTimeout(() => setSaveStatus(null), 4000);
   };
 
   return (
@@ -131,6 +229,22 @@ export default function AgendaPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{saveStatus}</span>
+          </div>
+        )}
+
+        {saveError && (
+          <div className="mt-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2 animate-fadeIn">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{saveError}</span>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="mt-2 text-xs text-[#9aa7c1] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-ping"></span>
+            <span>Syncing event settings from backend...</span>
           </div>
         )}
       </div>
@@ -246,7 +360,7 @@ export default function AgendaPage() {
             </p>
           </div>
           <div className="text-xs text-[#00e5ff] font-mono px-2.5 py-1 rounded bg-[#00e5ff]/10 border border-[#00e5ff]/20">
-            Stored in UTC • Displayed locally (Asia/Colombo)
+            Stored in UTC • Displayed locally
           </div>
         </div>
 
@@ -376,12 +490,24 @@ export default function AgendaPage() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#00e5ff] to-[#8b3dff] text-black font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#00e5ff] to-[#8b3dff] text-black font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all flex items-center gap-2 disabled:opacity-50"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              <span>Commit Schedule to EventSettings</span>
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  <span>Commit Schedule to EventSettings</span>
+                </>
+              )}
             </button>
           </div>
         </form>
