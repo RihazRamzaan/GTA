@@ -110,6 +110,94 @@ export default function AgendaPage() {
   const regStatus = getEffectiveStatus(registrationMode, 'registrationOpensAt', 'registrationClosesAt');
   const subStatus = getEffectiveStatus(submissionMode, 'submissionOpensAt', 'submissionClosesAt');
 
+  // Helper to describe the current gate status in simple, clear words (Day 03 requirement)
+  const getSimpleExplanation = (type, mode, isOpen, openKey, closeKey) => {
+    const isReg = type === 'registration';
+    const name = isReg ? 'Registration' : 'Project Submission';
+    const opens = milestones[openKey] ? new Date(milestones[openKey]) : null;
+    const closes = milestones[closeKey] ? new Date(milestones[closeKey]) : null;
+    const now = new Date();
+
+    if (mode === 'force_open') {
+      return {
+        word: 'OPEN',
+        tag: 'Force Open (Manual Override)',
+        summary: `${name} is currently OPEN by administrator override.`,
+        detail: isReg
+          ? 'New teams can sign up and submit registration details immediately regardless of the calendar dates.'
+          : 'Approved squads can submit or update their game projects freely without date restrictions.',
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-500/10 border-emerald-500/30',
+        dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+      };
+    }
+
+    if (mode === 'force_closed') {
+      return {
+        word: 'CLOSED',
+        tag: 'Force Closed (Manual Override)',
+        summary: `${name} is currently CLOSED by administrator override.`,
+        detail: isReg
+          ? 'All new registrations are completely blocked. The public site displays "Registration Closed".'
+          : 'Game submissions are frozen. Teams cannot edit or upload new project links.',
+        color: 'text-red-400',
+        bg: 'bg-red-500/10 border-red-500/30',
+        dot: 'bg-red-400 shadow-[0_0_8px_#f87171]',
+      };
+    }
+
+    // mode === 'auto'
+    if (isOpen) {
+      const closeFormatted = closes && !Number.isNaN(closes.getTime())
+        ? closes.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : 'scheduled deadline';
+      return {
+        word: 'OPEN',
+        tag: 'Scheduled Open (Automatic)',
+        summary: `${name} is currently OPEN on the automated timeline.`,
+        detail: isReg
+          ? `Within active registration window. Public sign-up remains available until ${closeFormatted}.`
+          : `Within active submission window. Approved teams can submit projects until ${closeFormatted}.`,
+        color: 'text-[#00e5ff]',
+        bg: 'bg-[#00e5ff]/10 border-[#00e5ff]/30',
+        dot: 'bg-[#00e5ff] shadow-[0_0_8px_#00e5ff]',
+      };
+    } else {
+      const isBefore = opens && now < opens;
+      const dateFormatted = isBefore && opens && !Number.isNaN(opens.getTime())
+        ? opens.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : null;
+      return {
+        word: 'CLOSED',
+        tag: 'Scheduled Closed (Automatic)',
+        summary: `${name} is currently CLOSED on the automated timeline.`,
+        detail: isBefore
+          ? `Will open automatically on ${dateFormatted || 'the scheduled start date'}. Sign-up forms are currently inactive.`
+          : 'The scheduled window has elapsed. Late submissions and sign-ups are locked.',
+        color: 'text-amber-400',
+        bg: 'bg-amber-500/10 border-amber-500/30',
+        dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
+      };
+    }
+  };
+
+  const regExplanation = getSimpleExplanation(
+    'registration',
+    registrationMode,
+    regStatus.isOpen,
+    'registrationOpensAt',
+    'registrationClosesAt'
+  );
+
+  const subExplanation = getSimpleExplanation(
+    'submission',
+    submissionMode,
+    subStatus.isOpen,
+    'submissionOpensAt',
+    'submissionClosesAt'
+  );
+
+
   const handleMilestoneChange = (e) => {
     const { name, value } = e.target;
     setMilestones((prev) => ({ ...prev, [name]: value }));
@@ -250,99 +338,152 @@ export default function AgendaPage() {
       </div>
 
       {/* Section 1: Interactive System Gates (FR-03) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Registration Gate Override Card */}
-        <div className="rounded-2xl bg-[#0d0f24]/90 border border-[#00e5ff]/25 p-6 shadow-lg relative overflow-hidden">
-          <div className="flex items-start justify-between gap-2 mb-4">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] font-bold">
-                Access Gate 01
-              </div>
-              <h3 className="text-xl font-bold text-white font-['Orbitron',sans-serif]">
-                Registration Gate
-              </h3>
-            </div>
-            <div className={`px-2.5 py-1 rounded-full text-xs font-bold border ${regStatus.color} font-mono uppercase`}>
-              {regStatus.label}
-            </div>
+      <div className="mb-8">
+        {/* Live System State Summary Strip */}
+        <div className="mb-4 p-4 rounded-2xl bg-[#070714] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-xs font-bold uppercase tracking-widest text-white font-['Orbitron',sans-serif] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-ping"></span>
+              Live Effective Status:
+            </span>
+            <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold border ${regExplanation.bg} ${regExplanation.color} flex items-center gap-1.5`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${regExplanation.dot}`}></span>
+              Registration: {regExplanation.word}
+            </span>
+            <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold border ${subExplanation.bg} ${subExplanation.color} flex items-center gap-1.5`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${subExplanation.dot}`}></span>
+              Submissions: {subExplanation.word}
+            </span>
           </div>
-
-          <p className="text-xs text-[#9aa7c1] mb-5">
-            Controls whether new participants can register team accounts and submit registration details.
-          </p>
-
-          <div className="space-y-3">
-            <div className="text-xs font-bold text-white font-['Orbitron',sans-serif] uppercase tracking-wider">
-              Select Gate Mode:
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'auto', label: 'AUTO (TIMED)', desc: 'Follows milestone dates' },
-                { id: 'force_open', label: 'FORCE OPEN', desc: 'Always allow registration' },
-                { id: 'force_closed', label: 'FORCE CLOSED', desc: 'Immediately lock signups' },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setRegistrationMode(opt.id)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    registrationMode === opt.id
-                      ? 'bg-[#00e5ff]/15 border-[#00e5ff] text-white shadow-[0_0_15px_rgba(0,229,255,0.25)]'
-                      : 'bg-[#070714] border-white/10 text-[#9aa7c1] hover:border-white/20 hover:text-white'
-                  }`}
-                >
-                  <div className="text-xs font-bold font-['Orbitron',sans-serif]">{opt.label}</div>
-                  <div className="text-[10px] text-[#9aa7c1] mt-1 leading-tight">{opt.desc}</div>
-                </button>
-              ))}
-            </div>
+          <div className="text-[11px] text-[#9aa7c1] font-mono">
+            Admin overrides take effect on write
           </div>
         </div>
 
-        {/* Submission Gate Override Card */}
-        <div className="rounded-2xl bg-[#0d0f24]/90 border border-[#8b3dff]/25 p-6 shadow-lg relative overflow-hidden">
-          <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Registration Gate Override Card */}
+          <div className="rounded-2xl bg-[#0d0f24]/90 border border-[#00e5ff]/25 p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] font-bold">
-                Access Gate 02
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] font-bold">
+                    Access Gate 01
+                  </div>
+                  <h3 className="text-xl font-bold text-white font-['Orbitron',sans-serif]">
+                    Registration Gate
+                  </h3>
+                </div>
+                <div className={`px-2.5 py-1 rounded-full text-xs font-bold border ${regStatus.color} font-mono uppercase`}>
+                  {regStatus.label}
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-white font-['Orbitron',sans-serif]">
-                Submission Gate
-              </h3>
+
+              {/* Simple Words Status Explanation Box (Day 03 Requirement) */}
+              <div className={`p-3.5 rounded-xl border ${regExplanation.bg} mb-4 flex items-start gap-3 transition-all`}>
+                <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${regExplanation.dot}`}></div>
+                <div>
+                  <div className={`text-xs font-bold font-['Orbitron',sans-serif] tracking-wider uppercase ${regExplanation.color}`}>
+                    {regExplanation.summary}
+                  </div>
+                  <p className="text-xs text-[#cbd5e1] mt-1 leading-relaxed">
+                    {regExplanation.detail}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#9aa7c1] mb-5">
+                Controls whether new participants can register team accounts and submit registration details.
+              </p>
             </div>
-            <div className={`px-2.5 py-1 rounded-full text-xs font-bold border ${subStatus.color} font-mono uppercase`}>
-              {subStatus.label}
+
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <div className="text-xs font-bold text-white font-['Orbitron',sans-serif] uppercase tracking-wider">
+                Select Gate Mode:
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'auto', label: 'AUTO (TIMED)', desc: 'Follows milestone dates' },
+                  { id: 'force_open', label: 'FORCE OPEN', desc: 'Always allow registration' },
+                  { id: 'force_closed', label: 'FORCE CLOSED', desc: 'Immediately lock signups' },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setRegistrationMode(opt.id)}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      registrationMode === opt.id
+                        ? 'bg-[#00e5ff]/15 border-[#00e5ff] text-white shadow-[0_0_15px_rgba(0,229,255,0.25)]'
+                        : 'bg-[#070714] border-white/10 text-[#9aa7c1] hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-xs font-bold font-['Orbitron',sans-serif]">{opt.label}</div>
+                    <div className="text-[10px] text-[#9aa7c1] mt-1 leading-tight">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <p className="text-xs text-[#9aa7c1] mb-5">
-            Controls whether approved teams can submit or edit their game titles, repositories, and playable demo links.
-          </p>
+          {/* Submission Gate Override Card */}
+          <div className="rounded-2xl bg-[#0d0f24]/90 border border-[#8b3dff]/25 p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] font-bold">
+                    Access Gate 02
+                  </div>
+                  <h3 className="text-xl font-bold text-white font-['Orbitron',sans-serif]">
+                    Submission Gate
+                  </h3>
+                </div>
+                <div className={`px-2.5 py-1 rounded-full text-xs font-bold border ${subStatus.color} font-mono uppercase`}>
+                  {subStatus.label}
+                </div>
+              </div>
 
-          <div className="space-y-3">
-            <div className="text-xs font-bold text-white font-['Orbitron',sans-serif] uppercase tracking-wider">
-              Select Gate Mode:
+              {/* Simple Words Status Explanation Box (Day 03 Requirement) */}
+              <div className={`p-3.5 rounded-xl border ${subExplanation.bg} mb-4 flex items-start gap-3 transition-all`}>
+                <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${subExplanation.dot}`}></div>
+                <div>
+                  <div className={`text-xs font-bold font-['Orbitron',sans-serif] tracking-wider uppercase ${subExplanation.color}`}>
+                    {subExplanation.summary}
+                  </div>
+                  <p className="text-xs text-[#cbd5e1] mt-1 leading-relaxed">
+                    {subExplanation.detail}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#9aa7c1] mb-5">
+                Controls whether approved teams can submit or edit their game titles, repositories, and playable demo links.
+              </p>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'auto', label: 'AUTO (TIMED)', desc: 'Follows milestone dates' },
-                { id: 'force_open', label: 'FORCE OPEN', desc: 'Emergency allow submissions' },
-                { id: 'force_closed', label: 'FORCE CLOSED', desc: 'Lock & freeze all submissions' },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setSubmissionMode(opt.id)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    submissionMode === opt.id
-                      ? 'bg-[#8b3dff]/20 border-[#8b3dff] text-white shadow-[0_0_15px_rgba(139,61,255,0.3)]'
-                      : 'bg-[#070714] border-white/10 text-[#9aa7c1] hover:border-white/20 hover:text-white'
-                  }`}
-                >
-                  <div className="text-xs font-bold font-['Orbitron',sans-serif]">{opt.label}</div>
-                  <div className="text-[10px] text-[#9aa7c1] mt-1 leading-tight">{opt.desc}</div>
-                </button>
-              ))}
+
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <div className="text-xs font-bold text-white font-['Orbitron',sans-serif] uppercase tracking-wider">
+                Select Gate Mode:
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'auto', label: 'AUTO (TIMED)', desc: 'Follows milestone dates' },
+                  { id: 'force_open', label: 'FORCE OPEN', desc: 'Emergency allow submissions' },
+                  { id: 'force_closed', label: 'FORCE CLOSED', desc: 'Lock & freeze all submissions' },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSubmissionMode(opt.id)}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      submissionMode === opt.id
+                        ? 'bg-[#8b3dff]/20 border-[#8b3dff] text-white shadow-[0_0_15px_rgba(139,61,255,0.3)]'
+                        : 'bg-[#070714] border-white/10 text-[#9aa7c1] hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-xs font-bold font-['Orbitron',sans-serif]">{opt.label}</div>
+                    <div className="text-[10px] text-[#9aa7c1] mt-1 leading-tight">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
