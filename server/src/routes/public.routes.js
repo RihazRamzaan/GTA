@@ -1,4 +1,8 @@
 import { Router } from 'express';
+import { getPublicSettings } from '../controllers/public.controller.js';
+
 const router = Router();
-router.get('/settings', (_req, res) => res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Public settings are not implemented yet.' } }));
+
+router.get('/settings', getPublicSettings);
+
 export default router;
