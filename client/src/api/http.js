@@ -6,5 +6,5 @@ export const http = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'htt
 // Turns a failed request into { message, fields } for forms.
 export function getApiError(error) {
   const apiError = error.response?.data?.error;
-  return { message: apiError?.message || 'Could not reach the server. Please try again.', fields: apiError?.fields || {} };
+  return { message: error.userMessage || apiError?.message || 'Could not reach the server. Please try again.', fields: apiError?.fields || {} };
 }

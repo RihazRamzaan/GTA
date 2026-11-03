@@ -28,9 +28,15 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (credentials) => {
     await authApi.login(credentials);
-    const { user } = await refresh();
-    return user;
-  }, [refresh]);
+    try {
+      const data = await authApi.me();
+      setAccount(data);
+      return data.user;
+    } catch (error) {
+      error.userMessage = 'Your login worked, but we could not load your account. Please try again.';
+      throw error;
+    }
+  }, []);
 
   const register = useCallback(async (details) => {
     const data = await authApi.register(details);
