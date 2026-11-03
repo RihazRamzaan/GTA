@@ -62,15 +62,11 @@ export default function SubmissionPage() {
       nextErrors.repoUrl = "Please enter a GitHub repository link.";
     }
 
-    if (!game.playableUrl.trim()) {
-      nextErrors.playableUrl = "Please enter your playable game URL.";
-    } else if (!isValidUrl(game.playableUrl)) {
-      nextErrors.playableUrl = "Please enter a valid playable game URL.";
-    }
+    if (game.playableUrl.trim() && !isValidUrl(game.playableUrl)) {
+  nextErrors.playableUrl = "Please enter a valid playable game URL.";
+}
 
-    if (game.videoUrl.trim() && !isValidUrl(game.videoUrl)) {
-      nextErrors.videoUrl = "Please enter a valid demo video URL.";
-    }
+    
 
     setErrors(nextErrors);
 
@@ -677,9 +673,8 @@ export default function SubmissionPage() {
                 )}
 
                 <label htmlFor="game-playable">
-                  Playable Game URL <span className="sp-required">*</span>
-                </label>
-
+                 Playable Game URL (Optional)
+               </label>
                 <input
                   id="game-playable"
                   type="url"
