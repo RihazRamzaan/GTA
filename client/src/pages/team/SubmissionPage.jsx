@@ -37,7 +37,10 @@ export default function SubmissionPage() {
   function isValidUrl(value) {
     try {
       const url = new URL(value);
-      return url.protocol === "http:" || url.protocol === "https:";
+      return (
+        url.protocol === "http:" ||
+        url.protocol === "https:"
+      );
     } catch {
       return false;
     }
@@ -56,17 +59,38 @@ export default function SubmissionPage() {
 
     if (!game.repoUrl.trim()) {
       nextErrors.repoUrl = "Please enter your GitHub repository URL.";
-    } else if (!isValidUrl(game.repoUrl)) {
-      nextErrors.repoUrl = "Please enter a valid GitHub URL.";
-    } else if (!game.repoUrl.toLowerCase().includes("github.com")) {
-      nextErrors.repoUrl = "Please enter a GitHub repository link.";
+    } else {
+      try {
+        const url = new URL(game.repoUrl.trim());
+
+        const isGitHub =
+          url.hostname === "github.com" &&
+          (url.protocol === "https:" || url.protocol === "http:");
+
+        if (!isGitHub) {
+          nextErrors.repoUrl =
+            "Please enter a valid GitHub repository link.";
+        }
+      } catch {
+        nextErrors.repoUrl = "Please enter a valid GitHub URL.";
+      }
     }
 
-    if (game.playableUrl.trim() && !isValidUrl(game.playableUrl)) {
-  nextErrors.playableUrl = "Please enter a valid playable game URL.";
-}
+    if (
+      game.playableUrl.trim() &&
+      !isValidUrl(game.playableUrl.trim())
+    ) {
+      nextErrors.playableUrl =
+        "Please enter a valid playable game URL.";
+    }
 
-    
+    if (
+      game.videoUrl.trim() &&
+      !isValidUrl(game.videoUrl.trim())
+    ) {
+      nextErrors.videoUrl =
+        "Please enter a valid demo video URL.";
+    }
 
     setErrors(nextErrors);
 
@@ -147,7 +171,6 @@ export default function SubmissionPage() {
           box-sizing: border-box;
         }
 
-        .sp-logo,
         .sp-hero h1,
         .sp-card h2,
         .sp-locked h2 {
@@ -158,27 +181,6 @@ export default function SubmissionPage() {
           width: 100%;
           max-width: 1150px;
           margin: 0 auto;
-        }
-
-        .sp-topbar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-          padding-bottom: 20px;
-          margin-bottom: 48px;
-          border-bottom: 1px solid var(--sp-line);
-        }
-
-        .sp-logo {
-          color: #fff;
-          font-size: 23px;
-          font-weight: 900;
-          letter-spacing: 2px;
-        }
-
-        .sp-logo span {
-          color: var(--sp-pink);
         }
 
         .sp-tag,
@@ -507,22 +509,9 @@ export default function SubmissionPage() {
           line-height: 1.8;
         }
 
-        .sp-footer {
-          margin-top: 48px;
-          padding-bottom: 12px;
-          color: #77819b;
-          text-align: center;
-          font-size: 11px;
-          letter-spacing: 1px;
-        }
-
         @media (max-width: 800px) {
           .sp-grid {
             grid-template-columns: 1fr;
-          }
-
-          .sp-topbar {
-            margin-bottom: 38px;
           }
         }
 
@@ -535,11 +524,6 @@ export default function SubmissionPage() {
             padding: 19px;
           }
 
-          .sp-topbar {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
           .sp-hero h1 {
             font-size: 35px;
           }
@@ -547,16 +531,6 @@ export default function SubmissionPage() {
       `}</style>
 
       <div className="sp-container">
-        <nav className="sp-topbar">
-          <div className="sp-logo">
-            BUILD<span>ATHON.</span>
-          </div>
-
-          <span className="sp-tag">
-            2026 · GAME SUBMISSION
-          </span>
-        </nav>
-
         <header className="sp-hero">
           <span className="sp-eyebrow">
             YOUR IDEAS. YOUR CREATION.
@@ -673,8 +647,9 @@ export default function SubmissionPage() {
                 )}
 
                 <label htmlFor="game-playable">
-                 Playable Game URL (Optional)
-               </label>
+                  Playable Game URL (Optional)
+                </label>
+
                 <input
                   id="game-playable"
                   type="url"
@@ -829,13 +804,17 @@ export default function SubmissionPage() {
 
               <p>
                 <strong>Playable Game: </strong>
-                <a
-                  href={savedGame.playableUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {savedGame.playableUrl}
-                </a>
+                {savedGame.playableUrl ? (
+                  <a
+                    href={savedGame.playableUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {savedGame.playableUrl}
+                  </a>
+                ) : (
+                  "Not provided"
+                )}
               </p>
 
               <p>
@@ -872,12 +851,7 @@ export default function SubmissionPage() {
             </section>
           </>
         )}
-
-        <footer className="sp-footer">
-          BUILDATHON 2026 · CREATE. INNOVATE. COMPETE.
-        </footer>
       </div>
     </main>
   );
 }
-
