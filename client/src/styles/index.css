@@ -19,7 +19,7 @@
 :root { --color-bg: #0b1020; --color-surface: #141b2d; --color-text: #eef2ff; --color-muted: #9aa7c1; --color-accent: #67e8f9; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: system-ui, sans-serif; }
+body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
 @layer base { a { color: var(--color-accent); text-decoration: none; } }
 .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .site-header, .site-footer { padding: 1rem 2rem; background: var(--color-surface); }
