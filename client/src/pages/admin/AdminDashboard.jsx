@@ -6,8 +6,8 @@ export default function AdminDashboard() {
   // Day 01 Mock Statistics (as per API contract: registration status counts, submission count)
   const [stats] = useState({
     totalTeams: 28,
-    pendingPayment: 3,
-    pendingReview: 3,
+    waitingForSlip: 3,
+    waitingForApproval: 3,
     approved: 20,
     rejected: 2,
     totalSubmissions: 12,
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
             </span>
           </div>
           <div className="text-3xl font-extrabold text-[#ff2bd6] font-['Orbitron',sans-serif] flex items-baseline gap-2">
-            {stats.pendingReview}
+            {stats.waitingForApproval}
             <span className="text-xs text-white/70 font-sans font-normal">slips to review</span>
           </div>
           <div className="mt-2 text-xs text-[#ff2bd6]/90 flex items-center gap-1 font-semibold">

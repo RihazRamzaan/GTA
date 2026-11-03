@@ -49,14 +49,14 @@ export const sampleTeam = {
 };
 
 // 4 clear registration states:
-// 1. not uploaded ('pending_payment')
-// 2. waiting ('pending_review')
+// 1. not uploaded ('waiting_for_slip')
+// 2. waiting ('waiting_for_approval')
 // 3. approved ('approved')
 // 4. rejected ('rejected')
 export const sampleStates = {
   // 1. Not uploaded / Pending Payment (new registration, not yet paid)
-  pending_payment: {
-    status: 'pending_payment',
+  waiting_for_slip: {
+    status: 'waiting_for_slip',
     feeAmount: 4000,
     payment: {
       reference: '',
@@ -71,9 +71,9 @@ export const sampleStates = {
     },
   },
 
-  // 2. Waiting for admin approval ('pending_review')
-  pending_review: {
-    status: 'pending_review',
+  // 2. Waiting for admin approval ('waiting_for_approval')
+  waiting_for_approval: {
+    status: 'waiting_for_approval',
     feeAmount: 4000,
     payment: {
       reference: 'BOC-TXN-88392019',

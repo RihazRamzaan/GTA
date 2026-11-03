@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminNav from '../../components/admin/AdminNav.jsx';
 
 export default function PaymentsPage() {
-  const [filter, setFilter] = useState('all'); // 'all' | 'pending_review' | 'approved' | 'rejected' | 'pending_payment'
+  const [filter, setFilter] = useState('all'); // 'all' | 'waiting_for_approval' | 'approved' | 'rejected' | 'waiting_for_slip'
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modals state
@@ -21,7 +21,7 @@ export default function PaymentsPage() {
       leaderEmail: 'kavindu@cybervanguard.io',
       membersCount: 4,
       feeAmount: 'LKR 4,000',
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         reference: 'BOC-99281729',
         date: '2026-10-31',
@@ -40,7 +40,7 @@ export default function PaymentsPage() {
       leaderEmail: 'ayesha.s@gmail.com',
       membersCount: 3,
       feeAmount: 'LKR 4,000',
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         reference: 'COMB-44810293',
         date: '2026-10-31',
@@ -59,7 +59,7 @@ export default function PaymentsPage() {
       leaderEmail: 'dilan@zerolag.dev',
       membersCount: 4,
       feeAmount: 'LKR 4,000',
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         reference: 'HNB-77319940',
         date: '2026-10-31',
@@ -142,7 +142,7 @@ export default function PaymentsPage() {
       leaderEmail: 'rashmika@aeroforge.io',
       membersCount: 2,
       feeAmount: 'LKR 4,000',
-      status: 'pending_payment',
+      status: 'waiting_for_slip',
       payment: null,
     },
   ]);
@@ -225,10 +225,10 @@ export default function PaymentsPage() {
 
   const counts = {
     all: registrations.length,
-    pending_review: registrations.filter((r) => r.status === 'pending_review').length,
+    waiting_for_approval: registrations.filter((r) => r.status === 'waiting_for_approval').length,
     approved: registrations.filter((r) => r.status === 'approved').length,
     rejected: registrations.filter((r) => r.status === 'rejected').length,
-    pending_payment: registrations.filter((r) => r.status === 'pending_payment').length,
+    waiting_for_slip: registrations.filter((r) => r.status === 'waiting_for_slip').length,
   };
 
   return (
@@ -287,10 +287,10 @@ export default function PaymentsPage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {[
             { id: 'all', label: 'All Teams', count: counts.all },
-            { id: 'pending_review', label: 'Awaiting Review', count: counts.pending_review, highlight: true },
+            { id: 'waiting_for_approval', label: 'Awaiting Review', count: counts.waiting_for_approval, highlight: true },
             { id: 'approved', label: 'Approved', count: counts.approved },
             { id: 'rejected', label: 'Rejected', count: counts.rejected },
-            { id: 'pending_payment', label: 'No Slip Yet', count: counts.pending_payment },
+            { id: 'waiting_for_slip', label: 'No Slip Yet', count: counts.waiting_for_slip },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -417,7 +417,7 @@ export default function PaymentsPage() {
 
                     {/* Status Badge */}
                     <td className="py-4 px-4">
-                      {reg.status === 'pending_review' && (
+                      {reg.status === 'waiting_for_approval' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ff2bd6]/15 text-[#ff2bd6] border border-[#ff2bd6]/30 font-['Orbitron',sans-serif]">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#ff2bd6] animate-pulse"></span>
                           <span>Pending Review</span>
@@ -450,7 +450,7 @@ export default function PaymentsPage() {
                           )}
                         </div>
                       )}
-                      {reg.status === 'pending_payment' && (
+                      {reg.status === 'waiting_for_slip' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 font-['Orbitron',sans-serif]">
                           <span>Pending Slip</span>
                         </span>
@@ -459,7 +459,7 @@ export default function PaymentsPage() {
 
                     {/* Actions */}
                     <td className="py-4 px-4 text-right">
-                      {reg.status === 'pending_review' ? (
+                      {reg.status === 'waiting_for_approval' ? (
                         <div className="inline-flex items-center gap-2">
                           <button
                             type="button"
@@ -573,7 +573,7 @@ export default function PaymentsPage() {
                 >
                   Close
                 </button>
-                {selectedSlip.status === 'pending_review' && (
+                {selectedSlip.status === 'waiting_for_approval' && (
                   <>
                     <button
                       type="button"

@@ -6,8 +6,8 @@ import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 
 export default function PaymentPage() {
   const [team] = useState(sampleTeam);
-  const [statusKey, setStatusKey] = useState('pending_review');
-  const [registration, setRegistration] = useState(sampleStates.pending_review);
+  const [statusKey, setStatusKey] = useState('waiting_for_approval');
+  const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
   const [toast, setToast] = useState(null);
 
   const showToast = (message) => {
@@ -17,10 +17,10 @@ export default function PaymentPage() {
 
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
-    setRegistration(sampleStates[newKey] || sampleStates.pending_review);
+    setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
     const labels = {
-      pending_payment: 'Not Uploaded',
-      pending_review: 'Waiting for Approval',
+      waiting_for_slip: 'Not Uploaded',
+      waiting_for_approval: 'Waiting for Approval',
       approved: 'Approved',
       rejected: 'Rejected',
     };
@@ -30,7 +30,7 @@ export default function PaymentPage() {
   const handleSubmitPayment = (paymentData) => {
     const updated = {
       ...registration,
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         ...registration.payment,
         reference: paymentData.reference,
@@ -42,7 +42,7 @@ export default function PaymentPage() {
         rejectionReason: null,
       },
     };
-    setStatusKey('pending_review');
+    setStatusKey('waiting_for_approval');
     setRegistration(updated);
     showToast('Payment slip submitted successfully! Registration is now waiting for review.');
   };

@@ -7,7 +7,7 @@ export default function PaymentSlipArea({
   onResetToNew,
 }) {
   const payment = registration?.payment || {};
-  const status = registration?.status || 'pending_payment';
+  const status = registration?.status || 'waiting_for_slip';
 
   // State for the payment form
   const [reference, setReference] = useState(payment.reference || '');
@@ -105,10 +105,10 @@ export default function PaymentSlipArea({
   };
 
   // Determine whether to show the form or the submitted summary
-  // In 'pending_payment' or 'rejected', or when explicitly editing: show form!
-  // In 'pending_review' or 'approved': show summary, with option to edit.
+  // In 'waiting_for_slip' or 'rejected', or when explicitly editing: show form!
+  // In 'waiting_for_approval' or 'approved': show summary, with option to edit.
   const showForm =
-    status === 'pending_payment' || status === 'rejected' || isEditingExisting;
+    status === 'waiting_for_slip' || status === 'rejected' || isEditingExisting;
 
   return (
     <div className="rounded-2xl border border-neon-purple/30 bg-night-card p-5 sm:p-6 font-body">
@@ -130,7 +130,7 @@ export default function PaymentSlipArea({
               ✓ Payment Approved & Verified
             </span>
           )}
-          {status === 'pending_review' && (
+          {status === 'waiting_for_approval' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
               ⏳ Waiting for Admin Review
             </span>
@@ -140,7 +140,7 @@ export default function PaymentSlipArea({
               ✕ Slip Rejected
             </span>
           )}
-          {status === 'pending_payment' && (
+          {status === 'waiting_for_slip' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
               💳 Payment Not Uploaded
             </span>
@@ -214,7 +214,7 @@ export default function PaymentSlipArea({
               {showForm ? 'Submit Payment Information' : 'Your Submitted Payment'}
             </h3>
 
-            {!showForm && status === 'pending_review' && (
+            {!showForm && status === 'waiting_for_approval' && (
               <button
                 type="button"
                 onClick={() => setIsEditingExisting(true)}
@@ -440,7 +440,7 @@ export default function PaymentSlipArea({
                   View Deposit Slip Receipt
                 </button>
 
-                {status === 'pending_review' && (
+                {status === 'waiting_for_approval' && (
                   <button
                     type="button"
                     onClick={() => setIsEditingExisting(true)}

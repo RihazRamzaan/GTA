@@ -1,4 +1,11 @@
 import { Router } from 'express';
+import { login, logout, me, register } from '../controllers/auth.controller.js';
+import { requireAuth } from '../middleware/auth.js';
+import { loginLimiter, registerLimiter } from '../middleware/rateLimit.js';
+
 const router = Router();
-for (const [method, path] of [['post', '/register'], ['post', '/login'], ['post', '/logout'], ['get', '/me']]) router[method](path, (_req, res) => res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Authentication is not implemented yet.' } }));
+router.post('/register', registerLimiter, register);
+router.post('/login', loginLimiter, login);
+router.post('/logout', logout);
+router.get('/me', requireAuth, me);
 export default router;

@@ -9,9 +9,9 @@ export default function TeamDashboard() {
   // Team state (editable name, leader contact, and members roster)
   const [team, setTeam] = useState(sampleTeam);
 
-  // Active registration scenario (defaults to 'pending_review' / Waiting)
-  const [statusKey, setStatusKey] = useState('pending_review');
-  const [registration, setRegistration] = useState(sampleStates.pending_review);
+  // Active registration scenario (defaults to 'waiting_for_approval' / Waiting)
+  const [statusKey, setStatusKey] = useState('waiting_for_approval');
+  const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
 
   // Feedback toast banner
   const [toast, setToast] = useState(null);
@@ -24,10 +24,10 @@ export default function TeamDashboard() {
   // Switch status for previewing all 4 states: not uploaded, waiting, approved, rejected
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
-    setRegistration(sampleStates[newKey] || sampleStates.pending_review);
+    setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
     const labels = {
-      pending_payment: 'Not Uploaded',
-      pending_review: 'Waiting for Approval',
+      waiting_for_slip: 'Not Uploaded',
+      waiting_for_approval: 'Waiting for Approval',
       approved: 'Approved',
       rejected: 'Rejected',
     };
@@ -89,7 +89,7 @@ export default function TeamDashboard() {
   const handleSubmitPayment = (paymentData) => {
     const updated = {
       ...registration,
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         ...registration.payment,
         reference: paymentData.reference,
@@ -102,7 +102,7 @@ export default function TeamDashboard() {
       },
     };
 
-    setStatusKey('pending_review');
+    setStatusKey('waiting_for_approval');
     setRegistration(updated);
     showToast('Payment slip submitted successfully! Registration is now waiting for review.');
   };
