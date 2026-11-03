@@ -8,20 +8,20 @@ import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 export default function TeamDashboard() {
   const [team] = useState(sampleTeam);
 
-  // Active status key defaults to 'pending_review' (Waiting for approval)
-  const [statusKey, setStatusKey] = useState('pending_review');
-  const [registration, setRegistration] = useState(sampleStates.pending_review);
+  // Active status key defaults to 'waiting_for_approval' (Waiting for approval)
+  const [statusKey, setStatusKey] = useState('waiting_for_approval');
+  const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
 
   // Switch status for previewing
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
-    setRegistration(sampleStates[newKey] || sampleStates.pending_review);
+    setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
   };
 
   const handleUploadNewSlip = () => {
     const updated = {
       ...registration,
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         reference: 'BOC-TXN-' + Math.floor(10000000 + Math.random() * 90000000),
         submittedAt: new Date().toISOString(),
@@ -30,7 +30,7 @@ export default function TeamDashboard() {
         rejectionReason: null,
       },
     };
-    setStatusKey('pending_review');
+    setStatusKey('waiting_for_approval');
     setRegistration(updated);
   };
 

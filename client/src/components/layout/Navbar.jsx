@@ -1,12 +1,22 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { homePathFor, useAuth } from '../../context/AuthContext.jsx';
 import { eventContent } from '../../data/eventContent.js';
 import RegisterButton from '../event/RegisterButton.jsx';
 import Logo from '../ui/Logo.jsx';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const close = () => setOpen(false);
+
+  const handleLogout = async () => {
+    close();
+    // Leave first, otherwise the page guard sends the person to the login page.
+    navigate('/');
+    await logout();
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-neon-purple/30 bg-night/90 backdrop-blur">
@@ -24,13 +34,23 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link to="/team" className="hidden font-body text-lg font-semibold text-slate-300 hover:text-neon-cyan sm:block">
-            Team Portal
-          </Link>
-          <Link to="/login" className="hidden font-body text-lg font-semibold text-neon-cyan hover:underline sm:block">
-            Login
-          </Link>
-          <RegisterButton className="hidden px-4 py-2 text-base sm:block" />
+          {user ? (
+            <>
+              <Link to={homePathFor(user)} className="hidden font-body text-lg font-semibold text-neon-cyan hover:underline sm:block">
+                {user.role === 'admin' ? 'Admin' : 'My Team'}
+              </Link>
+              <button type="button" onClick={handleLogout} className="hidden font-body text-lg font-semibold text-slate-200 hover:text-neon-pink sm:block">
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="hidden font-body text-lg font-semibold text-neon-cyan hover:underline sm:block">
+                Login
+              </Link>
+              <RegisterButton className="hidden px-4 py-2 text-base sm:block" />
+            </>
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -51,13 +71,23 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
-            <Link to="/team" onClick={close} className="text-slate-200 hover:text-neon-cyan">
-              Team Portal
-            </Link>
-            <Link to="/login" onClick={close} className="text-neon-cyan">
-              Login
-            </Link>
-            <RegisterButton onClick={close} className="w-fit px-5 py-2 text-lg" />
+            {user ? (
+              <>
+                <Link to={homePathFor(user)} onClick={close} className="text-neon-cyan">
+                  {user.role === 'admin' ? 'Admin' : 'My Team'}
+                </Link>
+                <button type="button" onClick={handleLogout} className="w-fit text-slate-200">
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={close} className="text-neon-cyan">
+                  Login
+                </Link>
+                <RegisterButton onClick={close} className="w-fit px-5 py-2 text-lg" />
+              </>
+            )}
           </div>
         </nav>
       )}

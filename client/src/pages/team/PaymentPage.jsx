@@ -6,18 +6,18 @@ import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 
 export default function PaymentPage() {
   const [team] = useState(sampleTeam);
-  const [statusKey, setStatusKey] = useState('pending_review');
-  const [registration, setRegistration] = useState(sampleStates.pending_review);
+  const [statusKey, setStatusKey] = useState('waiting_for_approval');
+  const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
 
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
-    setRegistration(sampleStates[newKey] || sampleStates.pending_review);
+    setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
   };
 
   const handleUploadNewSlip = () => {
     const updated = {
       ...registration,
-      status: 'pending_review',
+      status: 'waiting_for_approval',
       payment: {
         reference: 'BOC-TXN-' + Math.floor(10000000 + Math.random() * 90000000),
         submittedAt: new Date().toISOString(),
@@ -26,7 +26,7 @@ export default function PaymentPage() {
         rejectionReason: null,
       },
     };
-    setStatusKey('pending_review');
+    setStatusKey('waiting_for_approval');
     setRegistration(updated);
   };
 

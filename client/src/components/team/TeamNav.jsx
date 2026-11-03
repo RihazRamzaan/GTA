@@ -2,11 +2,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const statusBadges = {
-  pending_payment: {
+  waiting_for_slip: {
     label: 'Payment Pending',
     style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
   },
-  pending_review: {
+  waiting_for_approval: {
     label: 'Waiting for Approval',
     style: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
   },
@@ -20,8 +20,8 @@ const statusBadges = {
   },
 };
 
-export default function TeamNav({ team, currentStatus = 'pending_review', onStatusChange }) {
-  const currentBadge = statusBadges[currentStatus] || statusBadges.pending_review;
+export default function TeamNav({ team, currentStatus = 'waiting_for_approval', onStatusChange }) {
+  const currentBadge = statusBadges[currentStatus] || statusBadges.waiting_for_approval;
 
   const links = [
     { to: '/team', label: 'Team Overview', exact: true },
@@ -59,10 +59,10 @@ export default function TeamNav({ team, currentStatus = 'pending_review', onStat
               className="bg-night-card border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold font-body focus:outline-none focus:border-neon-cyan transition"
               aria-label="Preview registration status"
             >
-              <option value="pending_review">⏳ Waiting for Review</option>
+              <option value="waiting_for_approval">⏳ Waiting for Review</option>
               <option value="approved">✓ Approved</option>
               <option value="rejected">✕ Rejected</option>
-              <option value="pending_payment">💳 Needs Payment</option>
+              <option value="waiting_for_slip">💳 Needs Payment</option>
             </select>
           </div>
         )}

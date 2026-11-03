@@ -2,11 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function StatusBanner({ registration }) {
-  const status = registration?.status || 'pending_payment';
+  const status = registration?.status || 'waiting_for_slip';
   const payment = registration?.payment || {};
 
   // 1. WAITING / PENDING REVIEW
-  if (status === 'pending_review') {
+  if (status === 'waiting_for_approval') {
     return (
       <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 text-slate-200 font-body">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminNav({ activeTab = 'overview' }) {
+  const { logout } = useAuth();
   const navItems = [
     {
       to: '/admin',
@@ -72,6 +74,7 @@ export default function AdminNav({ activeTab = 'overview' }) {
 
           <Link
             to="/admin/login"
+            onClick={logout}
             className="px-3.5 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold tracking-wider transition-colors flex items-center gap-1.5"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
