@@ -9,8 +9,8 @@ All JSON responses use `{ "success": true, "data": {} }`. Errors use `{ "success
 | POST `/api/auth/login` | `email`, `password` | `user` | Public | Akindu |
 | POST `/api/auth/logout` | None | `data: { loggedOut: true }` | Session | Akindu |
 | GET `/api/auth/me` | None | `user`, `team`, `registration` | Session | Akindu |
-| GET `/api/team/me` | None | Team and registration summary | Team session | Thanish |
-| PATCH `/api/team/me` | Editable team name/member fields | Updated team | Team session | Thanish |
+| GET `/api/team/me` | None | `team`, `registration`, `submission` summary or null | Team session | Akindu |
+| PATCH `/api/team/me` | Optional `teamName`, `leaderName`, `members` | `team`; 403 `TEAM_LOCKED` once approved | Team session | Akindu |
 | POST `/api/team/payment` | Multipart `reference`, `date`, `slip` | Registration/payment status | Team session | Thanish |
 | GET `/api/team/submission` | None | Submission or null | Team session | Tharushi |
 | PUT `/api/team/submission` | `title`, `description`, `repoUrl`, `playableUrl`, `videoUrl` | Saved submission | Team session | Tharushi |
@@ -27,5 +27,7 @@ The listed request fields map to the five Mongoose models. Exact validation and 
 Validation errors may add `error.fields`, which maps a form field to its message. Registration uses `email`, `password`, `teamName`, `leaderName` and `members`.
 
 On registration, the server sets `leaderEmail` from `email` and always counts the leader as a member, so `team.members` only needs the other members. Team size is limited by `TEAM_MIN_SIZE` and `TEAM_MAX_SIZE`.
+
+On `PATCH /api/team/me`, `members` replaces the whole list and the same leader and size rules apply. The leader's email is the login email, so it can't be changed here.
 
 All `/api/team/*` routes need a team session and all `/api/admin/*` routes need an admin session: 401 when signed out, 403 for the wrong account type.

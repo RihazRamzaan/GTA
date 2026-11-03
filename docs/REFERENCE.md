@@ -89,7 +89,7 @@ Every response uses `{ "success": true, "data": {} }` or `{ "success": false, "e
 `requireAuth` loads the account into `req.user`, so read the role and team from there. Never accept `role`, `teamId`, payment status or window status from the request body.
 
 ```js
-router.use(requireAuth, requireTeam); // team routes: use req.user.teamId
+router.use(requireAuth, requireTeam, loadRegistration); // team routes: use req.user.teamId and req.registration.status
 router.use(requireAuth, requireAdmin); // admin routes
 ```
 
