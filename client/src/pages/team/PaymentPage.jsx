@@ -8,30 +8,57 @@ export default function PaymentPage() {
   const [team] = useState(sampleTeam);
   const [statusKey, setStatusKey] = useState('waiting_for_approval');
   const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
     setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
+    const labels = {
+      waiting_for_slip: 'Not Uploaded',
+      waiting_for_approval: 'Waiting for Approval',
+      approved: 'Approved',
+      rejected: 'Rejected',
+    };
+    showToast(`Status switched to: ${labels[newKey] || newKey}`);
   };
 
-  const handleUploadNewSlip = () => {
+  const handleSubmitPayment = (paymentData) => {
     const updated = {
       ...registration,
       status: 'waiting_for_approval',
       payment: {
-        reference: 'BOC-TXN-' + Math.floor(10000000 + Math.random() * 90000000),
-        submittedAt: new Date().toISOString(),
-        fileName: 'boc_transfer_slip_uploaded.png',
-        fileSize: '1.4 MB',
+        ...registration.payment,
+        reference: paymentData.reference,
+        paymentDate: paymentData.paymentDate,
+        fileName: paymentData.fileName,
+        fileSize: paymentData.fileSize,
+        slipPreviewUrl: paymentData.slipPreviewUrl,
+        submittedAt: paymentData.submittedAt,
         rejectionReason: null,
       },
     };
     setStatusKey('waiting_for_approval');
     setRegistration(updated);
+    showToast('Payment slip submitted successfully! Registration is now waiting for review.');
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
+      {/* Toast Alert */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce">
+          <div className="px-4 py-2.5 rounded-xl font-bold font-body text-sm bg-neon-cyan text-black shadow-xl flex items-center gap-2">
+            <span>✓</span>
+            <span>{toast}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <TeamNav
         team={team}
@@ -42,10 +69,10 @@ export default function PaymentPage() {
       {/* Status Notice */}
       <StatusBanner registration={registration} />
 
-      {/* Payment and Bank Slip */}
+      {/* Bank-Slip Picker, Payment Reference, and Payment Date */}
       <PaymentSlipArea
         registration={registration}
-        onUploadNewSlip={handleUploadNewSlip}
+        onSubmitPayment={handleSubmitPayment}
       />
     </div>
   );

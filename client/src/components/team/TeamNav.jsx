@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 
 const statusBadges = {
   waiting_for_slip: {
-    label: 'Payment Pending',
+    label: 'Not Uploaded',
     style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
   },
   waiting_for_approval: {
@@ -62,7 +62,7 @@ export default function TeamNav({ team, currentStatus = 'waiting_for_approval', 
               <option value="waiting_for_approval">⏳ Waiting for Review</option>
               <option value="approved">✓ Approved</option>
               <option value="rejected">✕ Rejected</option>
-              <option value="waiting_for_slip">💳 Needs Payment</option>
+              <option value="waiting_for_slip">💳 Not Uploaded</option>
             </select>
           </div>
         )}
