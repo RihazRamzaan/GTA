@@ -16,8 +16,17 @@ function fetchSettings() {
       if (USE_SAMPLE) {
         data = sampleSettings();
       } else {
-        const res = await getPublicSettings();
-        data = res.data.data; // API shape: { success: true, data: {...} }
+        try {
+          const res = await getPublicSettings();
+          if (res.data?.success && res.data?.data) {
+            data = res.data.data;
+          } else {
+            data = sampleSettings();
+          }
+        } catch (err) {
+          console.warn('API /public/settings unreachable, using sampleSettings fallback.', err);
+          data = sampleSettings();
+        }
       }
       const serverMs = Date.parse(data.serverTime);
       const offsetMs = Number.isNaN(serverMs) ? 0 : serverMs - Date.now();

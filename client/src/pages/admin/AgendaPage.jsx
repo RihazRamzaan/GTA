@@ -16,6 +16,22 @@ const formatForInput = (val) => {
   return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
 };
 
+// Helper to format local Sri Lankan time preview (Asia/Colombo) for admin clarity
+const formatLocalTimePreview = (val) => {
+  if (!val) return 'Not configured';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return 'Invalid date';
+  return d.toLocaleString('en-US', {
+    timeZone: 'Asia/Colombo',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }) + ' LK';
+};
+
+
 export default function AgendaPage() {
   // Gate Modes: 'auto' | 'force_open' | 'force_closed'
   const [registrationMode, setRegistrationMode] = useState('auto');
@@ -578,7 +594,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#00e5ff] transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Public sign-up opens for all teams</span>
+            <div className="text-[11px] text-[#00e5ff] font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.registrationOpensAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Public sign-up opens for all teams</span>
           </div>
 
           {/* Milestone 2 */}
@@ -598,7 +617,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#00e5ff] transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Hard deadline for registration</span>
+            <div className="text-[11px] text-[#00e5ff] font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.registrationClosesAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Hard deadline for registration</span>
           </div>
 
           {/* Milestone 3 */}
@@ -618,7 +640,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#ff2bd6] transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Hackathon theme revealed & dev commences</span>
+            <div className="text-[11px] text-[#ff2bd6] font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.buildingStartsAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Hackathon theme revealed & dev commences</span>
           </div>
 
           {/* Milestone 4 */}
@@ -638,7 +663,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#8b3dff] transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Game submission portal becomes active</span>
+            <div className="text-[11px] text-[#8b3dff] font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.submissionOpensAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Game submission portal becomes active</span>
           </div>
 
           {/* Milestone 5 */}
@@ -658,7 +686,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#8b3dff] transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Final cut-off for project submission</span>
+            <div className="text-[11px] text-[#8b3dff] font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.submissionClosesAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Final cut-off for project submission</span>
           </div>
 
           {/* Milestone 6 */}
@@ -678,7 +709,10 @@ export default function AgendaPage() {
               onChange={handleMilestoneChange}
               className="w-full px-3 py-2.5 bg-[#0d0f24] border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-emerald-400 transition-colors"
             />
-            <span className="text-[10px] text-[#9aa7c1] mt-1.5 block">Winners & closing ceremony</span>
+            <div className="text-[11px] text-emerald-400 font-mono mt-1.5 flex items-center gap-1">
+              <span className="text-[#9aa7c1]">LK Time:</span> {formatLocalTimePreview(milestones.resultsAt)}
+            </div>
+            <span className="text-[10px] text-[#9aa7c1] mt-1 block">Winners & closing ceremony</span>
           </div>
 
           {/* Form Submit Button Row */}
