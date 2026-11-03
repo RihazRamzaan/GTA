@@ -6,7 +6,7 @@ export default function PaymentSlipArea({ registration, onUploadNewSlip }) {
   const [showModal, setShowModal] = useState(false);
 
   const payment = registration?.payment || {};
-  const status = registration?.status || 'pending_payment';
+  const status = registration?.status || 'waiting_for_slip';
   const hasSlip = Boolean(payment.fileName || payment.reference);
 
   const handleCopy = () => {
@@ -135,7 +135,7 @@ export default function PaymentSlipArea({ registration, onUploadNewSlip }) {
                   View Receipt
                 </button>
 
-                {(status === 'rejected' || status === 'pending_payment') && (
+                {(status === 'rejected' || status === 'waiting_for_slip') && (
                   <button
                     type="button"
                     onClick={onUploadNewSlip}

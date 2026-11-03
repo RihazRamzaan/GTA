@@ -14,7 +14,7 @@ There are five collections and no others.
 | Team | `name`, `leaderName`, `leaderEmail`, `members[]` (`name`, `email`) | Unique `name` and unique `leaderEmail`. *(needs ruling: member fields; the architecture document lists `fullName`, optional `email`, `studentId`)* |
 | Registration | `teamId`, `status`, `feeAmount`, `payment` (`reference`, `date`, `slipKey`, `slipMime`, `submittedAt`, `reviewedBy`, `reviewedAt`, `rejectionReason`) | One per team. `slipKey` is never exposed publicly. |
 | EventSettings | `_id: "current"`, `milestones` (`registrationOpensAt`, `registrationClosesAt`, `buildingStartsAt`, `submissionOpensAt`, `submissionClosesAt`, `resultsAt`), `registrationMode`, `submissionMode` | One document only. Dates are stored in UTC and shown in Asia/Colombo. |
-| Submission | `teamId`, `title`, `description`, `repoUrl`, `playableUrl`, `videoUrl`, `submittedAt` | One per team. `videoUrl` is optional. *(needs ruling: `playableUrl` is treated as required)* |
+| Submission | `teamId`, `title`, `description`, `repoUrl`, `playableUrl`, `videoUrl`, `submittedAt` | One per team. `playableUrl` and `videoUrl` are optional. |
 
 ## Statuses and modes
 
@@ -105,7 +105,7 @@ throw httpError(403, 'SUBMISSION_CLOSED', 'Submissions are closed.');
 
 - Team size, currently set by `TEAM_MIN_SIZE` and `TEAM_MAX_SIZE`.
 - Registration fee, currently set by `REGISTRATION_FEE`.
-- Member fields, and whether `playableUrl` is required.
+- Member fields.
 - Whether an admin Teams page is needed. The SRS has none, although Day 1 lists one.
 - Hosting, because the session cookie only works if the client and API share a site.
 - Who owns the FR-10 backup checklist.
