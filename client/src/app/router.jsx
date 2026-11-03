@@ -10,6 +10,7 @@ import SubmissionPage from '../pages/team/SubmissionPage.jsx';
 import AdminLogin from '../pages/admin/AdminLogin.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AgendaPage from '../pages/admin/AgendaPage.jsx';
+import TeamsPage from '../pages/admin/TeamsPage.jsx';
 import PaymentsPage from '../pages/admin/PaymentsPage.jsx';
 import SubmissionsPage from '../pages/admin/SubmissionsPage.jsx';
 
@@ -19,6 +20,11 @@ const admin = (page) => <RequireAuth role="admin">{page}</RequireAuth>;
 export const router = createBrowserRouter([{ path: '/', element: <App />, children: [
   { index: true, element: <Home /> }, { path: 'register', element: <Register /> }, { path: 'login', element: <Login /> },
   { path: 'team', element: team(<TeamDashboard />) }, { path: 'team/payment', element: team(<PaymentPage />) }, { path: 'team/submission', element: team(<SubmissionPage />) },
-  { path: 'admin/login', element: <AdminLogin /> }, { path: 'admin', element: admin(<AdminDashboard />) }, { path: 'admin/agenda', element: admin(<AgendaPage />) }, { path: 'admin/payments', element: admin(<PaymentsPage />) }, { path: 'admin/submissions', element: admin(<SubmissionsPage />) },
+  { path: 'admin/login', element: <AdminLogin /> },
+  { path: 'admin', element: admin(<AdminDashboard />) },
+  { path: 'admin/agenda', element: admin(<AgendaPage />) },
+  { path: 'admin/teams', element: admin(<TeamsPage />) },
+  { path: 'admin/payments', element: admin(<PaymentsPage />) },
+  { path: 'admin/submissions', element: admin(<SubmissionsPage />) },
   { path: '*', element: <p>Page not found.</p> },
 ]}]);
