@@ -1,8 +1,10 @@
 import assert from 'node:assert';
-import { isGateOpen, evaluateGateStatuses } from '../src/services/gates.js';
+import { isGateOpen, evaluateGateStatuses, requireRegistrationOpen, requireSubmissionOpen } from '../src/services/gates.js';
 import { validateMilestonesChronology } from '../src/utils/dates.js';
+import { requireAdmin } from '../src/middleware/requireAdmin.js';
+import { requireAuth } from '../src/middleware/auth.js';
 
-console.log('Running Gates & Settings Unit Tests...');
+console.log('Running Gates, Auth & Settings Unit Tests...');
 
 // 1. Gate Logic Tests
 const opensAt = '2026-11-05T00:00:00.000Z';
@@ -71,4 +73,54 @@ assert.strictEqual(evaluation.registrationOpen, true, 'Registration should be ev
 assert.strictEqual(evaluation.submissionOpen, false, 'Submission should be evaluated as force closed');
 assert.ok(evaluation.serverTime, 'serverTime should be provided');
 
-console.log('All Gates & Settings Unit Tests Passed Successfully!');
+// 4. Admin Middleware Protection Tests
+function createMockRes() {
+  const res = {
+    statusCode: null,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(data) {
+      this.body = data;
+      return this;
+    },
+  };
+  return res;
+}
+
+// 4a. Unauthenticated admin request -> 401
+const unauthRes = createMockRes();
+let unauthNextCalled = false;
+requireAdmin({ session: null }, unauthRes, () => { unauthNextCalled = true; });
+assert.strictEqual(unauthRes.statusCode, 401, 'Unauthenticated admin request should return 401');
+assert.strictEqual(unauthRes.body?.error?.code, 'UNAUTHORIZED');
+assert.strictEqual(unauthNextCalled, false, 'next() should not be called when unauthenticated');
+
+// 4b. Non-admin user request -> 403
+const forbiddenRes = createMockRes();
+let forbiddenNextCalled = false;
+requireAdmin({ session: { user: { role: 'team' } } }, forbiddenRes, () => { forbiddenNextCalled = true; });
+assert.strictEqual(forbiddenRes.statusCode, 403, 'Non-admin request should return 403');
+assert.strictEqual(forbiddenRes.body?.error?.code, 'FORBIDDEN');
+assert.strictEqual(forbiddenNextCalled, false, 'next() should not be called for non-admin');
+
+// 4c. Authenticated admin request -> next() called
+const authAdminRes = createMockRes();
+let authAdminNextCalled = false;
+requireAdmin({ session: { user: { role: 'admin' } } }, authAdminRes, () => { authAdminNextCalled = true; });
+assert.strictEqual(authAdminNextCalled, true, 'next() should be called for authenticated admin');
+
+// 4d. requireAuth tests
+const noAuthRes = createMockRes();
+let noAuthNextCalled = false;
+requireAuth({ session: {} }, noAuthRes, () => { noAuthNextCalled = true; });
+assert.strictEqual(noAuthRes.statusCode, 401, 'Unauthenticated requireAuth should return 401');
+
+const validAuthRes = createMockRes();
+let validAuthNextCalled = false;
+requireAuth({ session: { user: { role: 'team' } } }, validAuthRes, () => { validAuthNextCalled = true; });
+assert.strictEqual(validAuthNextCalled, true, 'Authenticated requireAuth should proceed');
+
+console.log('All Gates, Auth & Settings Unit Tests Passed Successfully!');

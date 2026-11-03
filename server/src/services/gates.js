@@ -90,7 +90,7 @@ export async function getEffectiveSettings(now = new Date()) {
 
 /**
  * Quick check if registration is currently open.
- * Can be used by registration controllers / middleware.
+ * Can be used by registration controllers / middleware (Akindu).
  *
  * @param {Date} [now=new Date()]
  * @returns {Promise<boolean>}
@@ -107,7 +107,7 @@ export async function isRegistrationOpen(now = new Date()) {
 
 /**
  * Quick check if submission is currently open.
- * Can be used by submission controllers / middleware.
+ * Can be used by submission controllers / middleware (Tharushi).
  *
  * @param {Date} [now=new Date()]
  * @returns {Promise<boolean>}
@@ -122,3 +122,88 @@ export async function isSubmissionOpen(now = new Date()) {
   );
 }
 
+/**
+ * Assert helper: verifies registration is open; throws a 403-coded error if closed.
+ *
+ * @param {Date} [now=new Date()]
+ */
+export async function assertRegistrationOpen(now = new Date()) {
+  const open = await isRegistrationOpen(now);
+  if (!open) {
+    const error = new Error('Registration is currently closed.');
+    error.statusCode = 403;
+    error.code = 'REGISTRATION_CLOSED';
+    throw error;
+  }
+}
+
+/**
+ * Assert helper: verifies submission is open; throws a 403-coded error if closed.
+ *
+ * @param {Date} [now=new Date()]
+ */
+export async function assertSubmissionOpen(now = new Date()) {
+  const open = await isSubmissionOpen(now);
+  if (!open) {
+    const error = new Error('Game submissions are currently closed.');
+    error.statusCode = 403;
+    error.code = 'SUBMISSION_CLOSED';
+    throw error;
+  }
+}
+
+/**
+ * Express middleware helper to guard routes requiring open registration (Akindu).
+ * Returns 403 FORBIDDEN with error code REGISTRATION_CLOSED if closed.
+ */
+export async function requireRegistrationOpen(_req, res, next) {
+  try {
+    const open = await isRegistrationOpen();
+    if (!open) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'REGISTRATION_CLOSED',
+          message: 'Registration is currently closed.',
+        },
+      });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Express middleware helper to guard routes requiring open game submissions (Tharushi).
+ * Returns 403 FORBIDDEN with error code SUBMISSION_CLOSED if closed.
+ */
+export async function requireSubmissionOpen(_req, res, next) {
+  try {
+    const open = await isSubmissionOpen();
+    if (!open) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'SUBMISSION_CLOSED',
+          message: 'Game submissions are currently closed.',
+        },
+      });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export default {
+  isGateOpen,
+  evaluateGateStatuses,
+  getEffectiveSettings,
+  isRegistrationOpen,
+  isSubmissionOpen,
+  assertRegistrationOpen,
+  assertSubmissionOpen,
+  requireRegistrationOpen,
+  requireSubmissionOpen,
+};

@@ -1,2 +1,21 @@
-// Session authentication middleware will be implemented by Akindu.
-export function requireAuth(_req, res) { res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Authentication is not implemented yet.' } }); }
+/**
+ * Session authentication middleware (coordinated with Akindu's auth specification).
+ * Verifies that the requester has an active session.
+ */
+export function requireAuth(req, res, next) {
+  const user = req.session?.user || req.user;
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Authentication required. Please log in.',
+      },
+    });
+  }
+
+  next();
+}
+
+export default requireAuth;

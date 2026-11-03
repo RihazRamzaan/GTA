@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { getAdminSettings, updateAdminSettings } from '../controllers/admin.controller.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
 
-// Day 02 Event Settings endpoints (Rihaz)
+// Protect all admin endpoints with requireAdmin middleware (coordinated with Akindu)
+router.use(requireAdmin);
+
+// Day 02/03 Event Settings endpoints (Rihaz)
 router.get('/settings', getAdminSettings);
 router.patch('/settings', updateAdminSettings);
 

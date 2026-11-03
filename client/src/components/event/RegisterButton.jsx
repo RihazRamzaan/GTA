@@ -6,7 +6,7 @@ import useEventSettings from '../../hooks/useEventSettings.js';
 export default function RegisterButton({ className = '', arrow = false, onClick }) {
   const { status, settings } = useEventSettings();
 
-  if (status === 'ready' && settings.registrationOpen) {
+  if (status === 'ready' && settings?.registrationOpen) {
     return (
       <Link
         to="/register"
@@ -20,10 +20,10 @@ export default function RegisterButton({ className = '', arrow = false, onClick 
 
   let label = 'Checking registration...';
   if (status === 'error') {
-    label = 'Registration status unavailable';
+    label = 'Status unavailable';
   } else if (status === 'ready') {
-    const nowMs = Date.now() + (settings.offsetMs || 0);
-    const opensAt = Date.parse(settings.milestones?.registrationOpensAt);
+    const nowMs = Date.now() + (settings?.offsetMs || 0);
+    const opensAt = Date.parse(settings?.milestones?.registrationOpensAt);
     label = !Number.isNaN(opensAt) && nowMs < opensAt ? 'Registration Opens Soon' : 'Registration Closed';
   }
 

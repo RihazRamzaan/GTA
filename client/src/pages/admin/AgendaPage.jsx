@@ -103,6 +103,9 @@ export default function AgendaPage() {
         }
       } catch (err) {
         console.warn('Backend unavailable, using cached/default settings.', err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setSaveError('Notice: Admin authentication is required to modify live event settings.');
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -279,16 +282,6 @@ export default function AgendaPage() {
         }
       }
 
-      // Always save to persistent cache for refresh guarantee
-      localStorage.setItem(
-        'buildathon_admin_settings',
-        JSON.stringify({
-          registrationMode,
-          submissionMode,
-          milestones,
-        })
-      );
-
       const res = await updateAdminSettings({
         registrationMode,
         submissionMode,
@@ -296,16 +289,38 @@ export default function AgendaPage() {
       });
 
       if (res.data?.success) {
-        setSaveStatus('Gate overrides and milestone schedule saved successfully to database (persists on reload).');
+        // Only persist to cache once successfully saved to database
+        localStorage.setItem(
+          'buildathon_admin_settings',
+          JSON.stringify({
+            registrationMode,
+            submissionMode,
+            milestones,
+          })
+        );
+        setSaveStatus('Gate overrides and milestone schedule saved successfully to server.');
+        setSaveError(null);
         setTimeout(() => setSaveStatus(null), 5000);
       } else {
-        setSaveError(res.data?.error?.message || 'Failed to save settings.');
+        const errorMsg = res.data?.error?.message || 'Server error: Failed to save settings to database.';
+        setSaveError(errorMsg);
       }
     } catch (err) {
-      console.warn('Backend write failed, retained in local session.', err);
-      // Even if network fails, settings are cached and persist on refresh
-      setSaveStatus('Schedule and gates saved to local session. Settings will persist on refresh.');
-      setTimeout(() => setSaveStatus(null), 5000);
+      console.error('Failed to save settings to backend:', err);
+      const status = err.response?.status;
+      let errorMsg = 'Failed to save settings: Server is currently unreachable. Changes were not saved.';
+
+      if (status === 401) {
+        errorMsg = 'Failed to save settings: Authentication required. Please log in as an administrator.';
+      } else if (status === 403) {
+        errorMsg = 'Failed to save settings: Access denied. Admin authorization is required.';
+      } else if (err.response?.data?.error?.message) {
+        errorMsg = `Failed to save settings: ${err.response.data.error.message}`;
+      } else if (err.message) {
+        errorMsg = `Failed to save settings: ${err.message}`;
+      }
+
+      setSaveError(errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -392,11 +407,24 @@ export default function AgendaPage() {
         )}
 
         {saveError && (
-          <div className="mt-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2 animate-fadeIn">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{saveError}</span>
+          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-red-400 text-sm flex items-start justify-between gap-3 animate-fadeIn">
+            <div className="flex items-start gap-2.5">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-bold text-red-300 font-['Orbitron',sans-serif] text-xs uppercase tracking-wider mb-0.5">Settings Not Saved</p>
+                <p>{saveError}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSaveError(null)}
+              className="text-red-400/60 hover:text-red-300 transition-colors p-1"
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
           </div>
         )}
 
