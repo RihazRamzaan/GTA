@@ -2,6 +2,7 @@ import RegisterButton from './RegisterButton.jsx';
 import Icon from '../ui/Icon.jsx';
 import heroCity from '../../assets/hero-city.png';
 import { eventContent } from '../../data/eventContent.js';
+import RegistrationNotice from './RegistrationNotice.jsx';
 
 const lineColors = ['text-white', 'text-neon-cyan', 'text-neon-pink'];
 
@@ -46,6 +47,7 @@ export default function Hero() {
             Learn More
           </a>
         </div>
+         <RegistrationNotice />
 
         <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
           {infoItems.map((item) => (
