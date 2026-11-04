@@ -5,6 +5,7 @@ import {
   getAdminSettings,
   updateAdminSettings,
   getAdminRegistrations,
+  getAdminSummary,
 } from '../controllers/admin.controller.js';
 
 const router = Router();
@@ -16,12 +17,12 @@ router.use(requireAuth, requireAdmin);
 router.get('/settings', getAdminSettings);
 router.patch('/settings', updateAdminSettings);
 
-// Day 04: Registrations & Teams Roster (Rihaz)
+// Day 04: Registrations & Dashboard Summary (Rihaz)
+router.get('/summary', getAdminSummary);
 router.get('/registrations', getAdminRegistrations);
 
 // Placeholder endpoints for Days 4-5
 const unimplementedRoutes = [
-  ['get', '/summary'],
   ['patch', '/registrations/:id/review'],
   ['get', '/registrations/:id/slip'],
   ['get', '/submissions'],

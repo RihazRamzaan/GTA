@@ -1,8 +1,10 @@
 import EventSettings from '../models/EventSettings.js';
 import Registration from '../models/Registration.js';
 import Team from '../models/Team.js';
+import Submission from '../models/Submission.js';
 import { validateMilestonesChronology } from '../utils/dates.js';
 import { httpError } from '../middleware/error.js';
+import { getEffectiveGates } from '../services/gates.js';
 
 const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
 
@@ -168,6 +170,67 @@ export async function getAdminRegistrations(req, res, next) {
     return res.json({
       success: true,
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/admin/summary
+ * Retrieves dashboard summary counts and event overview:
+ * total teams, registration status counts, total submissions, and gates.
+ */
+export async function getAdminSummary(_req, res, next) {
+  try {
+    const [totalTeams, statusCounts, totalSubmissions, settings] = await Promise.all([
+      Team.countDocuments(),
+      Registration.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Submission.countDocuments().catch(() => 0),
+      EventSettings.getOrCreateSingleton(),
+    ]);
+
+    const counts = {
+      waiting_for_slip: 0,
+      waiting_for_approval: 0,
+      approved: 0,
+      rejected: 0,
+    };
+
+    for (const item of statusCounts) {
+      if (item._id && counts[item._id] !== undefined) {
+        counts[item._id] = item.count;
+      }
+    }
+
+    const gates = getEffectiveGates(settings, new Date());
+
+    return res.json({
+      success: true,
+      data: {
+        totalTeams,
+        totalRegistrations: Object.values(counts).reduce((sum, n) => sum + n, 0),
+        waitingForSlip: counts.waiting_for_slip,
+        waitingForApproval: counts.waiting_for_approval,
+        approved: counts.approved,
+        rejected: counts.rejected,
+        statusCounts: counts,
+        totalSubmissions,
+        gates: {
+          registrationOpen: gates.registrationOpen,
+          submissionOpen: gates.submissionOpen,
+          registrationMode: settings.registrationMode,
+          submissionMode: settings.submissionMode,
+        },
+        milestones: settings.milestones,
+      },
     });
   } catch (error) {
     next(error);
