@@ -38,8 +38,18 @@ The frontend runs at `http://localhost:5173` and the API at `http://localhost:50
 
 Check `GET http://localhost:5000/api/health` for the server health response.
 
-## Intentionally unfinished
+## Admin account
 
-Registration, login, permissions, team dashboards, payment uploads/review, countdown logic, agenda management, admin controls, and game submissions are deliberately placeholders. Implement them only on the assigned branches and keep the API contracts in `docs/API_CONTRACTS.md` synchronized.
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `server/.env`, then run the command below once. It never changes an existing admin. Remove `ADMIN_PASSWORD` from the file afterwards.
+
+```bash
+npm run seed:admin --workspace server
+```
+
+## Unfinished work
+
+Login, sessions, route protection, and team registration are implemented. Registration stays closed until the `EventSettings` document exists and its window is open.
+
+Team dashboards, payment uploads/review, agenda management, admin controls, and game submissions are still placeholders. Implement them only on the assigned branches and keep the API contracts in `docs/API_CONTRACTS.md` synchronized. Shared names are listed in `docs/REFERENCE.md`.
 
 See `docs/CONTRIBUTING.md` for ownership and `docs/BRANCHING.md` for the branch workflow.

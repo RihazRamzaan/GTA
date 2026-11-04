@@ -1,5 +1,5 @@
 /**
- * Sample Team & Registration Data
+ * Sample Team & Registration Data (Day 2)
  * Clean, standard data conforming to Team.js and Registration.js models
  */
 
@@ -26,6 +26,7 @@ export const sampleTeam = {
     email: 'thanish@example.com',
     role: 'Leader & Developer',
     university: 'Faculty of Information Technology',
+    phone: '+94 77 123 4567',
   },
   members: [
     {
@@ -47,66 +48,78 @@ export const sampleTeam = {
   minMembers: 2,
 };
 
-// 4 clean registration states for previewing:
+// 4 clear registration states:
+// 1. not uploaded ('waiting_for_slip')
+// 2. waiting ('waiting_for_approval')
+// 3. approved ('approved')
+// 4. rejected ('rejected')
 export const sampleStates = {
-  // 1. Waiting for admin approval
-  pending_review: {
-    status: 'pending_review',
+  // 1. Not uploaded / Pending Payment (new registration, not yet paid)
+  waiting_for_slip: {
+    status: 'waiting_for_slip',
     feeAmount: 4000,
     payment: {
-      reference: 'BOC-TXN-88392019',
-      submittedAt: '2026-10-31T14:35:00.000Z',
-      fileName: 'boc_transfer_slip.png',
-      fileSize: '1.4 MB',
+      reference: '',
+      paymentDate: '',
+      submittedAt: null,
+      fileName: null,
+      fileSize: null,
+      slipPreviewUrl: null,
       reviewedBy: null,
       reviewedAt: null,
       rejectionReason: null,
     },
   },
 
-  // 2. Approved by admin
+  // 2. Waiting for admin approval ('waiting_for_approval')
+  waiting_for_approval: {
+    status: 'waiting_for_approval',
+    feeAmount: 4000,
+    payment: {
+      reference: 'BOC-TXN-88392019',
+      paymentDate: '2026-10-31',
+      submittedAt: '2026-10-31T14:35:00.000Z',
+      fileName: 'boc_transfer_slip.png',
+      fileSize: '1.4 MB',
+      slipPreviewUrl: null,
+      reviewedBy: null,
+      reviewedAt: null,
+      rejectionReason: null,
+    },
+  },
+
+  // 3. Approved by admin
   approved: {
     status: 'approved',
     feeAmount: 4000,
     payment: {
       reference: 'BOC-TXN-88392019',
+      paymentDate: '2026-10-31',
       submittedAt: '2026-10-31T14:35:00.000Z',
       fileName: 'boc_transfer_slip.png',
       fileSize: '1.4 MB',
+      slipPreviewUrl: null,
       reviewedBy: 'Admin Overseer',
       reviewedAt: '2026-11-01T08:15:00.000Z',
       rejectionReason: null,
     },
   },
 
-  // 3. Rejected by admin with clear reason
+  // 4. Rejected by admin with clear reason
   rejected: {
     status: 'rejected',
     feeAmount: 4000,
     payment: {
       reference: 'BOC-TXN-88392019',
+      paymentDate: '2026-10-31',
       submittedAt: '2026-10-31T14:35:00.000Z',
       fileName: 'boc_transfer_slip.png',
       fileSize: '1.4 MB',
+      slipPreviewUrl: null,
       reviewedBy: 'Admin Overseer',
       reviewedAt: '2026-11-01T09:00:00.000Z',
       rejectionReason:
         'The deposit slip photo is blurry and the transaction number is unreadable. Please upload a clear photo or digital banking PDF receipt.',
-    },
-  },
-
-  // 4. Pending Payment (new registration, not yet paid)
-  pending_payment: {
-    status: 'pending_payment',
-    feeAmount: 4000,
-    payment: {
-      reference: '',
-      submittedAt: null,
-      fileName: null,
-      fileSize: null,
-      reviewedBy: null,
-      reviewedAt: null,
-      rejectionReason: null,
     },
   },
 };

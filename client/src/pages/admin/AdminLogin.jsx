@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { getApiError } from '../../api/http.js';
+import { homePathFor, useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,30 +24,18 @@ export default function AdminLogin() {
     if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Day 01: UI simulation mode
-    setTimeout(() => {
+    try {
+      const user = await login({ email: formData.email, password: formData.password });
+      navigate(homePathFor(user), { replace: true });
+    } catch (err) {
+      setError(getApiError(err).message);
       setIsLoading(false);
-      if (formData.email.trim() && formData.password.trim()) {
-        // Mock successful login - navigate to Admin Dashboard
-        navigate('/admin');
-      } else {
-        setError('Please enter both your administrator email and security passkey.');
-      }
-    }, 700);
-  };
-
-  const handleDemoFill = () => {
-    setFormData({
-      email: 'admin@buildathon.local',
-      password: '••••••••••••',
-      rememberMe: true,
-    });
-    setError('');
+    }
   };
 
   return (
@@ -182,18 +173,6 @@ export default function AdminLogin() {
               </span>
             </button>
           </form>
-
-          {/* Day 01 Quick Prototype Helper */}
-          <div className="mt-6 pt-6 border-t border-[#00e5ff]/15 flex items-center justify-between text-xs text-[#9aa7c1]">
-            <span></span>
-            <button
-              type="button"
-              onClick={handleDemoFill}
-              className="px-2.5 py-1 rounded bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] font-semibold border border-[#00e5ff]/30 transition-all"
-            >
-              Autofill Test Data
-            </button>
-          </div>
         </div>
 
         {/* Back navigation */}
