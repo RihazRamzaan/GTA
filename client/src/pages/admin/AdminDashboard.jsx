@@ -85,7 +85,10 @@ export default function AdminDashboard() {
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Teams Card */}
-        <div className="relative rounded-2xl bg-[#0d0f24]/80 border border-[#00e5ff]/20 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden group hover:border-[#00e5ff]/50 transition-all">
+        <Link
+          to="/admin/teams"
+          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#00e5ff]/20 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden group hover:border-[#00e5ff]/50 hover:bg-[#0d0f24] transition-all"
+        >
           <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
             <span>Total Teams</span>
             <span className="p-2 rounded-lg bg-[#00e5ff]/10 text-[#00e5ff]">
@@ -101,7 +104,7 @@ export default function AdminDashboard() {
             <span>+4 registered in last 24h</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00e5ff]/40 to-transparent"></div>
-        </div>
+        </Link>
 
         {/* Pending Review Card */}
         <div className="relative rounded-2xl bg-[#0d0f24]/80 border border-[#ff2bd6]/30 p-5 shadow-[0_4px_20px_rgba(255,43,214,0.1)] overflow-hidden group hover:border-[#ff2bd6]/60 transition-all">
