@@ -1,7 +1,13 @@
 
 import { useState } from "react";
+import useEventSettings from "../../hooks/useEventSettings.js";
 
 export default function SubmissionPage() {
+  const { status, settings } = useEventSettings();
+
+  const isOpen =
+    status === "ready" && settings?.submissionOpen === true;
+
   const exampleGame = {
     title: "Cyber Quest",
     description:
@@ -11,7 +17,6 @@ export default function SubmissionPage() {
     videoUrl: "",
   };
 
-  const [isOpen, setIsOpen] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [game, setGame] = useState({ ...exampleGame });
   const [savedGame, setSavedGame] = useState({ ...exampleGame });
@@ -54,25 +59,29 @@ export default function SubmissionPage() {
     }
 
     if (!game.description.trim()) {
-      nextErrors.description = "Please enter your game description.";
+      nextErrors.description =
+        "Please enter your game description.";
     }
 
     if (!game.repoUrl.trim()) {
-      nextErrors.repoUrl = "Please enter your GitHub repository URL.";
+      nextErrors.repoUrl =
+        "Please enter your GitHub repository URL.";
     } else {
       try {
         const url = new URL(game.repoUrl.trim());
 
         const isGitHub =
           url.hostname === "github.com" &&
-          (url.protocol === "https:" || url.protocol === "http:");
+          (url.protocol === "https:" ||
+            url.protocol === "http:");
 
         if (!isGitHub) {
           nextErrors.repoUrl =
             "Please enter a valid GitHub repository link.";
         }
       } catch {
-        nextErrors.repoUrl = "Please enter a valid GitHub URL.";
+        nextErrors.repoUrl =
+          "Please enter a valid GitHub URL.";
       }
     }
 
@@ -100,6 +109,11 @@ export default function SubmissionPage() {
   function handleSave(event) {
     event.preventDefault();
 
+    if (!isOpen) {
+      setMessage("Submissions are currently closed.");
+      return;
+    }
+
     if (!validateForm()) {
       setMessage("Please correct the highlighted fields.");
       return;
@@ -108,7 +122,9 @@ export default function SubmissionPage() {
     setSavedGame({ ...game });
     setIsEditing(false);
     setErrors({});
-    setMessage("Your sample game submission has been saved successfully!");
+    setMessage(
+      "Your sample game submission has been saved successfully!"
+    );
   }
 
   function handleEdit() {
@@ -127,11 +143,33 @@ export default function SubmissionPage() {
     setIsEditing(false);
   }
 
-  function changePreview(open) {
-    setIsOpen(open);
-    setIsEditing(false);
-    setMessage("");
-    setErrors({});
+  if (status === "loading") {
+    return (
+      <main className="submission-page">
+        <div className="sp-container">
+          <section className="sp-locked">
+            <h2>Loading Submission Settings...</h2>
+            <p>Please wait while we check the event settings.</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <main className="submission-page">
+        <div className="sp-container">
+          <section className="sp-locked">
+            <h2>Unable to Load Settings</h2>
+            <p>
+              We could not load the submission status.
+              Please try again later.
+            </p>
+          </section>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -145,35 +183,20 @@ export default function SubmissionPage() {
           --sp-text: #f5f7ff;
           --sp-muted: #aab3c8;
           --sp-line: rgba(0, 217, 245, .24);
-
           min-height: 100vh;
           padding: 34px 6%;
           box-sizing: border-box;
           color: var(--sp-text);
-
           background:
-            radial-gradient(
-              ellipse at 85% 4%,
-              rgba(0,217,245,.13),
-              transparent 32%
-            ),
-            radial-gradient(
-              ellipse at 8% 55%,
-              rgba(247,37,216,.11),
-              transparent 34%
-            ),
+            radial-gradient(ellipse at 85% 4%, rgba(0,217,245,.13), transparent 32%),
+            radial-gradient(ellipse at 8% 55%, rgba(247,37,216,.11), transparent 34%),
             var(--sp-bg);
-
           font-family: "Rajdhani", system-ui, sans-serif;
         }
 
-        .submission-page * {
-          box-sizing: border-box;
-        }
+        .submission-page * { box-sizing: border-box; }
 
-        .sp-hero h1,
-        .sp-card h2,
-        .sp-locked h2 {
+        .sp-hero h1, .sp-card h2, .sp-locked h2 {
           font-family: "Orbitron", system-ui, sans-serif;
         }
 
@@ -183,9 +206,7 @@ export default function SubmissionPage() {
           margin: 0 auto;
         }
 
-        .sp-tag,
-        .sp-status,
-        .sp-saved-badge {
+        .sp-tag, .sp-status, .sp-saved-badge {
           display: inline-flex;
           align-items: center;
           gap: 7px;
@@ -218,46 +239,14 @@ export default function SubmissionPage() {
           font-size: clamp(34px, 6vw, 60px);
           line-height: 1.08;
           font-weight: 900;
-          letter-spacing: 1px;
         }
 
-        .sp-hero h1 span {
-          color: var(--sp-cyan);
-        }
+        .sp-hero h1 span { color: var(--sp-cyan); }
 
         .sp-hero p {
           color: var(--sp-muted);
           font-size: 15px;
           line-height: 1.8;
-          margin: 0;
-        }
-
-        .sp-preview-controls {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin: 0 0 28px;
-        }
-
-        .sp-button {
-          border: 1px solid var(--sp-pink);
-          border-radius: 5px;
-          padding: 11px 17px;
-          color: var(--sp-pink);
-          background: transparent;
-          font: inherit;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all .2s ease;
-        }
-
-        .sp-button:hover,
-        .sp-button.active {
-          background: var(--sp-pink);
-          color: #fff;
-          box-shadow: 0 0 18px rgba(247,37,216,.3);
         }
 
         .sp-grid {
@@ -297,12 +286,9 @@ export default function SubmissionPage() {
           font-weight: 700;
         }
 
-        .sp-required {
-          color: var(--sp-pink);
-        }
+        .sp-required { color: var(--sp-pink); }
 
-        .sp-form input,
-        .sp-form textarea {
+        .sp-form input, .sp-form textarea {
           display: block;
           width: 100%;
           padding: 13px 14px;
@@ -313,7 +299,6 @@ export default function SubmissionPage() {
           color: #fff;
           font: inherit;
           font-size: 14px;
-          transition: border-color .2s, box-shadow .2s;
         }
 
         .sp-form textarea {
@@ -322,20 +307,16 @@ export default function SubmissionPage() {
           line-height: 1.6;
         }
 
-        .sp-form input:focus,
-        .sp-form textarea:focus {
+        .sp-form input:focus, .sp-form textarea:focus {
           border-color: var(--sp-cyan);
           box-shadow: 0 0 0 3px rgba(0,217,245,.1);
         }
 
-        .sp-form input::placeholder,
-        .sp-form textarea::placeholder {
+        .sp-form input::placeholder, .sp-form textarea::placeholder {
           color: #77819b;
         }
 
-        .sp-invalid {
-          border-color: #ff668a !important;
-        }
+        .sp-invalid { border-color: #ff668a !important; }
 
         .sp-error {
           display: block;
@@ -351,30 +332,27 @@ export default function SubmissionPage() {
           font-size: 11px;
         }
 
+        .sp-button, .sp-submit {
+          border: 1px solid var(--sp-pink);
+          border-radius: 5px;
+          padding: 11px 17px;
+          color: #fff;
+          background: var(--sp-pink);
+          font: inherit;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
         .sp-submit {
           width: 100%;
           margin-top: 25px;
           padding: 14px 18px;
-          border: 1px solid var(--sp-pink);
-          border-radius: 5px;
-          background: var(--sp-pink);
-          color: #fff;
-          font: inherit;
           font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
           box-shadow: 0 0 16px rgba(247,37,216,.2);
-          transition: transform .2s, box-shadow .2s;
         }
 
-        .sp-submit:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 0 24px rgba(247,37,216,.4);
-        }
-
-        .sp-cancel {
-          margin: 14px 0 0 10px;
-        }
+        .sp-cancel { margin: 14px 0 0 10px; }
 
         .sp-message {
           margin: 0 0 18px;
@@ -400,9 +378,7 @@ export default function SubmissionPage() {
           border-bottom: 1px solid #252d48;
         }
 
-        .sp-guide-item:last-child {
-          border-bottom: 0;
-        }
+        .sp-guide-item:last-child { border-bottom: 0; }
 
         .sp-guide-icon {
           display: grid;
@@ -441,13 +417,9 @@ export default function SubmissionPage() {
           line-height: 1.7;
         }
 
-        .sp-tip strong {
-          color: var(--sp-cyan);
-        }
+        .sp-tip strong { color: var(--sp-cyan); }
 
-        .sp-saved {
-          margin-top: 24px;
-        }
+        .sp-saved { margin-top: 24px; }
 
         .sp-saved-head {
           display: flex;
@@ -480,11 +452,7 @@ export default function SubmissionPage() {
           text-decoration: underline;
         }
 
-        .sp-edit {
-          margin-top: 10px;
-          background: var(--sp-pink);
-          color: #fff;
-        }
+        .sp-edit { margin-top: 10px; }
 
         .sp-locked {
           margin-bottom: 24px;
@@ -495,14 +463,7 @@ export default function SubmissionPage() {
           text-align: center;
         }
 
-        .sp-lock-icon {
-          margin-bottom: 12px;
-          font-size: 38px;
-        }
-
-        .sp-locked h2 {
-          color: var(--sp-pink);
-        }
+        .sp-locked h2 { color: var(--sp-pink); }
 
         .sp-locked p {
           color: var(--sp-muted);
@@ -510,23 +471,13 @@ export default function SubmissionPage() {
         }
 
         @media (max-width: 800px) {
-          .sp-grid {
-            grid-template-columns: 1fr;
-          }
+          .sp-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 520px) {
-          .submission-page {
-            padding: 24px 15px;
-          }
-
-          .sp-card {
-            padding: 19px;
-          }
-
-          .sp-hero h1 {
-            font-size: 35px;
-          }
+          .submission-page { padding: 24px 15px; }
+          .sp-card { padding: 19px; }
+          .sp-hero h1 { font-size: 35px; }
         }
       `}</style>
 
@@ -546,24 +497,6 @@ export default function SubmissionPage() {
             Submit your game and showcase what your team has built.
           </p>
         </header>
-
-        <div className="sp-preview-controls">
-          <button
-            type="button"
-            className={`sp-button ${isOpen ? "active" : ""}`}
-            onClick={() => changePreview(true)}
-          >
-            Preview Open State
-          </button>
-
-          <button
-            type="button"
-            className={`sp-button ${!isOpen ? "active" : ""}`}
-            onClick={() => changePreview(false)}
-          >
-            Preview Closed State
-          </button>
-        </div>
 
         {isOpen && isEditing ? (
           <div className="sp-grid">
@@ -766,7 +699,7 @@ export default function SubmissionPage() {
                 <h2>Submissions Are Closed</h2>
 
                 <p>
-                  The game submission period has ended.
+              The game submission period is not currently open.
                   <br />
                   You can view your existing submission,
                   but you cannot create or edit it.
@@ -819,7 +752,6 @@ export default function SubmissionPage() {
 
               <p>
                 <strong>Demo Video: </strong>
-
                 {savedGame.videoUrl ? (
                   <a
                     href={savedGame.videoUrl}
@@ -834,9 +766,7 @@ export default function SubmissionPage() {
               </p>
 
               {message && (
-                <div className="sp-message">
-                  {message}
-                </div>
+                <div className="sp-message">{message}</div>
               )}
 
               {isOpen && (

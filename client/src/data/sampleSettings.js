@@ -15,7 +15,7 @@ export function sampleSettings() {
       resultsAt: at(20),
     },
     registrationOpen: true,
-    submissionOpen: false,
+    submissionOpen: true,
     serverTime: new Date(now).toISOString(),
   };
 }
