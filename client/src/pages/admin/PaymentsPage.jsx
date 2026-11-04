@@ -1,175 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNav from '../../components/admin/AdminNav.jsx';
+import {
+  getRegistrations,
+  reviewRegistration,
+  getRegistrationSlipUrl,
+} from '../../api/admin.js';
 
 export default function PaymentsPage() {
+  const [registrations, setRegistrations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all' | 'waiting_for_approval' | 'approved' | 'rejected' | 'waiting_for_slip'
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Modals state
   const [selectedSlip, setSelectedSlip] = useState(null);
   const [rejectingItem, setRejectingItem] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionAlert, setActionAlert] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Day 01 Mock Registrations & Payment Evidence
-  const [registrations, setRegistrations] = useState([
-    {
-      id: 'reg_01',
-      teamId: 'team_01',
-      teamName: 'CyberVanguard',
-      leaderName: 'Kavindu Perera',
-      leaderEmail: 'kavindu@cybervanguard.io',
-      membersCount: 4,
-      feeAmount: 'LKR 4,000',
-      status: 'waiting_for_approval',
-      payment: {
-        reference: 'BOC-99281729',
-        date: '2026-10-31',
-        submittedAt: 'Today, 14:15',
-        slipMime: 'image/png',
-        slipFileName: 'boc_transfer_receipt_99281.png',
-        bankName: 'Bank of Ceylon (BOC)',
-        senderAccount: '•••• 4921',
-      },
-    },
-    {
-      id: 'reg_02',
-      teamId: 'team_02',
-      teamName: 'NexusRebels',
-      leaderName: 'Ayesha Senanayake',
-      leaderEmail: 'ayesha.s@gmail.com',
-      membersCount: 3,
-      feeAmount: 'LKR 4,000',
-      status: 'waiting_for_approval',
-      payment: {
-        reference: 'COMB-44810293',
-        date: '2026-10-31',
-        submittedAt: 'Today, 13:40',
-        slipMime: 'application/pdf',
-        slipFileName: 'commercial_bank_slip.pdf',
-        bankName: 'Commercial Bank of Ceylon',
-        senderAccount: '•••• 1109',
-      },
-    },
-    {
-      id: 'reg_03',
-      teamId: 'team_03',
-      teamName: 'ZeroLag Collective',
-      leaderName: 'Dilan Fonseka',
-      leaderEmail: 'dilan@zerolag.dev',
-      membersCount: 4,
-      feeAmount: 'LKR 4,000',
-      status: 'waiting_for_approval',
-      payment: {
-        reference: 'HNB-77319940',
-        date: '2026-10-31',
-        submittedAt: 'Today, 11:22',
-        slipMime: 'image/jpeg',
-        slipFileName: 'hnb_online_transfer.jpg',
-        bankName: 'Hatton National Bank (HNB)',
-        senderAccount: '•••• 8832',
-      },
-    },
-    {
-      id: 'reg_04',
-      teamId: 'team_04',
-      teamName: 'NeonDrifters',
-      leaderName: 'Sachini Wickramasinghe',
-      leaderEmail: 'sachini@drifters.lk',
-      membersCount: 4,
-      feeAmount: 'LKR 4,000',
-      status: 'approved',
-      payment: {
-        reference: 'SAMP-10293847',
-        date: '2026-10-30',
-        submittedAt: 'Yesterday, 16:50',
-        slipMime: 'image/png',
-        slipFileName: 'sampath_receipt.png',
-        bankName: 'Sampath Bank PLC',
-        senderAccount: '•••• 7741',
-        reviewedAt: '2026-10-30T17:10:00Z',
-        reviewedBy: 'Admin (Rihaz)',
-      },
-    },
-    {
-      id: 'reg_05',
-      teamId: 'team_05',
-      teamName: 'PixelSyndicate',
-      leaderName: 'Nuwan Alwis',
-      leaderEmail: 'nuwan.a@pixelsyndicate.dev',
-      membersCount: 3,
-      feeAmount: 'LKR 4,000',
-      status: 'approved',
-      payment: {
-        reference: 'BOC-33829104',
-        date: '2026-10-30',
-        submittedAt: 'Yesterday, 12:05',
-        slipMime: 'image/jpeg',
-        slipFileName: 'deposit_slip_boc.jpg',
-        bankName: 'Bank of Ceylon',
-        senderAccount: '•••• 3390',
-        reviewedAt: '2026-10-30T13:00:00Z',
-        reviewedBy: 'Admin (Rihaz)',
-      },
-    },
-    {
-      id: 'reg_06',
-      teamId: 'team_06',
-      teamName: 'QuantumGlitchers',
-      leaderName: 'Tharindu Gamage',
-      leaderEmail: 'tharindu@glitchers.com',
-      membersCount: 4,
-      feeAmount: 'LKR 4,000',
-      status: 'rejected',
-      payment: {
-        reference: 'COMB-00192837',
-        date: '2026-10-29',
-        submittedAt: '2 days ago',
-        slipMime: 'image/png',
-        slipFileName: 'invalid_receipt_scan.png',
-        bankName: 'Commercial Bank',
-        senderAccount: '•••• 6620',
-        reviewedAt: '2026-10-29T18:30:00Z',
-        reviewedBy: 'Admin (Rihaz)',
-        rejectionReason: 'Bank transfer reference number is unreadable on the uploaded image. Please re-upload a clear photograph of the deposit receipt.',
-      },
-    },
-    {
-      id: 'reg_07',
-      teamId: 'team_07',
-      teamName: 'AeroForge Games',
-      leaderName: 'Rashmika Bandara',
-      leaderEmail: 'rashmika@aeroforge.io',
-      membersCount: 2,
-      feeAmount: 'LKR 4,000',
-      status: 'waiting_for_slip',
-      payment: null,
-    },
-  ]);
+  const fetchRegistrations = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await getRegistrations();
+      if (res.data?.success) {
+        const rawList = res.data.data || [];
+        const formatted = rawList.map((reg) => {
+          const t = reg.team || {};
+          const p = reg.payment || {};
+          const membersCount =
+            Array.isArray(reg.members) && reg.members.length > 0
+              ? reg.members.length
+              : Array.isArray(t.members) && t.members.length > 0
+              ? t.members.length + 1
+              : 1;
 
-  // Actions
-  const handleApprove = (regId) => {
-    setRegistrations((prev) =>
-      prev.map((reg) =>
-        reg.id === regId
-          ? {
-              ...reg,
-              status: 'approved',
-              payment: reg.payment
+          return {
+            id: reg.id || reg._id,
+            teamId: reg.teamId || t.id || t._id,
+            teamName: reg.teamName || t.name || 'Unnamed Squad',
+            leaderName: reg.leaderName || t.leaderName || 'Unknown Leader',
+            leaderEmail: reg.leaderEmail || t.leaderEmail || '',
+            membersCount,
+            feeAmount: reg.feeAmount ? `LKR ${Number(reg.feeAmount).toLocaleString()}` : 'LKR 4,000',
+            status: reg.status || 'waiting_for_slip',
+            createdAt: reg.createdAt
+              ? new Date(reg.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
+              : 'Recent',
+            payment:
+              p.reference && p.reference !== '—'
                 ? {
-                    ...reg.payment,
-                    reviewedAt: new Date().toISOString(),
-                    reviewedBy: 'Admin (Rihaz)',
-                    rejectionReason: null,
+                    reference: p.reference,
+                    date: p.date
+                      ? new Date(p.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
+                      : '—',
+                    submittedAt: p.submittedAt
+                      ? new Date(p.submittedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : 'Submitted',
+                    slipMime: p.slipMime || 'image/png',
+                    slipFileName:
+                      p.slipMime === 'application/pdf'
+                        ? 'payment_receipt.pdf'
+                        : 'payment_slip.png',
+                    bankName: p.bankName || 'Bank Transfer',
+                    senderAccount: p.senderAccount || '—',
+                    hasSlip: Boolean(p.hasSlip),
+                    reviewedAt: p.reviewedAt,
+                    reviewedBy: p.reviewedBy,
+                    rejectionReason: p.rejectionReason,
                   }
                 : null,
-            }
-          : reg
-      )
-    );
-    setSelectedSlip(null);
-    const team = registrations.find((r) => r.id === regId);
-    triggerAlert(`Payment approved for ${team ? team.teamName : 'Team'}! Registration is now verified.`, 'success');
+          };
+        });
+        setRegistrations(formatted);
+      }
+    } catch (err) {
+      console.error('Failed to load payment registrations:', err);
+      const message =
+        err.response?.status === 401 || err.response?.status === 403
+          ? 'Admin authorization required. Please sign in with an admin account.'
+          : err.response?.data?.error?.message || 'Could not fetch payments from server.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchRegistrations();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Actions
+  const handleApprove = async (regId) => {
+    setIsProcessing(true);
+    try {
+      // Attempt backend review API call (wired for Day 5)
+      await reviewRegistration(regId, { status: 'approved' });
+      triggerAlert('Payment approved! Registration is now verified in database.', 'success');
+      fetchRegistrations();
+    } catch (err) {
+      // On Day 04, if review mutation returns 501 NOT_IMPLEMENTED, handle gracefully
+      if (err.response?.status === 501) {
+        setRegistrations((prev) =>
+          prev.map((reg) =>
+            reg.id === regId
+              ? {
+                  ...reg,
+                  status: 'approved',
+                  payment: reg.payment
+                    ? {
+                        ...reg.payment,
+                        reviewedAt: new Date().toISOString(),
+                        reviewedBy: 'Admin (Rihaz)',
+                        rejectionReason: null,
+                      }
+                    : null,
+                }
+              : reg
+          )
+        );
+        const team = registrations.find((r) => r.id === regId);
+        triggerAlert(
+          `Payment verified for ${team ? team.teamName : 'Team'} (Day 04 UI preview). Permanent review backend hooks will merge on Day 05.`,
+          'success'
+        );
+      } else {
+        triggerAlert(err.response?.data?.error?.message || 'Failed to approve payment.', 'error');
+      }
+    } finally {
+      setIsProcessing(false);
+      setSelectedSlip(null);
+    }
   };
 
   const handleOpenRejectModal = (reg) => {
@@ -177,33 +157,54 @@ export default function PaymentsPage() {
     setRejectionReason('');
   };
 
-  const handleConfirmReject = (e) => {
+  const handleConfirmReject = async (e) => {
     e.preventDefault();
     if (!rejectionReason.trim()) return;
 
-    setRegistrations((prev) =>
-      prev.map((reg) =>
-        reg.id === rejectingItem.id
-          ? {
-              ...reg,
-              status: 'rejected',
-              payment: reg.payment
-                ? {
-                    ...reg.payment,
-                    reviewedAt: new Date().toISOString(),
-                    reviewedBy: 'Admin (Rihaz)',
-                    rejectionReason: rejectionReason.trim(),
-                  }
-                : null,
-            }
-          : reg
-      )
-    );
-
+    setIsProcessing(true);
+    const regId = rejectingItem.id;
     const teamName = rejectingItem.teamName;
-    setRejectingItem(null);
-    setSelectedSlip(null);
-    triggerAlert(`Payment rejected for ${teamName}. Team may re-upload a corrected slip.`, 'error');
+    const reasonText = rejectionReason.trim();
+
+    try {
+      await reviewRegistration(regId, {
+        status: 'rejected',
+        rejectionReason: reasonText,
+      });
+      triggerAlert(`Payment rejected for ${teamName}. Team may re-upload a corrected slip.`, 'error');
+      fetchRegistrations();
+    } catch (err) {
+      if (err.response?.status === 501) {
+        setRegistrations((prev) =>
+          prev.map((reg) =>
+            reg.id === regId
+              ? {
+                  ...reg,
+                  status: 'rejected',
+                  payment: reg.payment
+                    ? {
+                        ...reg.payment,
+                        reviewedAt: new Date().toISOString(),
+                        reviewedBy: 'Admin (Rihaz)',
+                        rejectionReason: reasonText,
+                      }
+                    : null,
+                }
+              : reg
+          )
+        );
+        triggerAlert(
+          `Payment marked rejected for ${teamName} (Day 04 UI preview). Reason logged.`,
+          'error'
+        );
+      } else {
+        triggerAlert(err.response?.data?.error?.message || 'Failed to reject payment.', 'error');
+      }
+    } finally {
+      setIsProcessing(false);
+      setRejectingItem(null);
+      setSelectedSlip(null);
+    }
   };
 
   const triggerAlert = (message, type) => {
@@ -223,216 +224,264 @@ export default function PaymentsPage() {
     return matchesFilter && matchesQuery;
   });
 
-  const counts = {
-    all: registrations.length,
-    waiting_for_approval: registrations.filter((r) => r.status === 'waiting_for_approval').length,
-    approved: registrations.filter((r) => r.status === 'approved').length,
-    rejected: registrations.filter((r) => r.status === 'rejected').length,
-    waiting_for_slip: registrations.filter((r) => r.status === 'waiting_for_slip').length,
-  };
+  const pendingCount = registrations.filter((r) => r.status === 'waiting_for_approval').length;
+  const approvedCount = registrations.filter((r) => r.status === 'approved').length;
+  const waitingSlipCount = registrations.filter((r) => r.status === 'waiting_for_slip').length;
 
   return (
     <div className="pb-16 font-['Rajdhani',sans-serif]">
       {/* Admin Nav */}
       <AdminNav activeTab="payments" />
 
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-white/5 gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#ff2bd6]/30 bg-[#ff2bd6]/10 text-[#ff2bd6] text-xs font-semibold tracking-widest uppercase mb-2">
-            <span>FINANCIAL VERIFICATION • FR-05 / FR-09</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-['Orbitron',sans-serif]">
-            PAYMENT <span className="text-[#00e5ff] drop-shadow-[0_0_10px_rgba(0,229,255,0.6)]">REVIEWS</span>
-          </h2>
-          <p className="text-sm text-[#9aa7c1] mt-1">
-            Review submitted bank transfer slips, audit transaction references, and approve team eligibility to compete.
-          </p>
-        </div>
-
-        {/* Global Security Badge */}
-        <div className="flex items-center gap-2 self-start md:self-auto px-3.5 py-2 rounded-xl bg-[#070714] border border-[#00e5ff]/20 text-xs text-[#00e5ff] font-mono">
-          <svg className="w-4 h-4 text-[#00e5ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span>Private Object Storage • Protected Access</span>
-        </div>
-      </div>
-
-      {/* Action Notification Alert */}
+      {/* Action Toast Feedback Alert */}
       {actionAlert && (
-        <div
-          className={`mb-6 p-4 rounded-xl text-sm font-semibold flex items-center gap-3 animate-fadeIn border ${
-            actionAlert.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-              : 'bg-red-500/10 border-red-500/30 text-red-400'
-          }`}
-        >
-          {actionAlert.type === 'success' ? (
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )}
-          <span>{actionAlert.message}</span>
+        <div className="fixed top-6 right-6 z-50 animate-bounce">
+          <div
+            className={`p-4 rounded-xl border shadow-2xl flex items-center gap-3 ${
+              actionAlert.type === 'success'
+                ? 'bg-[#071d15] border-emerald-500/50 text-emerald-300 shadow-[0_0_25px_rgba(52,211,153,0.3)]'
+                : 'bg-[#220a0d] border-red-500/50 text-red-300 shadow-[0_0_25px_rgba(239,68,68,0.3)]'
+            }`}
+          >
+            <span className="text-lg">
+              {actionAlert.type === 'success' ? '✓' : '⚠'}
+            </span>
+            <span className="text-xs font-semibold font-mono tracking-wide">
+              {actionAlert.message}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+      {/* Header Info */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#ff2bd6]/30 bg-[#ff2bd6]/10 text-[#ff2bd6] text-xs font-semibold tracking-widest uppercase mb-2">
+            <span>ADMIN CONTROLS • PAYMENT AUDIT & SLIPS</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-['Orbitron',sans-serif]">
+            PAYMENT <span className="text-[#ff2bd6] drop-shadow-[0_0_10px_rgba(255,43,214,0.6)]">VERIFICATION</span>
+          </h2>
+          <p className="text-sm text-[#9aa7c1] mt-1 max-w-2xl">
+            Audit team registration fees, inspect uploaded bank deposit slips and transaction references, and prepare team verifications for competition access.
+          </p>
+        </div>
+
+        {/* Quick Stats Banner & Refresh */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#0d0f24] border border-white/10">
+            <div className="px-3 py-1.5 rounded-xl bg-[#ff2bd6]/10 border border-[#ff2bd6]/30 text-xs">
+              <span className="text-[#ff2bd6] font-bold">Pending: </span>
+              <span className="font-bold text-white font-mono">{pendingCount}</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs">
+              <span className="text-emerald-400 font-bold">Approved: </span>
+              <span className="font-bold text-white font-mono">{approvedCount}</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
+              <span className="text-amber-400 font-bold">Awaiting Slip: </span>
+              <span className="font-bold text-white font-mono">{waitingSlipCount}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={fetchRegistrations}
+            disabled={isLoading}
+            className="p-2.5 rounded-xl bg-[#0d0f24] border border-white/10 hover:border-[#ff2bd6]/40 text-[#9aa7c1] hover:text-white transition-all disabled:opacity-50"
+            title="Refresh Payments"
+          >
+            <svg
+              className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#ff2bd6]' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchRegistrations}
+            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold uppercase transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Filter and Search Controls */}
+      <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {[
-            { id: 'all', label: 'All Teams', count: counts.all },
-            { id: 'waiting_for_approval', label: 'Awaiting Review', count: counts.waiting_for_approval, highlight: true },
-            { id: 'approved', label: 'Approved', count: counts.approved },
-            { id: 'rejected', label: 'Rejected', count: counts.rejected },
-            { id: 'waiting_for_slip', label: 'No Slip Yet', count: counts.waiting_for_slip },
+            { id: 'all', label: 'ALL PAYMENTS' },
+            { id: 'waiting_for_approval', label: 'PENDING REVIEW' },
+            { id: 'approved', label: 'APPROVED' },
+            { id: 'rejected', label: 'REJECTED' },
+            { id: 'waiting_for_slip', label: 'NO SLIP YET' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all uppercase whitespace-nowrap ${
                 filter === tab.id
-                  ? 'bg-[#00e5ff] text-black shadow-[0_0_12px_rgba(0,229,255,0.4)]'
-                  : 'bg-[#0d0f24] text-[#9aa7c1] hover:text-white hover:bg-white/5 border border-white/5'
+                  ? 'bg-gradient-to-r from-[#ff2bd6] to-[#8b3dff] text-white shadow-[0_0_15px_rgba(255,43,214,0.3)] font-["Orbitron",sans-serif]'
+                  : 'bg-[#0d0f24] border border-white/10 text-[#9aa7c1] hover:text-white hover:border-white/20'
               }`}
             >
-              <span>{tab.label}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  filter === tab.id
-                    ? 'bg-black text-white'
-                    : tab.highlight && tab.count > 0
-                    ? 'bg-[#ff2bd6] text-white'
-                    : 'bg-white/10 text-[#9aa7c1]'
-                }`}
-              >
-                {tab.count}
-              </span>
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative min-w-[280px]">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#9aa7c1]">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+        {/* Search Bar */}
+        <div className="relative min-w-[260px]">
           <input
             type="text"
+            placeholder="Search team, leader, or ref..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search team, leader or reference..."
-            className="w-full pl-10 pr-4 py-2 bg-[#070714] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#00e5ff] transition-colors"
+            className="w-full px-3.5 py-2 pl-9 bg-[#0d0f24] border border-white/10 rounded-xl text-white text-xs placeholder-[#9aa7c1]/60 focus:outline-none focus:border-[#ff2bd6] transition-colors"
           />
+          <svg
+            className="w-4 h-4 text-[#9aa7c1] absolute left-3 top-2.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
       </div>
 
-      {/* Registrations & Payment Evidence Table */}
-      <div className="rounded-2xl bg-[#0d0f24]/90 border border-white/10 shadow-lg overflow-hidden">
+      {/* Main Payment Audit Table */}
+      <div className="rounded-2xl bg-[#0d0f24]/90 border border-white/10 overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="text-xs text-[#9aa7c1] uppercase font-['Orbitron',sans-serif] bg-white/[0.02] border-b border-white/10">
-                <th className="py-3.5 px-4">Team & Leader</th>
-                <th className="py-3.5 px-4">Bank Reference</th>
-                <th className="py-3.5 px-4">Fee Amount</th>
-                <th className="py-3.5 px-4">Slip Evidence</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="border-b border-white/10 bg-[#070714] text-[#9aa7c1] uppercase font-['Orbitron',sans-serif] tracking-wider text-[11px]">
+                <th className="py-4 px-4 font-bold">Squad & Leader</th>
+                <th className="py-4 px-4 font-bold">Bank Reference</th>
+                <th className="py-4 px-4 font-bold">Fee Amount</th>
+                <th className="py-4 px-4 font-bold text-center">Slip Evidence</th>
+                <th className="py-4 px-4 font-bold text-center">Status</th>
+                <th className="py-4 px-4 font-bold text-right">Review Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredRegistrations.length === 0 ? (
+              {isLoading && registrations.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-[#9aa7c1]">
-                    No registrations found matching the selected filter or query.
+                  <td colSpan="6" className="py-16 text-center text-[#9aa7c1]">
+                    <div className="inline-flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[#ff2bd6] animate-ping"></span>
+                      <span className="text-sm">Loading payment registrations from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRegistrations.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="py-16 text-center text-[#9aa7c1]">
+                    {registrations.length === 0 ? (
+                      <div>
+                        <svg className="w-10 h-10 mx-auto text-white/20 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-sm font-semibold text-white">No payment registrations recorded yet.</p>
+                        <p className="text-xs text-[#9aa7c1] mt-1">Registrations will appear here as teams register and submit payment slips.</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm">No payment records match your filter criteria.</p>
+                    )}
                   </td>
                 </tr>
               ) : (
                 filteredRegistrations.map((reg) => (
                   <tr key={reg.id} className="hover:bg-white/[0.02] transition-colors">
-                    {/* Team Info */}
+                    {/* Team & Leader */}
                     <td className="py-4 px-4">
                       <div className="font-bold text-white text-base">{reg.teamName}</div>
-                      <div className="text-xs text-[#9aa7c1]">
+                      <div className="text-xs text-[#9aa7c1] mt-0.5">
                         {reg.leaderName} • <span className="font-mono text-white/70">{reg.leaderEmail}</span>
                       </div>
-                      <div className="text-[11px] text-[#00e5ff]/80 mt-0.5">
+                      <div className="text-[10px] text-[#00e5ff] mt-0.5 font-mono">
                         {reg.membersCount} Members Registered
                       </div>
                     </td>
 
-                    {/* Bank Reference */}
+                    {/* Reference */}
                     <td className="py-4 px-4">
                       {reg.payment ? (
                         <div>
-                          <div className="font-mono text-xs text-[#00e5ff] bg-[#070714] px-2.5 py-1 rounded border border-[#00e5ff]/20 inline-block font-bold">
+                          <div className="font-mono font-bold text-white text-sm">
                             {reg.payment.reference}
                           </div>
-                          <div className="text-[11px] text-[#9aa7c1] mt-1">
+                          <div className="text-[11px] text-[#9aa7c1]">
                             {reg.payment.bankName}
                           </div>
-                          <div className="text-[10px] text-[#9aa7c1]/70 font-mono">
+                          <div className="text-[10px] text-[#00e5ff] font-mono mt-0.5">
                             Paid: {reg.payment.date}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-[#9aa7c1] italic">No transaction details</span>
+                        <span className="text-[#9aa7c1] font-mono italic">No reference submitted</span>
                       )}
                     </td>
 
-                    {/* Fee Amount */}
+                    {/* Amount */}
                     <td className="py-4 px-4">
                       <div className="font-bold text-white font-mono">{reg.feeAmount}</div>
-                      <span className="text-[10px] text-[#9aa7c1]">Standard Team Fee</span>
+                      <div className="text-[10px] text-emerald-400 font-semibold">Standard Reg Fee</div>
                     </td>
 
-                    {/* Slip Evidence */}
-                    <td className="py-4 px-4">
+                    {/* Evidence Document */}
+                    <td className="py-4 px-4 text-center">
                       {reg.payment ? (
                         <button
                           type="button"
                           onClick={() => setSelectedSlip(reg)}
-                          className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 border border-[#00e5ff]/30 text-[#00e5ff] text-xs font-semibold transition-all"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs font-semibold transition-all group"
                         >
-                          <svg className="w-4 h-4 text-[#00e5ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          <span>Inspect Evidence</span>
+                          <span>View Evidence</span>
                         </button>
                       ) : (
-                        <span className="text-xs text-amber-400/80 bg-amber-400/10 px-2 py-1 rounded border border-amber-400/20">
-                          Awaiting Slip
+                        <span className="text-[11px] text-[#9aa7c1] font-mono italic">
+                          Slip pending
                         </span>
                       )}
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-4 text-center">
                       {reg.status === 'waiting_for_approval' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ff2bd6]/15 text-[#ff2bd6] border border-[#ff2bd6]/30 font-['Orbitron',sans-serif]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff2bd6] animate-pulse"></span>
-                          <span>Pending Review</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono bg-[#ff2bd6]/15 text-[#ff2bd6] border-[#ff2bd6]/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff2bd6] shadow-[0_0_8px_#ff2bd6]"></span>
+                          WAITING APPROVAL
                         </span>
                       )}
                       {reg.status === 'approved' && (
                         <div>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-['Orbitron',sans-serif]">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span>Approved</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+                            VERIFIED
                           </span>
                           {reg.payment && reg.payment.reviewedBy && (
-                            <div className="text-[10px] text-[#9aa7c1] mt-1">
+                            <div className="text-[9px] text-[#9aa7c1] mt-0.5">
                               By {reg.payment.reviewedBy}
                             </div>
                           )}
@@ -440,8 +489,9 @@ export default function PaymentsPage() {
                       )}
                       {reg.status === 'rejected' && (
                         <div>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/15 text-red-400 border border-red-500/30 font-['Orbitron',sans-serif]">
-                            <span>Rejected</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono bg-red-500/15 text-red-400 border-red-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shadow-[0_0_8px_#f87171]"></span>
+                            REJECTED
                           </span>
                           {reg.payment && reg.payment.rejectionReason && (
                             <div className="text-[10px] text-red-300/80 mt-1 max-w-[200px] truncate" title={reg.payment.rejectionReason}>
@@ -451,8 +501,9 @@ export default function PaymentsPage() {
                         </div>
                       )}
                       {reg.status === 'waiting_for_slip' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 font-['Orbitron',sans-serif]">
-                          <span>Pending Slip</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono bg-amber-500/15 text-amber-400 border-amber-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></span>
+                          AWAITING SLIP
                         </span>
                       )}
                     </td>
@@ -463,24 +514,27 @@ export default function PaymentsPage() {
                         <div className="inline-flex items-center gap-2">
                           <button
                             type="button"
+                            disabled={isProcessing}
                             onClick={() => handleApprove(reg.id)}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all"
+                            className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider shadow-[0_0_10px_rgba(52,211,153,0.3)] transition-all disabled:opacity-50"
                           >
-                            APPROVE
+                            Approve
                           </button>
                           <button
                             type="button"
+                            disabled={isProcessing}
                             onClick={() => handleOpenRejectModal(reg)}
-                            className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all"
+                            className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-bold transition-all disabled:opacity-50"
                           >
-                            REJECT
+                            Reject
                           </button>
                         </div>
                       ) : reg.status === 'rejected' ? (
                         <button
                           type="button"
+                          disabled={isProcessing}
                           onClick={() => handleApprove(reg.id)}
-                          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 text-xs font-semibold transition-all"
+                          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 text-xs font-semibold transition-all disabled:opacity-50"
                         >
                           Override Approve
                         </button>
@@ -499,7 +553,7 @@ export default function PaymentsPage() {
       {/* Slip Evidence Inspection Modal */}
       {selectedSlip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-2xl rounded-2xl bg-[#0d0f24] border border-[#00e5ff]/40 shadow-[0_0_50px_rgba(0,229,255,0.2)] p-6 relative">
+          <div className="w-full max-w-2xl rounded-2xl bg-[#0d0f24] border border-[#00e5ff]/40 shadow-[0_0_50px_rgba(0,229,255,0.2)] p-6 relative max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 mb-4 border-b border-white/10">
               <div>
@@ -522,14 +576,14 @@ export default function PaymentsPage() {
               </button>
             </div>
 
-            {/* Evidence Card Simulation */}
+            {/* Evidence Card */}
             <div className="bg-[#070714] rounded-xl p-5 border border-white/10 mb-6">
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/5 text-xs">
                 <span className="text-[#9aa7c1]">Slip Document:</span>
                 <span className="font-mono text-[#00e5ff]">{selectedSlip.payment.slipFileName}</span>
               </div>
 
-              {/* Mock Bank Slip Visual Preview */}
+              {/* Bank Slip Visual Card */}
               <div className="relative rounded-lg border-2 border-dashed border-[#00e5ff]/30 bg-[#0b1020] p-6 text-center my-4">
                 <div className="w-12 h-12 rounded-full bg-[#00e5ff]/10 text-[#00e5ff] mx-auto flex items-center justify-center mb-3">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -542,12 +596,23 @@ export default function PaymentsPage() {
                 <div className="text-xs text-[#9aa7c1] max-w-sm mx-auto space-y-1 font-mono">
                   <div>Bank: <span className="text-white">{selectedSlip.payment.bankName}</span></div>
                   <div>Transaction Reference: <span className="text-[#00e5ff] font-bold">{selectedSlip.payment.reference}</span></div>
-                  <div>Account: <span className="text-white">{selectedSlip.payment.senderAccount}</span></div>
-                  <div>Amount Verified: <span className="text-emerald-400 font-bold">{selectedSlip.feeAmount}</span></div>
-                  <div>Date: <span className="text-white">{selectedSlip.payment.date}</span></div>
+                  <div>Amount: <span className="text-emerald-400 font-bold">{selectedSlip.feeAmount}</span></div>
+                  <div>Payment Date: <span className="text-white">{selectedSlip.payment.date}</span></div>
                 </div>
-                <div className="mt-4 text-[11px] text-[#00e5ff] underline cursor-pointer hover:text-white">
-                  [Simulate High-Res Original Download]
+
+                {/* Secure Slip Stream Link (ready for Day 5) */}
+                <div className="mt-4 pt-3 border-t border-white/10">
+                  <a
+                    href={getRegistrationSlipUrl(selectedSlip.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#00e5ff] hover:text-white font-bold tracking-wide underline transition-colors"
+                  >
+                    <span>View / Download Uploaded Slip Evidence</span>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
 
@@ -577,15 +642,17 @@ export default function PaymentsPage() {
                   <>
                     <button
                       type="button"
+                      disabled={isProcessing}
                       onClick={() => handleOpenRejectModal(selectedSlip)}
-                      className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-xs font-bold font-['Orbitron',sans-serif]"
+                      className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-xs font-bold font-['Orbitron',sans-serif] disabled:opacity-50"
                     >
                       Reject Slip
                     </button>
                     <button
                       type="button"
+                      disabled={isProcessing}
                       onClick={() => handleApprove(selectedSlip.id)}
-                      className="px-5 py-2 rounded-xl bg-emerald-500 text-black font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+                      className="px-5 py-2 rounded-xl bg-emerald-500 text-black font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_15px_rgba(52,211,153,0.4)] disabled:opacity-50"
                     >
                       Approve & Verify
                     </button>
@@ -655,7 +722,8 @@ export default function PaymentsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                  disabled={isProcessing}
+                  className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-['Orbitron',sans-serif] font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(239,68,68,0.4)] disabled:opacity-50"
                 >
                   Confirm Rejection
                 </button>
