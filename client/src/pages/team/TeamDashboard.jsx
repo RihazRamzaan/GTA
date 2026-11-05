@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { sampleTeam, sampleStates } from '../../data/sampleTeamData.js';
 import TeamNav from '../../components/team/TeamNav.jsx';
 import StatusBanner from '../../components/team/StatusBanner.jsx';
@@ -6,12 +8,66 @@ import MemberList from '../../components/team/MemberList.jsx';
 import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 
 export default function TeamDashboard() {
-  // Team state (editable name, leader contact, and members roster)
-  const [team, setTeam] = useState(sampleTeam);
+  const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
 
-  // Active registration scenario (defaults to 'waiting_for_approval' / Waiting)
-  const [statusKey, setStatusKey] = useState('waiting_for_approval');
-  const [registration, setRegistration] = useState(sampleStates.waiting_for_approval);
+  // Combine signed-in account details with example team details for missing Day 4 fields
+  const initialTeam = useMemo(() => {
+    if (!authTeam) {
+      return {
+        ...sampleTeam,
+        leader: {
+          ...sampleTeam.leader,
+          email: user?.email || sampleTeam.leader.email,
+        },
+      };
+    }
+
+    const mergedMembers =
+      authTeam.members && authTeam.members.length > 0
+        ? authTeam.members.map((m, idx) => ({
+            id: m.id || `m${idx + 1}`,
+            name: m.name,
+            email: m.email,
+            role: sampleTeam.members[idx]?.role || (idx === 0 ? 'Lead Developer' : 'Developer & Designer'),
+            university: sampleTeam.members[idx]?.university || 'Faculty of Information Technology',
+            phone: sampleTeam.members[idx]?.phone || '+94 77 123 4567',
+          }))
+        : sampleTeam.members;
+
+    return {
+      ...sampleTeam,
+      id: authTeam.id || sampleTeam.id,
+      name: authTeam.name || sampleTeam.name,
+      code: authTeam.id ? `TEAM-${String(authTeam.id).slice(-4).toUpperCase()}` : sampleTeam.code,
+      leader: {
+        ...sampleTeam.leader,
+        name: authTeam.leaderName || sampleTeam.leader.name,
+        email: user?.email || authTeam.leaderEmail || sampleTeam.leader.email,
+      },
+      members: mergedMembers,
+    };
+  }, [authTeam, user]);
+
+  // Team state (editable name, leader contact, and members roster)
+  const [team, setTeam] = useState(initialTeam);
+
+  useEffect(() => {
+    setTeam(initialTeam);
+  }, [initialTeam]);
+
+  // Initial status based on real account registration, or sample if none
+  const initialStatus = authRegistration?.status || (authTeam ? 'waiting_for_slip' : 'waiting_for_approval');
+  const [statusKey, setStatusKey] = useState(initialStatus);
+  const [registration, setRegistration] = useState(
+    authRegistration || sampleStates[initialStatus] || sampleStates.waiting_for_approval
+  );
+
+  useEffect(() => {
+    if (authRegistration) {
+      setStatusKey(authRegistration.status);
+      setRegistration(authRegistration);
+    }
+  }, [authRegistration]);
 
   // Feedback toast banner
   const [toast, setToast] = useState(null);
@@ -21,15 +77,20 @@ export default function TeamDashboard() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Switch status for previewing all 4 states: not uploaded, waiting, approved, rejected
+  // Switch status for previewing all states: not uploaded, waiting, approved, rejected, unregistered
   const handleStatusChange = (newKey) => {
     setStatusKey(newKey);
-    setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
+    if (newKey === 'unregistered') {
+      setRegistration(null);
+    } else {
+      setRegistration(sampleStates[newKey] || sampleStates.waiting_for_approval);
+    }
     const labels = {
       waiting_for_slip: 'Not Uploaded',
       waiting_for_approval: 'Waiting for Approval',
       approved: 'Approved',
       rejected: 'Rejected',
+      unregistered: 'Not Registered',
     };
     showToast(`Status switched to: ${labels[newKey] || newKey}`);
   };
@@ -88,10 +149,10 @@ export default function TeamDashboard() {
   // Handle payment form submission (slip file, reference, date)
   const handleSubmitPayment = (paymentData) => {
     const updated = {
-      ...registration,
+      ...(registration || sampleStates.waiting_for_slip),
       status: 'waiting_for_approval',
       payment: {
-        ...registration.payment,
+        ...(registration?.payment || {}),
         reference: paymentData.reference,
         paymentDate: paymentData.paymentDate,
         fileName: paymentData.fileName,
@@ -106,6 +167,23 @@ export default function TeamDashboard() {
     setRegistration(updated);
     showToast('Payment slip submitted successfully! Registration is now waiting for review.');
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto py-24 text-center font-body">
+        <div className="inline-block w-10 h-10 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xl font-bold text-white font-display">Checking Account Data...</p>
+        <p className="text-sm text-slate-400 mt-1">Connecting to your signed-in profile</p>
+      </div>
+    );
+  }
+
+  // Account has no registration check
+  const isUnregistered =
+    (!user?.teamId && !authTeam && !authRegistration && statusKey === 'unregistered') ||
+    statusKey === 'unregistered' ||
+    (!user?.teamId && !authTeam && !authRegistration);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
@@ -127,28 +205,75 @@ export default function TeamDashboard() {
 
       {/* Team Header & Navigation */}
       <TeamNav
-        team={team}
-        currentStatus={statusKey}
+        team={isUnregistered ? null : team}
+        user={user}
+        currentStatus={isUnregistered ? 'unregistered' : statusKey}
         onStatusChange={handleStatusChange}
       />
 
-      {/* Registration Status Banner (Not Uploaded, Waiting, Approved, or Rejected) */}
-      <StatusBanner registration={registration} />
+      {/* Registration Status Banner (Unregistered, Not Uploaded, Waiting, Approved, or Rejected) */}
+      <StatusBanner registration={isUnregistered ? null : registration} />
 
-      {/* Editable Team Members & Contact Details Section */}
-      <MemberList
-        team={team}
-        onUpdateTeam={handleUpdateTeam}
-        onAddMember={handleAddMember}
-        onUpdateMember={handleUpdateMember}
-        onDeleteMember={handleDeleteMember}
-      />
+      {/* If account has no registration yet, show clear Register call-to-action */}
+      {isUnregistered ? (
+        <div className="rounded-2xl border border-white/10 bg-night-card/80 backdrop-blur p-8 sm:p-10 text-center max-w-2xl mx-auto space-y-6 shadow-xl">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-3xl">
+            🎮
+          </div>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white font-display">
+              Register Your Team to Begin
+            </h2>
+            <p className="mt-2 text-slate-300 font-body text-base">
+              Welcome, <span className="text-neon-cyan font-mono font-medium">{user?.email}</span>. Your account is verified, but you have not registered a team for the Cyberpunk Game Buildathon yet.
+            </p>
+          </div>
 
-      {/* Bank-Slip Picker, Payment Reference, and Payment Date Section */}
-      <PaymentSlipArea
-        registration={registration}
-        onSubmitPayment={handleSubmitPayment}
-      />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left p-4 rounded-xl bg-white/5 border border-white/10 text-sm">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">Team Size</span>
+              <span className="text-white font-semibold">2 – 4 Developers</span>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">Entry Fee</span>
+              <span className="text-white font-semibold">LKR 4,000 / Team</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <Link
+              to="/register"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-neon-cyan hover:bg-neon-cyan/90 text-black font-bold font-display tracking-wider text-sm shadow-lg shadow-neon-cyan/20 transition transform hover:-translate-y-0.5 text-center"
+            >
+              REGISTER TEAM NOW →
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleStatusChange('waiting_for_approval')}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/20 hover:border-white/40 text-slate-300 hover:text-white font-bold text-sm transition"
+            >
+              Preview Example Dashboard
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Editable Team Members & Contact Details Section */}
+          <MemberList
+            team={team}
+            onUpdateTeam={handleUpdateTeam}
+            onAddMember={handleAddMember}
+            onUpdateMember={handleUpdateMember}
+            onDeleteMember={handleDeleteMember}
+          />
+
+          {/* Bank-Slip Picker, Payment Reference, and Payment Date Section */}
+          <PaymentSlipArea
+            registration={registration}
+            onSubmitPayment={handleSubmitPayment}
+          />
+        </>
+      )}
     </div>
   );
 }

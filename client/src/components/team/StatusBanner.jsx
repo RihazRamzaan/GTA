@@ -2,11 +2,44 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function StatusBanner({ registration }) {
+  // If no registration is provided or status is unregistered, show clear registration banner
+  if (!registration || registration.status === 'unregistered') {
+    return (
+      <div className="rounded-xl border border-neon-pink/50 bg-gradient-to-r from-neon-pink/15 via-neon-purple/15 to-transparent p-5 text-slate-200 font-body shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <span className="text-2xl mt-0.5">🚀</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white font-display tracking-wide">
+                  No Team Registration Found
+                </h3>
+                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-neon-pink/20 text-neon-pink border border-neon-pink/40">
+                  Action Required
+                </span>
+              </div>
+              <p className="mt-1 text-base text-slate-300 max-w-2xl">
+                Your account is signed in, but you haven't registered a team for the Cyberpunk Game Buildathon yet. Complete registration to lock in your spot and compete.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/register"
+            className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-neon-cyan hover:bg-neon-cyan/90 text-black text-base font-bold shadow-lg shadow-neon-cyan/20 transition transform hover:-translate-y-0.5 text-center"
+          >
+            <span>Register Team Now</span>
+            <span>→</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const status = registration?.status || 'waiting_for_slip';
   const payment = registration?.payment || {};
 
   // 1. WAITING / PENDING REVIEW
-  if (status === 'waiting_for_approval') {
+  if (status === 'waiting_for_approval' || status === 'pending_review') {
     return (
       <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 text-slate-200 font-body">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

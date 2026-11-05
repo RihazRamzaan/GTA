@@ -16,11 +16,20 @@ function fetchSettings() {
       if (USE_SAMPLE) {
         data = sampleSettings();
       } else {
-        const res = await getPublicSettings();
-        if (res.data?.success && res.data?.data) {
-          data = res.data.data;
-        } else {
-          throw new Error(res.data?.error?.message || 'Public settings request failed');
+        try {
+          const res = await getPublicSettings();
+          if (res.data?.success && res.data?.data) {
+            data = res.data.data;
+          } else {
+            throw new Error(res.data?.error?.message || 'Public settings request failed');
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn('Could not fetch authoritative public settings, falling back to sample:', err);
+            data = sampleSettings();
+          } else {
+            throw err;
+          }
         }
       }
       const serverMs = Date.parse(data.serverTime);
