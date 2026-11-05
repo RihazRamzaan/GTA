@@ -6,6 +6,8 @@ import {
   updateAdminSettings,
   getAdminRegistrations,
   getAdminSummary,
+  reviewAdminRegistration,
+  getAdminRegistrationSlip,
 } from '../controllers/admin.controller.js';
 
 const router = Router();
@@ -21,10 +23,12 @@ router.patch('/settings', updateAdminSettings);
 router.get('/summary', getAdminSummary);
 router.get('/registrations', getAdminRegistrations);
 
+// Day 05: Payment reviews and slip retrieval (Rihaz)
+router.patch('/registrations/:id/review', reviewAdminRegistration);
+router.get('/registrations/:id/slip', getAdminRegistrationSlip);
+
 // Placeholder endpoints for Days 4-5
 const unimplementedRoutes = [
-  ['patch', '/registrations/:id/review'],
-  ['get', '/registrations/:id/slip'],
   ['get', '/submissions'],
 ];
 
