@@ -35,24 +35,37 @@ function fetchSettings() {
   return cached;
 }
 
+// Every mounted page and button, so a new answer reaches the ones already on screen.
+const listeners = new Set();
+
+function publish(request) {
+  request
+    .then((settings) => listeners.forEach((listener) => listener({ status: 'ready', settings })))
+    .catch((err) => {
+      console.warn('Could not fetch public event settings:', err);
+      listeners.forEach((listener) => listener({ status: 'error', settings: null }));
+    });
+}
+
+// Call this after the settings change, for example when the admin saves them.
+export function refreshEventSettings() {
+  cached = null;
+  publish(fetchSettings());
+}
+
 // status is 'loading', 'ready' or 'error'
-export default function useEventSettings() {
+// Pass { fresh: true } on pages that must not trust an earlier answer.
+export default function useEventSettings({ fresh = false } = {}) {
   const [state, setState] = useState({ status: 'loading', settings: null });
 
   useEffect(() => {
-    let cancelled = false;
-    fetchSettings()
-      .then((settings) => {
-        if (!cancelled) setState({ status: 'ready', settings });
-      })
-      .catch((err) => {
-        console.warn('Could not fetch public event settings:', err);
-        if (!cancelled) setState({ status: 'error', settings: null });
-      });
+    listeners.add(setState);
+    if (fresh) cached = null;
+    publish(fetchSettings());
     return () => {
-      cancelled = true;
+      listeners.delete(setState);
     };
-  }, []);
+  }, [fresh]);
 
   return state;
 }

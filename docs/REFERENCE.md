@@ -22,7 +22,7 @@ There are five collections and no others.
 
 **Window mode:** `auto`, `force_open` or `force_closed`, set separately for registration and submission.
 
-**Is a window open?** `force_open` is always open and `force_closed` is always closed. `auto` is open when `opensAt <= serverNow < closesAt`. If the settings or dates are missing, the window is closed.
+**Is a window open?** `force_open` is always open and `force_closed` is always closed. `auto` is open when `opensAt <= serverNow < closesAt`. If the dates are missing, the window is closed. On first use, `EventSettings.getOrCreateSingleton` creates the settings with the default dates in the model.
 
 Use the one shared helper for this check, so that every route gives the same answer:
 
