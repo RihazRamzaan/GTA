@@ -99,6 +99,7 @@ export default function PaymentSlipArea({
       fileSize: fileSizeStr,
       slipPreviewUrl: previewUrl,
       submittedAt: new Date().toISOString(),
+      file: selectedFile,
     });
 
     setIsEditingExisting(false);
@@ -144,7 +145,7 @@ export default function PaymentSlipArea({
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
               💳 Payment Not Uploaded
             </span>
-          )}
+          )}1
         </div>
       </div>
 

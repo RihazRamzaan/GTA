@@ -89,3 +89,29 @@ export async function updateAdminSettings(req, res, next) {
     next(error);
   }
 }
+
+/**
+ * GET /api/admin/registrations/:id/slip
+ * Safely streams the private payment slip file for admin review.
+ */
+export async function getRegistrationSlip(req, res, next) {
+  try {
+    const registration = await (await import('../models/Registration.js')).default.findById(req.params.id);
+    if (!registration) {
+      throw httpError(404, 'REGISTRATION_NOT_FOUND', 'Registration not found.');
+    }
+    const slipKey = registration.payment?.slipKey;
+    if (!slipKey) {
+      throw httpError(404, 'SLIP_NOT_FOUND', 'No payment slip has been uploaded for this registration.');
+    }
+
+    const { getSlipPath } = await import('../services/storage.js');
+    const filePath = await getSlipPath(slipKey);
+    if (registration.payment.slipMime) {
+      res.type(registration.payment.slipMime);
+    }
+    res.sendFile(filePath);
+  } catch (error) {
+    next(error);
+  }
+}

@@ -60,3 +60,36 @@ export function validateTeamUpdate(body, team, { minSize, maxSize }) {
   }
   return { errors, value };
 }
+
+// Returns { errors, value } for POST /api/team/payment
+export function validatePaymentSubmission({ reference, date, file }) {
+  const errors = {};
+
+  if (!isNonEmptyString(reference)) {
+    errors.reference = 'Enter the payment reference or transaction ID.';
+  } else if (reference.trim().length < 3 || reference.trim().length > 100) {
+    errors.reference = 'Reference must be between 3 and 100 characters.';
+  }
+
+  if (!isNonEmptyString(date) && !(date instanceof Date)) {
+    errors.date = 'Enter the date of payment.';
+  } else {
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+      errors.date = 'Enter a valid payment date.';
+    } else if (parsedDate.getTime() > Date.now() + 24 * 60 * 60 * 1000) {
+      errors.date = 'Payment date cannot be in the future.';
+    }
+  }
+
+  if (!file) {
+    errors.slip = 'Please upload a photo or PDF of your bank deposit slip.';
+  }
+
+  const value = {
+    reference: typeof reference === 'string' ? reference.trim() : '',
+    date: date ? new Date(date) : null,
+  };
+
+  return { errors, value };
+}

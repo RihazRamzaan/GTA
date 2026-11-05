@@ -5,6 +5,7 @@ import { sampleTeam, sampleStates } from '../../data/sampleTeamData.js';
 import TeamNav from '../../components/team/TeamNav.jsx';
 import StatusBanner from '../../components/team/StatusBanner.jsx';
 import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
+import { teamApi } from '../../api/team.js';
 
 export default function PaymentPage() {
   const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
@@ -68,7 +69,38 @@ export default function PaymentPage() {
     showToast(`Status switched to: ${labels[newKey] || newKey}`);
   };
 
-  const handleSubmitPayment = (paymentData) => {
+  const handleSubmitPayment = async (paymentData) => {
+    // If authenticated team and real file attached, send to backend API
+    if (user?.teamId && paymentData.file) {
+      try {
+        const formData = new FormData();
+        formData.append('reference', paymentData.reference);
+        formData.append('date', paymentData.paymentDate);
+        formData.append('slip', paymentData.file);
+
+        const res = await teamApi.submitPayment(formData);
+        if (res?.registration) {
+          setStatusKey(res.registration.status);
+          setRegistration({
+            ...res.registration,
+            payment: {
+              ...res.registration.payment,
+              fileName: paymentData.fileName,
+              fileSize: paymentData.fileSize,
+              slipPreviewUrl: paymentData.slipPreviewUrl,
+            },
+          });
+          showToast('Payment slip submitted successfully! Registration is now waiting for review.');
+          return;
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.message || 'Payment submission failed.';
+        showToast(msg, 'error');
+        return;
+      }
+    }
+
+    // Client-side state fallback (e.g. preview mode)
     const updated = {
       ...(registration || sampleStates.waiting_for_slip),
       status: 'waiting_for_approval',
