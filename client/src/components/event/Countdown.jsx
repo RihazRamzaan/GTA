@@ -46,7 +46,7 @@ export default function Countdown({ settings, status }) {
   } else if (status === 'error') {
     body = (
       <p className="font-body text-lg text-neon-pink">
-        We could not load the latest event dates. Please check again soon.
+          We could not load the latest event dates. We will try again automatically.
       </p>
     );
   } else {
