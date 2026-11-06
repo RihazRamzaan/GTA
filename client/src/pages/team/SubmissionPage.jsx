@@ -1,6 +1,17 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useEventSettings from "../../hooks/useEventSettings.js";
+import {
+  getSubmission,
+  saveSubmission,
+} from "../../api/submission.js";
+
+const emptyGame = {
+  title: "",
+  description: "",
+  repoUrl: "",
+  playableUrl: "",
+  videoUrl: "",
+};
 
 export default function SubmissionPage() {
   const { status, settings } = useEventSettings();
@@ -8,20 +19,39 @@ export default function SubmissionPage() {
   const isOpen =
     status === "ready" && settings?.submissionOpen === true;
 
-  const exampleGame = {
-    title: "Cyber Quest",
-    description:
-      "A cyberpunk adventure game where players solve puzzles and explore a futuristic world.",
-    repoUrl: "https://github.com/octocat/Hello-World",
-    playableUrl: "https://example.com",
-    videoUrl: "",
-  };
-
   const [isEditing, setIsEditing] = useState(false);
-  const [game, setGame] = useState({ ...exampleGame });
-  const [savedGame, setSavedGame] = useState({ ...exampleGame });
+  const [game, setGame] = useState(emptyGame);
+  const [savedGame, setSavedGame] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    async function loadSubmission() {
+      try {
+        const response = await getSubmission();
+        const submission = response.data;
+
+        if (submission) {
+          setSavedGame(submission);
+          setGame({
+            title: submission.title || "",
+            description: submission.description || "",
+            repoUrl: submission.repoUrl || "",
+            playableUrl: submission.playableUrl || "",
+            videoUrl: submission.videoUrl || "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load submission:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadSubmission();
+  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -70,12 +100,10 @@ export default function SubmissionPage() {
       try {
         const url = new URL(game.repoUrl.trim());
 
-        const isGitHub =
-          url.hostname === "github.com" &&
-          (url.protocol === "https:" ||
-            url.protocol === "http:");
-
-        if (!isGitHub) {
+        if (
+          url.hostname !== "github.com" ||
+          !["http:", "https:"].includes(url.protocol)
+        ) {
           nextErrors.repoUrl =
             "Please enter a valid GitHub repository link.";
         }
@@ -102,11 +130,10 @@ export default function SubmissionPage() {
     }
 
     setErrors(nextErrors);
-
     return Object.keys(nextErrors).length === 0;
   }
 
-  function handleSave(event) {
+  async function handleSave(event) {
     event.preventDefault();
 
     if (!isOpen) {
@@ -119,37 +146,78 @@ export default function SubmissionPage() {
       return;
     }
 
-    setSavedGame({ ...game });
-    setIsEditing(false);
-    setErrors({});
-    setMessage(
-      "Your sample game submission has been saved successfully!"
-    );
+    try {
+      setIsSaving(true);
+      setMessage("");
+
+      const response = await saveSubmission(game);
+      const submission = response.data;
+
+      setSavedGame(submission);
+      setGame({
+        title: submission.title || "",
+        description: submission.description || "",
+        repoUrl: submission.repoUrl || "",
+        playableUrl: submission.playableUrl || "",
+        videoUrl: submission.videoUrl || "",
+      });
+
+      setIsEditing(false);
+      setErrors({});
+      setMessage("Your game submission has been saved successfully!");
+    } catch (error) {
+      console.error("Failed to save submission:", error);
+
+      setMessage(
+        error.response?.data?.error?.message ||
+          "Could not save your submission. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handleEdit() {
-    if (!isOpen) return;
+    if (!isOpen || !savedGame) return;
 
-    setGame({ ...savedGame });
+    setGame({
+      title: savedGame.title || "",
+      description: savedGame.description || "",
+      repoUrl: savedGame.repoUrl || "",
+      playableUrl: savedGame.playableUrl || "",
+      videoUrl: savedGame.videoUrl || "",
+    });
+
     setErrors({});
     setMessage("");
     setIsEditing(true);
   }
 
   function handleCancel() {
-    setGame({ ...savedGame });
+    if (savedGame) {
+      setGame({
+        title: savedGame.title || "",
+        description: savedGame.description || "",
+        repoUrl: savedGame.repoUrl || "",
+        playableUrl: savedGame.playableUrl || "",
+        videoUrl: savedGame.videoUrl || "",
+      });
+    } else {
+      setGame(emptyGame);
+    }
+
     setErrors({});
     setMessage("");
     setIsEditing(false);
   }
 
-  if (status === "loading") {
+  if (isLoading || status === "loading") {
     return (
       <main className="submission-page">
         <div className="sp-container">
           <section className="sp-locked">
-            <h2>Loading Submission Settings...</h2>
-            <p>Please wait while we check the event settings.</p>
+            <h2>Loading Game Submission...</h2>
+            <p>Please wait while we load your information.</p>
           </section>
         </div>
       </main>
@@ -176,20 +244,20 @@ export default function SubmissionPage() {
     <main className="submission-page">
       <style>{`
         .submission-page {
-          --sp-bg: #080a1c;
+          --sp-bg: #080714;
           --sp-panel: rgba(13, 17, 39, .92);
-          --sp-cyan: #00d9f5;
-          --sp-pink: #f725d8;
+          --sp-cyan: #00e5ff;
+          --sp-pink: #ff2bd6;
           --sp-text: #f5f7ff;
           --sp-muted: #aab3c8;
-          --sp-line: rgba(0, 217, 245, .24);
+          --sp-line: rgba(0, 229, 255, .24);
           min-height: 100vh;
           padding: 34px 6%;
           box-sizing: border-box;
           color: var(--sp-text);
           background:
-            radial-gradient(ellipse at 85% 4%, rgba(0,217,245,.13), transparent 32%),
-            radial-gradient(ellipse at 8% 55%, rgba(247,37,216,.11), transparent 34%),
+            radial-gradient(ellipse at 85% 4%, rgba(0,229,255,.13), transparent 32%),
+            radial-gradient(ellipse at 8% 55%, rgba(255,43,214,.11), transparent 34%),
             var(--sp-bg);
           font-family: "Rajdhani", system-ui, sans-serif;
         }
@@ -213,7 +281,7 @@ export default function SubmissionPage() {
           padding: 9px 13px;
           border: 1px solid var(--sp-line);
           border-radius: 5px;
-          background: rgba(0,217,245,.07);
+          background: rgba(0,229,255,.07);
           color: var(--sp-cyan);
           font-size: 11px;
           font-weight: 700;
@@ -295,7 +363,7 @@ export default function SubmissionPage() {
           border: 1px solid #303955;
           border-radius: 5px;
           outline: none;
-          background: #080a1c;
+          background: #080714;
           color: #fff;
           font: inherit;
           font-size: 14px;
@@ -309,7 +377,7 @@ export default function SubmissionPage() {
 
         .sp-form input:focus, .sp-form textarea:focus {
           border-color: var(--sp-cyan);
-          box-shadow: 0 0 0 3px rgba(0,217,245,.1);
+          box-shadow: 0 0 0 3px rgba(0,229,255,.1);
         }
 
         .sp-form input::placeholder, .sp-form textarea::placeholder {
@@ -349,7 +417,12 @@ export default function SubmissionPage() {
           margin-top: 25px;
           padding: 14px 18px;
           font-size: 14px;
-          box-shadow: 0 0 16px rgba(247,37,216,.2);
+          box-shadow: 0 0 16px rgba(255,43,214,.2);
+        }
+
+        .sp-button:disabled, .sp-submit:disabled {
+          opacity: .6;
+          cursor: not-allowed;
         }
 
         .sp-cancel { margin: 14px 0 0 10px; }
@@ -357,9 +430,9 @@ export default function SubmissionPage() {
         .sp-message {
           margin: 0 0 18px;
           padding: 12px 14px;
-          border: 1px solid rgba(0,217,245,.4);
+          border: 1px solid rgba(0,229,255,.4);
           border-radius: 5px;
-          background: rgba(0,217,245,.07);
+          background: rgba(0,229,255,.07);
           color: var(--sp-cyan);
           font-size: 13px;
         }
@@ -386,9 +459,9 @@ export default function SubmissionPage() {
           flex: 0 0 36px;
           width: 36px;
           height: 36px;
-          border: 1px solid rgba(247,37,216,.25);
+          border: 1px solid rgba(255,43,214,.25);
           border-radius: 5px;
-          background: rgba(247,37,216,.1);
+          background: rgba(255,43,214,.1);
           font-size: 17px;
         }
 
@@ -409,9 +482,9 @@ export default function SubmissionPage() {
         .sp-tip {
           margin-top: 20px;
           padding: 16px;
-          border: 1px solid rgba(0,217,245,.3);
+          border: 1px solid rgba(0,229,255,.3);
           border-radius: 7px;
-          background: rgba(0,217,245,.05);
+          background: rgba(0,229,255,.05);
           color: var(--sp-muted);
           font-size: 12px;
           line-height: 1.7;
@@ -457,9 +530,9 @@ export default function SubmissionPage() {
         .sp-locked {
           margin-bottom: 24px;
           padding: 38px 24px;
-          border: 1px solid rgba(247,37,216,.4);
+          border: 1px solid rgba(255,43,214,.4);
           border-radius: 10px;
-          background: rgba(247,37,216,.06);
+          background: rgba(255,43,214,.06);
           text-align: center;
         }
 
@@ -505,7 +578,9 @@ export default function SubmissionPage() {
                 ● SUBMISSIONS OPEN
               </span>
 
-              <h2>Edit Your Game Submission</h2>
+              <h2>
+                {savedGame ? "Edit Your Game Submission" : "Create Your Game Submission"}
+              </h2>
 
               <p className="sp-subtitle">
                 Enter your team's game information below.
@@ -513,11 +588,7 @@ export default function SubmissionPage() {
               </p>
 
               {message && (
-                <div
-                  className={`sp-message ${
-                    Object.keys(errors).length ? "error" : ""
-                  }`}
-                >
+                <div className="sp-message error">
                   {message}
                 </div>
               )}
@@ -619,14 +690,19 @@ export default function SubmissionPage() {
                   You can provide a YouTube or other accessible video link.
                 </span>
 
-                <button type="submit" className="sp-submit">
-                  ✦ Save Sample Submission
+                <button
+                  type="submit"
+                  className="sp-submit"
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "✦ Save Game Submission"}
                 </button>
 
                 <button
                   type="button"
                   className="sp-button sp-cancel"
                   onClick={handleCancel}
+                  disabled={isSaving}
                 >
                   Cancel
                 </button>
@@ -645,9 +721,7 @@ export default function SubmissionPage() {
                   <div className="sp-guide-icon">🎮</div>
                   <div>
                     <strong>Original Game</strong>
-                    <p>
-                      Submit your team's own completed game project.
-                    </p>
+                    <p>Submit your team's own completed game project.</p>
                   </div>
                 </div>
 
@@ -655,9 +729,7 @@ export default function SubmissionPage() {
                   <div className="sp-guide-icon">💻</div>
                   <div>
                     <strong>GitHub Repository</strong>
-                    <p>
-                      Make sure your repository link is accessible.
-                    </p>
+                    <p>Make sure your repository link is accessible.</p>
                   </div>
                 </div>
 
@@ -665,9 +737,7 @@ export default function SubmissionPage() {
                   <div className="sp-guide-icon">🚀</div>
                   <div>
                     <strong>Playable Link</strong>
-                    <p>
-                      Provide a working link so judges can test your game.
-                    </p>
+                    <p>Provide a working link so judges can test your game.</p>
                   </div>
                 </div>
 
@@ -675,9 +745,7 @@ export default function SubmissionPage() {
                   <div className="sp-guide-icon">🎥</div>
                   <div>
                     <strong>Demo Video</strong>
-                    <p>
-                      Include a demonstration video if available.
-                    </p>
+                    <p>Include a demonstration video if available.</p>
                   </div>
                 </div>
               </section>
@@ -695,11 +763,9 @@ export default function SubmissionPage() {
             {!isOpen && (
               <section className="sp-locked">
                 <div className="sp-lock-icon">🔒</div>
-
                 <h2>Submissions Are Closed</h2>
-
                 <p>
-              The game submission period is not currently open.
+                  The game submission period is not currently open.
                   <br />
                   You can view your existing submission,
                   but you cannot create or edit it.
@@ -707,78 +773,77 @@ export default function SubmissionPage() {
               </section>
             )}
 
-            <section className="sp-card sp-saved">
-              <div className="sp-saved-head">
-                <span className="sp-saved-badge">
-                  ✓ SAVED EXAMPLE {isOpen ? "" : "— READ ONLY"}
-                </span>
+            {savedGame ? (
+              <section className="sp-card sp-saved">
+                <div className="sp-saved-head">
+                  <span className="sp-saved-badge">
+                    ✓ SAVED SUBMISSION
+                  </span>
+                </div>
+
+                <h2>🎮 {savedGame.title}</h2>
+                <p>{savedGame.description}</p>
+
+                <p>
+                  <strong>GitHub Repository: </strong>
+                  <a href={savedGame.repoUrl} target="_blank" rel="noreferrer">
+                    {savedGame.repoUrl}
+                  </a>
+                </p>
+
+                <p>
+                  <strong>Playable Game: </strong>
+                  {savedGame.playableUrl ? (
+                    <a href={savedGame.playableUrl} target="_blank" rel="noreferrer">
+                      {savedGame.playableUrl}
+                    </a>
+                  ) : "Not provided"}
+                </p>
+
+                <p>
+                  <strong>Demo Video: </strong>
+                  {savedGame.videoUrl ? (
+                    <a href={savedGame.videoUrl} target="_blank" rel="noreferrer">
+                      {savedGame.videoUrl}
+                    </a>
+                  ) : "Not provided"}
+                </p>
+
+                {message && (
+                  <div className="sp-message">{message}</div>
+                )}
 
                 {isOpen && (
-                  <span className="sp-tag">
-                    SAMPLE PROJECT
-                  </span>
-                )}
-              </div>
-
-              <h2>🎮 {savedGame.title}</h2>
-
-              <p>{savedGame.description}</p>
-
-              <p>
-                <strong>GitHub Repository: </strong>
-                <a
-                  href={savedGame.repoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {savedGame.repoUrl}
-                </a>
-              </p>
-
-              <p>
-                <strong>Playable Game: </strong>
-                {savedGame.playableUrl ? (
-                  <a
-                    href={savedGame.playableUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    className="sp-button sp-edit"
+                    onClick={handleEdit}
                   >
-                    {savedGame.playableUrl}
-                  </a>
-                ) : (
-                  "Not provided"
+                    ✎ Edit Submission
+                  </button>
                 )}
-              </p>
+              </section>
+            ) : (
+              <section className="sp-card sp-saved">
+                <h2>No Game Submission Yet</h2>
+                <p>Your team has not submitted a game yet.</p>
 
-              <p>
-                <strong>Demo Video: </strong>
-                {savedGame.videoUrl ? (
-                  <a
-                    href={savedGame.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                {isOpen && (
+                  <button
+                    type="button"
+                    className="sp-button sp-edit"
+                    onClick={() => {
+                      setGame(emptyGame);
+                      setMessage("");
+                      setErrors({});
+                      setIsEditing(true);
+                    }}
                   >
-                    {savedGame.videoUrl}
-                  </a>
-                ) : (
-                  "Not provided"
+                    ✦ Create Your Game Submission
+                  </button>
                 )}
-              </p>
-
-              {message && (
-                <div className="sp-message">{message}</div>
-              )}
-
-              {isOpen && (
-                <button
-                  type="button"
-                  className="sp-button sp-edit"
-                  onClick={handleEdit}
-                >
-                  ✎ Edit Submission
-                </button>
-              )}
-            </section>
+              </section>
+            )}
           </>
         )}
       </div>
