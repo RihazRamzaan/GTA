@@ -32,6 +32,10 @@ export default function Hero() {
       />
       {/* Dark layer on the left so the headline stays easy to read */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-night/80 via-night/20 to-transparent" />
+            {/* Soft fade at the bottom so the info row is easy to read */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night/90 to-transparent" />
+      {/* Darker cover on phones, where the text sits over the bright part of the picture */}
+      <div className="pointer-events-none absolute inset-0 bg-night/50 md:hidden" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
         <p className="mb-4 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">{label}</p>

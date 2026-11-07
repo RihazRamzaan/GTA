@@ -42,13 +42,13 @@ export const eventContent = {
   },
 
   // Labels are fixed here. The DATES come from the API (milestones).
-  agendaSteps: [
-    { key: 'registrationOpensAt', label: 'Registration Opens' },
-    { key: 'registrationClosesAt', label: 'Registration Closes' },
-    { key: 'buildingStartsAt', label: 'Building Starts' },
-    { key: 'submissionOpensAt', label: 'Submissions Open' },
-    { key: 'submissionClosesAt', label: 'Submissions Close' },
-    { key: 'resultsAt', label: 'Results' },
+    agendaSteps: [
+    { key: 'registrationOpensAt', label: 'Registration Opens', countdownTitle: 'Registration opens in' },
+    { key: 'registrationClosesAt', label: 'Registration Closes', countdownTitle: 'Registration closes in' },
+    { key: 'buildingStartsAt', label: 'Building Starts', countdownTitle: 'Building starts in' },
+    { key: 'submissionOpensAt', label: 'Submissions Open', countdownTitle: 'Submissions open in' },
+    { key: 'submissionClosesAt', label: 'Submissions Close', countdownTitle: 'Submissions close in' },
+    { key: 'resultsAt', label: 'Results', countdownTitle: 'Results in' },
   ],
 
   // PLACEHOLDER amounts from the design mockup
