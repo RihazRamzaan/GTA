@@ -11,7 +11,7 @@ export default function RegisterButton({ className = '', arrow = false, onClick 
       <Link
         to="/register"
         onClick={onClick}
-        className={`rounded bg-neon-pink font-body font-bold text-white shadow-[0_0_18px_rgba(255,43,214,0.55)] transition hover:brightness-110 ${className}`}
+        className={`glow-pulse rounded bg-neon-pink font-body font-bold text-white shadow-[0_0_18px_rgba(255,43,214,0.55)] transition hover:brightness-110 ${className}`}
       >
         Register Now{arrow ? ' →' : ''}
       </Link>
