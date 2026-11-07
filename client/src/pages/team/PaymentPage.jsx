@@ -27,6 +27,8 @@ function formatTeamFromBackend(backendTeam, userEmail) {
   };
 }
 
+const IS_DEV = import.meta.env.DEV;
+
 export default function PaymentPage() {
   const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
 
@@ -34,13 +36,15 @@ export default function PaymentPage() {
     if (authTeam) {
       return formatTeamFromBackend(authTeam, user?.email);
     }
-    return user?.teamId ? null : sampleTeam;
+    return (!user?.teamId && IS_DEV) ? sampleTeam : null;
   });
 
-  const initialStatus = authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : 'waiting_for_approval');
+  const initialStatus =
+    authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : IS_DEV ? 'waiting_for_approval' : 'unregistered');
   const [statusKey, setStatusKey] = useState(initialStatus);
   const [registration, setRegistration] = useState(
-    authRegistration || (user?.teamId ? null : sampleStates[initialStatus] || sampleStates.waiting_for_approval)
+    authRegistration ||
+      ((!user?.teamId && IS_DEV) ? sampleStates[initialStatus] || sampleStates.waiting_for_approval : null)
   );
   const [toast, setToast] = useState(null);
   const [fetchingTeam, setFetchingTeam] = useState(Boolean(user?.teamId));
@@ -210,7 +214,7 @@ export default function PaymentPage() {
         team={isUnregistered ? null : team}
         user={user}
         currentStatus={isUnregistered ? 'unregistered' : statusKey}
-        onStatusChange={handleStatusChange}
+        onStatusChange={IS_DEV ? handleStatusChange : undefined}
       />
 
       {/* Status Notice */}
@@ -237,13 +241,15 @@ export default function PaymentPage() {
             >
               REGISTER TEAM NOW →
             </Link>
-            <button
-              type="button"
-              onClick={() => handleStatusChange('waiting_for_slip')}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/20 hover:border-white/40 text-slate-300 hover:text-white font-bold text-sm transition"
-            >
-              Preview Payment Slip Form
-            </button>
+            {IS_DEV && (
+              <button
+                type="button"
+                onClick={() => handleStatusChange('waiting_for_slip')}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/20 hover:border-white/40 text-slate-300 hover:text-white font-bold text-sm transition"
+              >
+                Preview Payment Slip Form
+              </button>
+            )}
           </div>
         </div>
       ) : (

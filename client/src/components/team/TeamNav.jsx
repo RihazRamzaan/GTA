@@ -54,7 +54,7 @@ export default function TeamNav({ team, user, currentStatus = 'waiting_for_appro
 
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
-              {team?.name || 'Cyber Synapse'}
+              {team?.name || (import.meta.env.DEV ? 'Cyber Synapse' : 'Your Team')}
             </h1>
             <span
               className={`px-3 py-0.5 rounded-full text-xs font-bold font-body border ${currentBadge.style}`}
@@ -64,8 +64,8 @@ export default function TeamNav({ team, user, currentStatus = 'waiting_for_appro
           </div>
         </div>
 
-        {/* Clean, discreet state selector to preview and test each state */}
-        {onStatusChange && (
+        {/* Clean, discreet state selector to preview and test each state (Development only) */}
+        {import.meta.env.DEV && onStatusChange && (
           <div className="flex items-center gap-2 text-sm font-body">
             <span className="text-slate-400 hidden sm:inline">Preview Status:</span>
             <select

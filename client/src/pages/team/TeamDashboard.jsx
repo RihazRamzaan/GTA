@@ -47,22 +47,26 @@ function formatTeamFromBackend(backendTeam, userEmail) {
   };
 }
 
+const IS_DEV = import.meta.env.DEV;
+
 export default function TeamDashboard() {
   const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
 
-  // Team state (starts from authContext if available, never falls back to sampleTeam if authenticated)
+  // Team state (starts from authContext if available; sample data is available only in development)
   const [team, setTeam] = useState(() => {
     if (authTeam) {
       return formatTeamFromBackend(authTeam, user?.email);
     }
-    return user?.teamId ? null : sampleTeam;
+    return (!user?.teamId && IS_DEV) ? sampleTeam : null;
   });
 
-  // Initial status based on real account registration, or sample if none
-  const initialStatus = authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : 'waiting_for_approval');
+  // Initial status based on real account registration, or sample if in dev preview
+  const initialStatus =
+    authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : IS_DEV ? 'waiting_for_approval' : 'unregistered');
   const [statusKey, setStatusKey] = useState(initialStatus);
   const [registration, setRegistration] = useState(
-    authRegistration || (user?.teamId ? null : sampleStates[initialStatus] || sampleStates.waiting_for_approval)
+    authRegistration ||
+      ((!user?.teamId && IS_DEV) ? sampleStates[initialStatus] || sampleStates.waiting_for_approval : null)
   );
 
   const [fetchingTeam, setFetchingTeam] = useState(Boolean(user?.teamId));
@@ -354,7 +358,7 @@ export default function TeamDashboard() {
         team={isUnregistered ? null : team}
         user={user}
         currentStatus={isUnregistered ? 'unregistered' : statusKey}
-        onStatusChange={handleStatusChange}
+        onStatusChange={IS_DEV ? handleStatusChange : undefined}
       />
 
       {/* Registration Status Banner (Unregistered, Not Uploaded, Waiting, Approved, or Rejected) */}
@@ -393,13 +397,15 @@ export default function TeamDashboard() {
             >
               REGISTER TEAM NOW →
             </Link>
-            <button
-              type="button"
-              onClick={() => handleStatusChange('waiting_for_approval')}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/20 hover:border-white/40 text-slate-300 hover:text-white font-bold text-sm transition"
-            >
-              Preview Example Dashboard
-            </button>
+            {IS_DEV && (
+              <button
+                type="button"
+                onClick={() => handleStatusChange('waiting_for_approval')}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/20 hover:border-white/40 text-slate-300 hover:text-white font-bold text-sm transition"
+              >
+                Preview Example Dashboard
+              </button>
+            )}
           </div>
         </div>
       ) : (
