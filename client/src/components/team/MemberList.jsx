@@ -9,15 +9,16 @@ export default function MemberList({
   onUpdateMember,
   onDeleteMember,
 }) {
+  // Saved leader details from Akindu's Day 4 team route
   const leader = team?.leader || {
-    name: 'Thanish Ahamed',
-    email: 'thanish@example.com',
-    role: 'Leader & Developer',
-    university: 'Faculty of Information Technology',
-    phone: '+94 77 123 4567',
+    name: team?.leaderName || 'Team Leader',
+    email: team?.leaderEmail || '',
+    role: 'Team Leader',
+    university: 'University Student',
+    phone: '',
   };
 
-  const members = team?.members || [];
+  const members = Array.isArray(team?.members) ? team.members : [];
   const totalCount = 1 + members.length;
   const maxMembers = team?.maxMembers || 4;
   const minMembers = team?.minMembers || 2;
@@ -30,9 +31,9 @@ export default function MemberList({
 
   // List of existing emails to prevent duplicate member entries
   const existingEmails = [
-    leader.email.toLowerCase(),
-    ...members.map((m) => m.email.toLowerCase()),
-  ];
+    leader?.email ? leader.email.toLowerCase() : '',
+    ...members.map((m) => (m?.email ? m.email.toLowerCase() : '')),
+  ].filter(Boolean);
 
   return (
     <div className="rounded-2xl border border-neon-purple/30 bg-night-card p-5 sm:p-6 font-body">

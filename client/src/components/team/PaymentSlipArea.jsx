@@ -109,6 +109,7 @@ export default function PaymentSlipArea({
       ? selectedFile.name
       : payment.fileName || 'boc_transfer_slip.png';
 
+    // Point 1: Upload selected slip file, payment reference, and date
     onSubmitPayment({
       reference: reference.trim().toUpperCase(),
       paymentDate: paymentDate,

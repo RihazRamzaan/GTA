@@ -60,6 +60,13 @@ export default function TeamDashboard() {
     return (!user?.teamId && IS_DEV) ? sampleTeam : null;
   });
 
+  // Sync with authTeam if updated
+  useEffect(() => {
+    if (authTeam) {
+      setTeam(formatTeamFromBackend(authTeam, user?.email));
+    }
+  }, [authTeam, user?.email]);
+
   // Initial status based on real account registration, or sample if in dev preview
   const initialStatus =
     authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : IS_DEV ? 'waiting_for_approval' : 'unregistered');
@@ -71,7 +78,7 @@ export default function TeamDashboard() {
 
   const [fetchingTeam, setFetchingTeam] = useState(Boolean(user?.teamId));
 
-  // Fetch authoritative saved team & payment registration from /api/team/me
+  // Point 1: Fetch authoritative saved team & members from Akindu's Day 4 team route (/api/team/me)
   useEffect(() => {
     let isMounted = true;
     if (user?.teamId) {
