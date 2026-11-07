@@ -6,6 +6,7 @@ import {
   updateAdminSettings,
   getAdminRegistrations,
   getAdminSummary,
+  getRegistrationSlip,
 } from '../controllers/admin.controller.js';
 
 const router = Router();
@@ -21,10 +22,12 @@ router.patch('/settings', updateAdminSettings);
 router.get('/summary', getAdminSummary);
 router.get('/registrations', getAdminRegistrations);
 
+// Slip inspection endpoint
+router.get('/registrations/:id/slip', getRegistrationSlip);
+
 // Placeholder endpoints for Days 4-5
 const unimplementedRoutes = [
   ['patch', '/registrations/:id/review'],
-  ['get', '/registrations/:id/slip'],
   ['get', '/submissions'],
 ];
 
