@@ -14,7 +14,7 @@ export const eventContent = {
 
   // PLACEHOLDER: real dates should come from the supervisor / API
   info: {
-    dates: 'JAN 24 – 26, 2026',
+    dates: 'DATES TO BE ANNOUNCED',
     venue: 'COLOMBO, SRI LANKA',
     teamSize: 'TEAMS OF 2 – 4',
   },
