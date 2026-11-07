@@ -151,7 +151,7 @@ export default function PaymentSlipArea({
           )}
           {status === 'waiting_for_approval' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              ⏳ Waiting for Admin Review
+              ⏳ Waiting for Approval
             </span>
           )}
           {status === 'rejected' && (
@@ -163,7 +163,7 @@ export default function PaymentSlipArea({
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
               💳 Payment Not Uploaded
             </span>
-          )}1
+          )}
         </div>
       </div>
 
@@ -441,7 +441,7 @@ export default function PaymentSlipArea({
                   </span>
                 ) : (
                   <span className="px-3 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300">
-                    ⏳ In Verification Queue (6-12 hrs)
+                    ⏳ Waiting for Approval (In Queue)
                   </span>
                 )}
               </div>

@@ -275,6 +275,7 @@ export default function TeamDashboard() {
 
         const res = await teamApi.submitPayment(formData);
         if (res?.registration) {
+          // Point 2: After upload, show Waiting for Approval
           setStatusKey(res.registration.status);
           setRegistration({
             ...res.registration,

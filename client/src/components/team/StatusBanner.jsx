@@ -49,7 +49,7 @@ export default function StatusBanner({ registration }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                  Payment Slip Under Review
+                  Payment Slip Under Review (Waiting for Approval)
                 </h3>
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   Waiting for Approval
