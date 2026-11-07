@@ -83,7 +83,7 @@ export async function submitPayment(req, res) {
     throw httpError(400, 'VALIDATION_ERROR', 'Please check the highlighted fields.', errors);
   }
 
-  // If replacing an existing rejected slip, remove the old file from private storage
+  // Point 3: If replacing an existing rejected slip, remove the old file from private storage
   if (registration.payment?.slipKey) {
     await deleteSlip(registration.payment.slipKey);
   }
@@ -91,7 +91,7 @@ export async function submitPayment(req, res) {
   // Save the file privately and record only its storage reference
   const { slipKey, slipMime } = await saveSlip(req.user.teamId, req.file);
 
-  // Update status to waiting_for_approval and update payment record
+  // Point 3: Reset status to waiting_for_approval and clear rejection reason on replacement
   registration.status = 'waiting_for_approval';
   registration.payment = {
     reference: value.reference,
@@ -101,7 +101,7 @@ export async function submitPayment(req, res) {
     submittedAt: new Date(),
     reviewedBy: null,
     reviewedAt: null,
-    rejectionReason: null,
+    rejectionReason: null, // Cleared on replacement resubmission
   };
 
   await registration.save();

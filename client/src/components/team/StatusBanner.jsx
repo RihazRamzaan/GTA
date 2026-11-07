@@ -124,7 +124,7 @@ export default function StatusBanner({ registration }) {
                 Your payment slip could not be verified by the admin team. Please review the reason below and upload a clear receipt.
               </p>
 
-              {/* Admin Reason Callout */}
+              {/* Point 3: Admin Rejection Reason Callout & Replacement Slip Link */}
               <div className="mt-3 p-3.5 rounded-lg bg-black/40 border border-red-500/30 text-base">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-400 block mb-0.5">
                   Reason for Rejection:

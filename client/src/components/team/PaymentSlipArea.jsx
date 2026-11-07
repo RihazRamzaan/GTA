@@ -230,7 +230,11 @@ export default function PaymentSlipArea({
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-300 uppercase tracking-[0.2em] font-display">
-              {showForm ? 'Submit Payment Information' : 'Your Submitted Payment'}
+              {status === 'rejected'
+                ? 'Upload Replacement Deposit Slip'
+                : showForm
+                ? 'Submit Payment Information'
+                : 'Your Submitted Payment'}
             </h3>
 
             {!showForm && status === 'waiting_for_approval' && (
@@ -241,7 +245,7 @@ export default function PaymentSlipArea({
             )}
           </div>
 
-          {/* Admin Rejection Callout (if rejected) */}
+          {/* Point 3: If a slip is rejected, show the reason and allow a replacement */}
           {status === 'rejected' && (
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-sm">
               <div className="flex items-center gap-2 text-red-400 font-bold font-display text-xs uppercase tracking-wider mb-1">
