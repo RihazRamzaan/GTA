@@ -2,13 +2,22 @@ import RegisterButton from './RegisterButton.jsx';
 import Icon from '../ui/Icon.jsx';
 import heroCity from '../../assets/hero-city.png';
 import { eventContent } from '../../data/eventContent.js';
+import RegistrationNotice from './RegistrationNotice.jsx';
+import useEventSettings from '../../hooks/useEventSettings.js';
+import { formatColomboDateRange } from '../../utils/dates.js';
 
 const lineColors = ['text-white', 'text-neon-cyan', 'text-neon-pink'];
 
 export default function Hero() {
   const { label, heroLines, tagline, info } = eventContent;
+  const { status, settings } = useEventSettings();
+  const dateRange =
+    status === 'ready'
+      ? formatColomboDateRange(settings.milestones?.buildingStartsAt, settings.milestones?.submissionClosesAt)
+      : null;
+  const dateText = (dateRange || info.dates).toUpperCase();
   const infoItems = [
-    { icon: 'calendar', value: info.dates, caption: 'EVENT DATES' },
+    { icon: 'calendar', value: dateText, caption: 'EVENT DATES' },
     { icon: 'pin', value: info.venue, caption: 'VENUE' },
     { icon: 'users', value: info.teamSize, caption: 'TEAM SIZE' },
   ];
@@ -50,6 +59,7 @@ export default function Hero() {
             Learn More
           </a>
         </div>
+         <RegistrationNotice />
 
         <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
           {infoItems.map((item) => (
