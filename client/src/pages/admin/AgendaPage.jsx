@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminNav from '../../components/admin/AdminNav.jsx';
 import { getAdminSettings, updateAdminSettings } from '../../api/admin.js';
+import { refreshEventSettings } from '../../hooks/useEventSettings.js';
 
 // Helper to format ISO Date string or Date instance into datetime-local format (YYYY-MM-DDTHH:mm)
 const formatForInput = (val) => {
@@ -300,6 +301,8 @@ export default function AgendaPage() {
             milestones,
           })
         );
+        // The navbar and public pages should show the new open/closed state straight away.
+        refreshEventSettings();
         setSaveStatus('Gate overrides and milestone schedule saved successfully to server.');
         setSaveError(null);
         setTimeout(() => setSaveStatus(null), 5000);

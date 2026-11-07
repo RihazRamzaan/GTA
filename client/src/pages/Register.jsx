@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { getApiError } from '../api/http.js';
 import TextField from '../components/ui/TextField.jsx';
 import { homePathFor, useAuth } from '../context/AuthContext.jsx';
-import useEventSettings from '../hooks/useEventSettings.js';
+import useEventSettings, { refreshEventSettings } from '../hooks/useEventSettings.js';
 
 const emptyMember = { name: '', email: '' };
 
@@ -18,7 +18,7 @@ function Notice({ title, children }) {
 
 export default function Register() {
   const { user, loading, register } = useAuth();
-  const { status, settings } = useEventSettings();
+  const { status, settings } = useEventSettings({ fresh: true });
   const navigate = useNavigate();
   const [form, setForm] = useState({ teamName: '', leaderName: '', email: '', password: '', confirmPassword: '' });
   const [members, setMembers] = useState([{ ...emptyMember }]);
@@ -54,10 +54,12 @@ export default function Register() {
       });
       navigate(homePathFor(signedIn), { replace: true });
     } catch (err) {
-      const { message, fields } = getApiError(err);
+      const { code, message, fields } = getApiError(err);
       setErrors(fields);
       setFormError(message);
       setSubmitting(false);
+      // The admin closed registration while this form was open, so show the closed page.
+      if (code === 'REGISTRATION_CLOSED') refreshEventSettings();
     }
   };
 
