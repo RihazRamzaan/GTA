@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
-import { getAdminSettings, updateAdminSettings } from '../controllers/admin.controller.js';
+import {
+  getAdminSettings,
+  updateAdminSettings,
+  getAdminRegistrations,
+  getAdminSummary,
+} from '../controllers/admin.controller.js';
 
 const router = Router();
 
@@ -12,10 +17,12 @@ router.use(requireAuth, requireAdmin);
 router.get('/settings', getAdminSettings);
 router.patch('/settings', updateAdminSettings);
 
+// Day 04: Registrations & Dashboard Summary (Rihaz)
+router.get('/summary', getAdminSummary);
+router.get('/registrations', getAdminRegistrations);
+
 // Placeholder endpoints for Days 4-5
 const unimplementedRoutes = [
-  ['get', '/summary'],
-  ['get', '/registrations'],
   ['patch', '/registrations/:id/review'],
   ['get', '/registrations/:id/slip'],
   ['get', '/submissions'],
