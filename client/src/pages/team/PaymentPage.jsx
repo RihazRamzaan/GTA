@@ -7,38 +7,81 @@ import StatusBanner from '../../components/team/StatusBanner.jsx';
 import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 import { teamApi } from '../../api/team.js';
 
+// Helper to format backend team data into the shape expected by TeamNav
+function formatTeamFromBackend(backendTeam, userEmail) {
+  if (!backendTeam) return null;
+  const leaderEmail = backendTeam.leaderEmail || userEmail;
+  const leaderName = backendTeam.leaderName || 'Team Leader';
+  return {
+    id: backendTeam.id,
+    name: backendTeam.name,
+    code: backendTeam.id ? `TEAM-${String(backendTeam.id).slice(-4).toUpperCase()}` : 'TEAM-24',
+    leader: {
+      name: leaderName,
+      email: leaderEmail,
+      role: 'Team Leader',
+      university: 'University Student',
+      phone: '',
+    },
+    members: Array.isArray(backendTeam.members) ? backendTeam.members : [],
+  };
+}
+
 export default function PaymentPage() {
   const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
 
-  const mergedTeam = useMemo(() => {
-    if (!authTeam) {
-      return {
-        ...sampleTeam,
-        leader: {
-          ...sampleTeam.leader,
-          email: user?.email || sampleTeam.leader.email,
-        },
-      };
+  const [team, setTeam] = useState(() => {
+    if (authTeam) {
+      return formatTeamFromBackend(authTeam, user?.email);
     }
-    return {
-      ...sampleTeam,
-      id: authTeam.id || sampleTeam.id,
-      name: authTeam.name || sampleTeam.name,
-      code: authTeam.id ? `TEAM-${String(authTeam.id).slice(-4).toUpperCase()}` : sampleTeam.code,
-      leader: {
-        ...sampleTeam.leader,
-        name: authTeam.leaderName || sampleTeam.leader.name,
-        email: user?.email || authTeam.leaderEmail || sampleTeam.leader.email,
-      },
-    };
-  }, [authTeam, user]);
+    return user?.teamId ? null : sampleTeam;
+  });
 
-  const initialStatus = authRegistration?.status || (authTeam ? 'waiting_for_slip' : 'waiting_for_approval');
+  const initialStatus = authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : 'waiting_for_approval');
   const [statusKey, setStatusKey] = useState(initialStatus);
   const [registration, setRegistration] = useState(
-    authRegistration || sampleStates[initialStatus] || sampleStates.waiting_for_approval
+    authRegistration || (user?.teamId ? null : sampleStates[initialStatus] || sampleStates.waiting_for_approval)
   );
   const [toast, setToast] = useState(null);
+  const [fetchingTeam, setFetchingTeam] = useState(Boolean(user?.teamId));
+
+  // Fetch authoritative saved team & payment registration from /api/team/me
+  useEffect(() => {
+    let isMounted = true;
+    if (user?.teamId) {
+      setFetchingTeam(true);
+      teamApi
+        .getMyTeam()
+        .then((data) => {
+          if (!isMounted) return;
+          if (data?.team) {
+            setTeam(formatTeamFromBackend(data.team, user?.email));
+          }
+          if (data?.registration) {
+            setStatusKey(data.registration.status);
+            setRegistration(data.registration);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load /api/team/me in PaymentPage:', err);
+          if (authTeam) {
+            setTeam(formatTeamFromBackend(authTeam, user?.email));
+          }
+          if (authRegistration) {
+            setStatusKey(authRegistration.status);
+            setRegistration(authRegistration);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setFetchingTeam(false);
+        });
+    } else {
+      setFetchingTeam(false);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.teamId, user?.email]);
 
   useEffect(() => {
     if (authRegistration) {
@@ -47,8 +90,8 @@ export default function PaymentPage() {
     }
   }, [authRegistration]);
 
-  const showToast = (message) => {
-    setToast(message);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
@@ -90,7 +133,11 @@ export default function PaymentPage() {
               slipPreviewUrl: paymentData.slipPreviewUrl,
             },
           });
-          showToast('Payment slip submitted successfully! Registration is now waiting for review.');
+          const successMsg =
+            statusKey === 'rejected'
+              ? 'Replacement payment slip submitted successfully! Registration is now waiting for review.'
+              : 'Payment slip submitted successfully! Registration is now waiting for review.';
+          showToast(successMsg);
           return;
         }
       } catch (err) {
@@ -108,6 +155,7 @@ export default function PaymentPage() {
         ...(registration?.payment || {}),
         reference: paymentData.reference,
         paymentDate: paymentData.paymentDate,
+        date: paymentData.paymentDate,
         fileName: paymentData.fileName,
         fileSize: paymentData.fileSize,
         slipPreviewUrl: paymentData.slipPreviewUrl,
@@ -117,39 +165,49 @@ export default function PaymentPage() {
     };
     setStatusKey('waiting_for_approval');
     setRegistration(updated);
-    showToast('Payment slip submitted successfully! Registration is now waiting for review.');
+    const successMsg =
+      statusKey === 'rejected'
+        ? 'Replacement payment slip submitted successfully! Registration is now waiting for review.'
+        : 'Payment slip submitted successfully! Registration is now waiting for review.';
+    showToast(successMsg);
   };
 
-  if (loading) {
+  if (loading || (user?.teamId && fetchingTeam && !team)) {
     return (
       <div className="max-w-5xl mx-auto py-24 text-center font-body">
         <div className="inline-block w-10 h-10 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xl font-bold text-white font-display">Checking Account Data...</p>
-        <p className="text-sm text-slate-400 mt-1">Connecting to your signed-in profile</p>
+        <p className="text-xl font-bold text-white font-display">Loading Payment Information...</p>
+        <p className="text-sm text-slate-400 mt-1">Connecting to your registered team</p>
       </div>
     );
   }
 
   const isUnregistered =
-    (!user?.teamId && !authTeam && !authRegistration && statusKey === 'unregistered') ||
+    (!user?.teamId && !authTeam && !team?.id && statusKey === 'unregistered') ||
     statusKey === 'unregistered' ||
-    (!user?.teamId && !authTeam && !authRegistration);
+    (!user?.teamId && !authTeam && !team?.id);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
       {/* Toast Alert */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 animate-bounce">
-          <div className="px-4 py-2.5 rounded-xl font-bold font-body text-sm bg-neon-cyan text-black shadow-xl flex items-center gap-2">
-            <span>✓</span>
-            <span>{toast}</span>
+          <div
+            className={`px-4 py-2.5 rounded-xl font-bold font-body text-sm ${
+              typeof toast === 'object' && toast.type === 'error'
+                ? 'bg-red-500 text-white shadow-red-500/30'
+                : 'bg-neon-cyan text-black shadow-neon-cyan/20'
+            } shadow-xl flex items-center gap-2`}
+          >
+            <span>{typeof toast === 'object' && toast.type === 'error' ? '✕' : '✓'}</span>
+            <span>{typeof toast === 'object' ? toast.message : toast}</span>
           </div>
         </div>
       )}
 
       {/* Header */}
       <TeamNav
-        team={isUnregistered ? null : mergedTeam}
+        team={isUnregistered ? null : team}
         user={user}
         currentStatus={isUnregistered ? 'unregistered' : statusKey}
         onStatusChange={handleStatusChange}

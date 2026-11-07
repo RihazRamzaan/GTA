@@ -8,67 +8,102 @@ import MemberList from '../../components/team/MemberList.jsx';
 import PaymentSlipArea from '../../components/team/PaymentSlipArea.jsx';
 import { teamApi } from '../../api/team.js';
 
+// Helper to format backend team data into the shape expected by TeamDashboard
+function formatTeamFromBackend(backendTeam, userEmail) {
+  if (!backendTeam) return null;
+
+  const leaderEmail = backendTeam.leaderEmail || userEmail;
+  const leaderName = backendTeam.leaderName || 'Team Leader';
+
+  // Filter out any member matching leaderEmail so the leader is only shown in the leader row
+  const rawMembers = Array.isArray(backendTeam.members) ? backendTeam.members : [];
+  const otherMembers = rawMembers.filter(
+    (m) => m.email?.toLowerCase().trim() !== leaderEmail?.toLowerCase().trim()
+  );
+
+  const formattedMembers = otherMembers.map((m, idx) => ({
+    id: m.id || m._id || `m-${idx + 1}`,
+    name: m.name,
+    email: m.email,
+    role: m.role || (idx === 0 ? 'Lead Developer' : 'Developer & Designer'),
+    university: m.university || 'University Student',
+    phone: m.phone || '',
+  }));
+
+  return {
+    id: backendTeam.id,
+    name: backendTeam.name,
+    code: backendTeam.id ? `TEAM-${String(backendTeam.id).slice(-4).toUpperCase()}` : 'TEAM-24',
+    leader: {
+      name: leaderName,
+      email: leaderEmail,
+      role: 'Team Leader',
+      university: 'University Student',
+      phone: '',
+    },
+    members: formattedMembers,
+    maxMembers: 4,
+    minMembers: 2,
+  };
+}
+
 export default function TeamDashboard() {
   const { user, team: authTeam, registration: authRegistration, loading } = useAuth();
 
-  // Combine signed-in account details with example team details for missing Day 4 fields
-  const initialTeam = useMemo(() => {
-    if (!authTeam) {
-      return {
-        ...sampleTeam,
-        leader: {
-          ...sampleTeam.leader,
-          email: user?.email || sampleTeam.leader.email,
-        },
-      };
+  // Team state (starts from authContext if available, never falls back to sampleTeam if authenticated)
+  const [team, setTeam] = useState(() => {
+    if (authTeam) {
+      return formatTeamFromBackend(authTeam, user?.email);
     }
-
-    const mergedMembers =
-      authTeam.members && authTeam.members.length > 0
-        ? authTeam.members.map((m, idx) => ({
-            id: m.id || `m${idx + 1}`,
-            name: m.name,
-            email: m.email,
-            role: sampleTeam.members[idx]?.role || (idx === 0 ? 'Lead Developer' : 'Developer & Designer'),
-            university: sampleTeam.members[idx]?.university || 'Faculty of Information Technology',
-            phone: sampleTeam.members[idx]?.phone || '+94 77 123 4567',
-          }))
-        : sampleTeam.members;
-
-    return {
-      ...sampleTeam,
-      id: authTeam.id || sampleTeam.id,
-      name: authTeam.name || sampleTeam.name,
-      code: authTeam.id ? `TEAM-${String(authTeam.id).slice(-4).toUpperCase()}` : sampleTeam.code,
-      leader: {
-        ...sampleTeam.leader,
-        name: authTeam.leaderName || sampleTeam.leader.name,
-        email: user?.email || authTeam.leaderEmail || sampleTeam.leader.email,
-      },
-      members: mergedMembers,
-    };
-  }, [authTeam, user]);
-
-  // Team state (editable name, leader contact, and members roster)
-  const [team, setTeam] = useState(initialTeam);
-
-  useEffect(() => {
-    setTeam(initialTeam);
-  }, [initialTeam]);
+    return user?.teamId ? null : sampleTeam;
+  });
 
   // Initial status based on real account registration, or sample if none
-  const initialStatus = authRegistration?.status || (authTeam ? 'waiting_for_slip' : 'waiting_for_approval');
+  const initialStatus = authRegistration?.status || (user?.teamId ? 'waiting_for_slip' : 'waiting_for_approval');
   const [statusKey, setStatusKey] = useState(initialStatus);
   const [registration, setRegistration] = useState(
-    authRegistration || sampleStates[initialStatus] || sampleStates.waiting_for_approval
+    authRegistration || (user?.teamId ? null : sampleStates[initialStatus] || sampleStates.waiting_for_approval)
   );
 
+  const [fetchingTeam, setFetchingTeam] = useState(Boolean(user?.teamId));
+
+  // Fetch authoritative saved team & payment registration from /api/team/me
   useEffect(() => {
-    if (authRegistration) {
-      setStatusKey(authRegistration.status);
-      setRegistration(authRegistration);
+    let isMounted = true;
+    if (user?.teamId) {
+      setFetchingTeam(true);
+      teamApi
+        .getMyTeam()
+        .then((data) => {
+          if (!isMounted) return;
+          if (data?.team) {
+            setTeam(formatTeamFromBackend(data.team, user?.email));
+          }
+          if (data?.registration) {
+            setStatusKey(data.registration.status);
+            setRegistration(data.registration);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load /api/team/me:', err);
+          if (authTeam) {
+            setTeam(formatTeamFromBackend(authTeam, user?.email));
+          }
+          if (authRegistration) {
+            setStatusKey(authRegistration.status);
+            setRegistration(authRegistration);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setFetchingTeam(false);
+        });
+    } else {
+      setFetchingTeam(false);
     }
-  }, [authRegistration]);
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.teamId, user?.email]);
 
   // Feedback toast banner
   const [toast, setToast] = useState(null);
@@ -96,11 +131,30 @@ export default function TeamDashboard() {
     showToast(`Status switched to: ${labels[newKey] || newKey}`);
   };
 
-  // Update team name and leader contact info
-  const handleUpdateTeam = (updatedData) => {
+  // Update team name and leader contact info (persisted to /api/team/me)
+  const handleUpdateTeam = async (updatedData) => {
+    const newName = updatedData.name || team?.name;
+    const newLeader = updatedData.leader?.name || team?.leader?.name;
+    if (user?.teamId) {
+      try {
+        const res = await teamApi.updateMyTeam({
+          teamName: newName,
+          leaderName: newLeader,
+        });
+        if (res?.team) {
+          setTeam(formatTeamFromBackend(res.team, user?.email));
+          showToast('Team details updated successfully.');
+          return;
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.message || 'Failed to update team details.';
+        showToast(msg, 'error');
+        return;
+      }
+    }
     setTeam((prev) => ({
       ...prev,
-      name: updatedData.name || prev.name,
+      name: newName,
       leader: {
         ...prev.leader,
         ...updatedData.leader,
@@ -109,40 +163,91 @@ export default function TeamDashboard() {
     showToast('Team and leader contact details updated successfully.');
   };
 
-  // Add a new member
-  const handleAddMember = (newMember) => {
-    if (team.members.length + 1 >= team.maxMembers) {
+  // Add a new member (persisted to /api/team/me)
+  const handleAddMember = async (newMember) => {
+    if ((team?.members?.length || 0) + 1 >= (team?.maxMembers || 4)) {
       showToast('Maximum team size reached (4 members max).', 'error');
       return;
     }
+    const updatedMembers = [...(team?.members || []), newMember];
+    if (user?.teamId) {
+      try {
+        const res = await teamApi.updateMyTeam({
+          members: updatedMembers.map((m) => ({ name: m.name, email: m.email })),
+        });
+        if (res?.team) {
+          setTeam(formatTeamFromBackend(res.team, user?.email));
+          showToast(`Added ${newMember.name} to the team roster.`);
+          return;
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.message || 'Failed to add member.';
+        showToast(msg, 'error');
+        return;
+      }
+    }
     setTeam((prev) => ({
       ...prev,
-      members: [...prev.members, newMember],
+      members: updatedMembers,
     }));
     showToast(`Added ${newMember.name} to the team roster.`);
   };
 
-  // Update an existing member
-  const handleUpdateMember = (updatedMember) => {
+  // Update an existing member (persisted to /api/team/me)
+  const handleUpdateMember = async (updatedMember) => {
+    const updatedMembers = (team?.members || []).map((m) =>
+      m.id === updatedMember.id ? updatedMember : m
+    );
+    if (user?.teamId) {
+      try {
+        const res = await teamApi.updateMyTeam({
+          members: updatedMembers.map((m) => ({ name: m.name, email: m.email })),
+        });
+        if (res?.team) {
+          setTeam(formatTeamFromBackend(res.team, user?.email));
+          showToast(`Updated details for ${updatedMember.name}.`);
+          return;
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.message || 'Failed to update member.';
+        showToast(msg, 'error');
+        return;
+      }
+    }
     setTeam((prev) => ({
       ...prev,
-      members: prev.members.map((m) =>
-        m.id === updatedMember.id ? updatedMember : m
-      ),
+      members: updatedMembers,
     }));
     showToast(`Updated details for ${updatedMember.name}.`);
   };
 
-  // Remove a member
-  const handleDeleteMember = (memberId) => {
-    if (team.members.length + 1 <= team.minMembers) {
+  // Remove a member (persisted to /api/team/me)
+  const handleDeleteMember = async (memberId) => {
+    if ((team?.members?.length || 0) + 1 <= (team?.minMembers || 2)) {
       showToast('Cannot remove: Teams must have at least 2 members.', 'error');
       return;
     }
-    const memberToRemove = team.members.find((m) => m.id === memberId);
+    const memberToRemove = team?.members?.find((m) => m.id === memberId);
+    const updatedMembers = (team?.members || []).filter((m) => m.id !== memberId);
+    if (user?.teamId) {
+      try {
+        const res = await teamApi.updateMyTeam({
+          members: updatedMembers.map((m) => ({ name: m.name, email: m.email })),
+        });
+        if (res?.team) {
+          setTeam(formatTeamFromBackend(res.team, user?.email));
+          showToast(`Removed ${memberToRemove?.name || 'member'} from the team.`);
+          return;
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.message || 'Failed to remove member.';
+        showToast(msg, 'error');
+        return;
+      }
+    }
     setTeam((prev) => ({
       ...prev,
-      members: prev.members.filter((m) => m.id !== memberId),
+      members: updatedMembers,
     }));
     showToast(`Removed ${memberToRemove?.name || 'member'} from the team.`);
   };
@@ -169,7 +274,11 @@ export default function TeamDashboard() {
               slipPreviewUrl: paymentData.slipPreviewUrl,
             },
           });
-          showToast('Payment slip submitted successfully! Registration is now waiting for review.');
+          const successMsg =
+            statusKey === 'rejected'
+              ? 'Replacement payment slip submitted successfully! Registration is now waiting for review.'
+              : 'Payment slip submitted successfully! Registration is now waiting for review.';
+          showToast(successMsg);
           return;
         }
       } catch (err) {
@@ -187,6 +296,7 @@ export default function TeamDashboard() {
         ...(registration?.payment || {}),
         reference: paymentData.reference,
         paymentDate: paymentData.paymentDate,
+        date: paymentData.paymentDate,
         fileName: paymentData.fileName,
         fileSize: paymentData.fileSize,
         slipPreviewUrl: paymentData.slipPreviewUrl,
@@ -197,25 +307,29 @@ export default function TeamDashboard() {
 
     setStatusKey('waiting_for_approval');
     setRegistration(updated);
-    showToast('Payment slip submitted successfully! Registration is now waiting for review.');
+    const successMsg =
+      statusKey === 'rejected'
+        ? 'Replacement payment slip submitted successfully! Registration is now waiting for review.'
+        : 'Payment slip submitted successfully! Registration is now waiting for review.';
+    showToast(successMsg);
   };
 
   // Loading state
-  if (loading) {
+  if (loading || (user?.teamId && fetchingTeam && !team)) {
     return (
       <div className="max-w-5xl mx-auto py-24 text-center font-body">
         <div className="inline-block w-10 h-10 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xl font-bold text-white font-display">Checking Account Data...</p>
-        <p className="text-sm text-slate-400 mt-1">Connecting to your signed-in profile</p>
+        <p className="text-xl font-bold text-white font-display">Loading Team Details...</p>
+        <p className="text-sm text-slate-400 mt-1">Connecting to your registered team</p>
       </div>
     );
   }
 
   // Account has no registration check
   const isUnregistered =
-    (!user?.teamId && !authTeam && !authRegistration && statusKey === 'unregistered') ||
+    (!user?.teamId && !authTeam && !team?.id && statusKey === 'unregistered') ||
     statusKey === 'unregistered' ||
-    (!user?.teamId && !authTeam && !authRegistration);
+    (!user?.teamId && !authTeam && !team?.id);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">

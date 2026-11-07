@@ -37,6 +37,7 @@ export default function StatusBanner({ registration }) {
 
   const status = registration?.status || 'waiting_for_slip';
   const payment = registration?.payment || {};
+  const rejectionReason = payment.rejectionReason || registration?.rejectionReason;
 
   // 1. WAITING / PENDING REVIEW
   if (status === 'waiting_for_approval' || status === 'pending_review') {
@@ -129,7 +130,7 @@ export default function StatusBanner({ registration }) {
                   Reason for Rejection:
                 </span>
                 <p className="text-red-100 font-semibold">
-                  "{payment.rejectionReason || 'The deposit slip photo is blurry and the reference number is unreadable. Please upload a clear photo or online banking PDF.'}"
+                  "{rejectionReason || 'The deposit slip could not be verified by organizers. Please upload a clear photo or online banking PDF.'}"
                 </p>
               </div>
             </div>
@@ -139,7 +140,7 @@ export default function StatusBanner({ registration }) {
             to="/team/payment"
             className="shrink-0 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white text-base font-bold transition text-center"
           >
-            Upload New Slip
+            Upload Replacement Slip
           </Link>
         </div>
       </div>
