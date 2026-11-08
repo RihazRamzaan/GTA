@@ -1,13 +1,22 @@
 # Deploy the frontend and API in one Vercel project
 
 Import the repository with Root Directory set to the repository root, not
-`client` or `server`. Use the Other framework preset. The root `vercel.json`
-builds the client with `npm run build` and serves `client/dist`.
+`client` or `server`. The root `vercel.json` defines two Vercel Services in one
+project: a Vite client rooted at `client` and an Express server rooted at `server`.
+Build and output settings belong to each service; remove dashboard overrides
+left over from the previous single-build setup.
 
-API requests under `/api` go to `api/handler.js`, which initializes MongoDB
-before passing the original request to Express. Static files are served next.
-Other paths return `index.html` so React Router can handle direct visits and
-refreshes on `/team`, `/register`, and `/admin` pages.
+API requests at `/api` and under `/api/` go to the server service with their
+original paths preserved. Its explicit entrypoint is `src/server.js`, which
+connects to MongoDB before starting Express. All other requests go to the client
+service. That service serves existing static files first and then falls back to
+`index.html` so React Router can handle direct visits and refreshes on `/team`,
+`/register`, and `/admin` pages. There is no separate root API function.
+
+Both services share the project's environment variables and public domain.
+Vercel Services is currently beta. Configuration references:
+https://vercel.com/docs/services
+https://vercel.com/docs/services/routing
 
 Set the following in the Vercel project's environment variable settings:
 
