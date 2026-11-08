@@ -8,6 +8,7 @@ import {
   getAdminSummary,
   reviewAdminRegistration,
   getAdminRegistrationSlip,
+  getAdminSubmissions,
 } from '../controllers/admin.controller.js';
 
 const router = Router();
@@ -27,21 +28,7 @@ router.get('/registrations', getAdminRegistrations);
 router.patch('/registrations/:id/review', reviewAdminRegistration);
 router.get('/registrations/:id/slip', getAdminRegistrationSlip);
 
-// Placeholder endpoints for Days 4-5
-const unimplementedRoutes = [
-  ['get', '/submissions'],
-];
-
-for (const [method, path] of unimplementedRoutes) {
-  router[method](path, (_req, res) =>
-    res.status(501).json({
-      success: false,
-      error: {
-        code: 'NOT_IMPLEMENTED',
-        message: 'Admin features are not implemented yet.',
-      },
-    })
-  );
-}
+// Day 06: Game submissions gallery (Rihaz)
+router.get('/submissions', getAdminSubmissions);
 
 export default router;

@@ -505,3 +505,89 @@ export async function getAdminSummary(_req, res, next) {
     next(error);
   }
 }
+
+/**
+ * Helper to format a populated Submission document consistently
+ * for admin gallery consumption.
+ */
+export function formatSubmissionRecord(sub) {
+  if (!sub) return null;
+  const team = sub.teamId || {};
+  const teamMembers = Array.isArray(team.members) ? team.members : [];
+  const allMembers = team.leaderName
+    ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
+    : teamMembers;
+
+  return {
+    id: sub._id,
+    _id: sub._id,
+    teamId: team._id || sub.teamId,
+    teamName: team.name || 'Unnamed Squad',
+    leaderName: team.leaderName || 'Unknown Leader',
+    leaderEmail: team.leaderEmail || '',
+    members: allMembers,
+    membersCount: allMembers.length,
+    team: {
+      id: team._id,
+      name: team.name,
+      leaderName: team.leaderName,
+      leaderEmail: team.leaderEmail,
+      members: allMembers,
+    },
+    title: sub.title || 'Untitled Project',
+    description: sub.description || '',
+    repoUrl: sub.repoUrl || '',
+    playableUrl: sub.playableUrl || '',
+    videoUrl: sub.videoUrl || '',
+    submittedAt: sub.submittedAt || sub.createdAt,
+    createdAt: sub.createdAt,
+    updatedAt: sub.updatedAt,
+  };
+}
+
+/**
+ * GET /api/admin/submissions
+ * Retrieves all game submissions with populated team details.
+ * Supports optional search query (?q= or ?search=).
+ * Protected by requireAuth and requireAdmin.
+ */
+export async function getAdminSubmissions(req, res, next) {
+  try {
+    const { q, search } = req.query || {};
+    const searchTerm = (q || search || '').trim();
+
+    const query = {};
+    if (searchTerm) {
+      const matchingTeams = await Team.find({
+        $or: [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { leaderName: { $regex: searchTerm, $options: 'i' } },
+          { leaderEmail: { $regex: searchTerm, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const teamIds = matchingTeams.map((t) => t._id);
+
+      query.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { teamId: { $in: teamIds } },
+      ];
+    }
+
+    const submissions = await Submission.find(query)
+      .populate('teamId')
+      .sort({ submittedAt: -1, createdAt: -1 })
+      .lean();
+
+    const formatted = submissions.map(formatSubmissionRecord);
+
+    return res.json({
+      success: true,
+      data: formatted,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
