@@ -17,6 +17,7 @@ import Team from '../src/models/Team.js';
 import EventSettings from '../src/models/EventSettings.js';
 import { requireAuth } from '../src/middleware/auth.js';
 import { requireAdmin } from '../src/middleware/requireAdmin.js';
+import { saveSlip, deleteSlip } from '../src/services/storage.js';
 
 console.log('Running Day 06 End-to-End Unified Admin Workflow Tests...');
 
@@ -34,6 +35,10 @@ const createMockRes = () => ({
   },
   setHeader(name, value) {
     this.headers[name] = value;
+    return this;
+  },
+  type(val) {
+    this.headers['Content-Type'] = val;
     return this;
   },
   send(content) {
@@ -294,8 +299,31 @@ const makeQuery = (result) => ({
 // =========================================================================
 // 5. Slip Retrieval Endpoint (GET /api/admin/registrations/:id/slip)
 // =========================================================================
-console.log('• Testing Private Slip Delivery & SVG Digital Voucher...');
+console.log('• Testing Private Slip Delivery via getSlipPath...');
 
+// 5.1 Missing slip key returns 404 SLIP_NOT_FOUND
+{
+  const origFindById = Registration.findById;
+  try {
+    Registration.findById = () => ({
+      populate: async () => ({
+        ...testRegDoc,
+        payment: {},
+      }),
+    });
+
+    const req = { params: { id: mockRegId.toString() } };
+    const res = createMockRes();
+    await getAdminRegistrationSlip(req, res, () => {});
+
+    assert.strictEqual(res.statusCode, 404);
+    assert.strictEqual(res.body?.error?.code, 'SLIP_NOT_FOUND');
+  } finally {
+    Registration.findById = origFindById;
+  }
+}
+
+// 5.2 Non-existent slip file returns 404 SLIP_NOT_FOUND
 {
   const origFindById = Registration.findById;
   try {
@@ -304,7 +332,8 @@ console.log('• Testing Private Slip Delivery & SVG Digital Voucher...');
         ...testRegDoc,
         payment: {
           reference: 'BOC-990011',
-          slipKey: 'non_existent_path.png',
+          slipKey: 'slip_non_existent_file_123.png',
+          slipMime: 'image/png',
           submittedAt: new Date(),
         },
       }),
@@ -312,14 +341,149 @@ console.log('• Testing Private Slip Delivery & SVG Digital Voucher...');
 
     const req = { params: { id: mockRegId.toString() } };
     const res = createMockRes();
-    await getAdminRegistrationSlip(req, res, (err) => { if (err) throw err; });
+    await getAdminRegistrationSlip(req, res, () => {});
 
-    assert.strictEqual(res.statusCode, 200);
-    assert.strictEqual(res.headers['Content-Type'], 'image/svg+xml');
-    assert(res.body.includes('OFFICIAL PAYMENT TRANSFER VOUCHER'), 'Should stream SVG voucher');
-    assert(res.body.includes('CyberSyndicate'), 'SVG should contain team name');
+    assert.strictEqual(res.statusCode, 404);
+    assert.strictEqual(res.body?.error?.code, 'SLIP_NOT_FOUND');
   } finally {
     Registration.findById = origFindById;
+  }
+}
+
+// 5.3 Actual uploaded slip streamed via getSlipPath and res.sendFile
+{
+  const testTeamId = new mongoose.Types.ObjectId();
+  const mockFile = {
+    originalname: 'bank_transfer_receipt.png',
+    mimetype: 'image/png',
+    buffer: Buffer.from('FAKE_PNG_BINARY_DATA_FOR_VERIFICATION'),
+  };
+  const saved = await saveSlip(testTeamId, mockFile);
+
+  const origFindById = Registration.findById;
+  try {
+    Registration.findById = () => ({
+      populate: async () => ({
+        ...testRegDoc,
+        payment: {
+          reference: 'BOC-990011',
+          slipKey: saved.slipKey,
+          slipMime: saved.slipMime,
+          submittedAt: new Date(),
+        },
+      }),
+    });
+
+    const req = { params: { id: mockRegId.toString() } };
+    const res = createMockRes();
+    await getAdminRegistrationSlip(req, res, () => {});
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.headers['Content-Type'], 'image/png');
+    assert.ok(res.body?.fileSent?.includes(saved.slipKey), 'Should stream the exact slip path');
+  } finally {
+    Registration.findById = origFindById;
+    await deleteSlip(saved.slipKey);
+  }
+}
+
+// =========================================================================
+// 6. Event Settings Date Chronology Validation
+// =========================================================================
+console.log('• Testing Event Date Chronology Validation in updateAdminSettings...');
+
+// 6.1 Valid schedule saves successfully
+{
+  const origGetOrCreate = EventSettings.getOrCreateSingleton;
+  try {
+    const mockSettingsDoc = {
+      milestones: {
+        registrationOpensAt: new Date('2026-11-05T00:00:00.000Z'),
+        registrationClosesAt: new Date('2026-11-15T23:59:59.000Z'),
+        buildingStartsAt: new Date('2026-11-16T09:00:00.000Z'),
+        submissionOpensAt: new Date('2026-11-27T12:00:00.000Z'),
+        submissionClosesAt: new Date('2026-12-10T18:00:00.000Z'),
+        resultsAt: new Date('2026-12-15T15:00:00.000Z'),
+        toObject() {
+          return {
+            registrationOpensAt: this.registrationOpensAt,
+            registrationClosesAt: this.registrationClosesAt,
+            buildingStartsAt: this.buildingStartsAt,
+            submissionOpensAt: this.submissionOpensAt,
+            submissionClosesAt: this.submissionClosesAt,
+            resultsAt: this.resultsAt,
+          };
+        },
+      },
+      registrationMode: 'auto',
+      submissionMode: 'auto',
+      save: async () => true,
+    };
+    EventSettings.getOrCreateSingleton = async () => mockSettingsDoc;
+
+    const req = {
+      body: {
+        milestones: {
+          registrationOpensAt: '2026-11-06T00:00:00.000Z',
+          registrationClosesAt: '2026-11-16T00:00:00.000Z',
+        },
+      },
+    };
+    const res = createMockRes();
+    await updateAdminSettings(req, res, (err) => { if (err) throw err; });
+
+    assert.strictEqual(res.statusCode, 200, 'Valid milestone updates must return 200');
+    assert.strictEqual(res.body?.success, true);
+  } finally {
+    EventSettings.getOrCreateSingleton = origGetOrCreate;
+  }
+}
+
+// 6.2 Invalid schedule (inverted registration dates) rejected with CHRONOLOGY_VIOLATION
+{
+  const origGetOrCreate = EventSettings.getOrCreateSingleton;
+  try {
+    const mockSettingsDoc = {
+      milestones: {
+        registrationOpensAt: new Date('2026-11-05T00:00:00.000Z'),
+        registrationClosesAt: new Date('2026-11-15T23:59:59.000Z'),
+        buildingStartsAt: new Date('2026-11-16T09:00:00.000Z'),
+        submissionOpensAt: new Date('2026-11-27T12:00:00.000Z'),
+        submissionClosesAt: new Date('2026-12-10T18:00:00.000Z'),
+        resultsAt: new Date('2026-12-15T15:00:00.000Z'),
+        toObject() {
+          return {
+            registrationOpensAt: this.registrationOpensAt,
+            registrationClosesAt: this.registrationClosesAt,
+            buildingStartsAt: this.buildingStartsAt,
+            submissionOpensAt: this.submissionOpensAt,
+            submissionClosesAt: this.submissionClosesAt,
+            resultsAt: this.resultsAt,
+          };
+        },
+      },
+      registrationMode: 'auto',
+      submissionMode: 'auto',
+      save: async () => true,
+    };
+    EventSettings.getOrCreateSingleton = async () => mockSettingsDoc;
+
+    const req = {
+      body: {
+        milestones: {
+          registrationOpensAt: '2026-11-25T00:00:00.000Z',
+          registrationClosesAt: '2026-11-10T00:00:00.000Z',
+        },
+      },
+    };
+    const res = createMockRes();
+    await updateAdminSettings(req, res, (err) => { if (err) throw err; });
+
+    assert.strictEqual(res.statusCode, 400, 'Invalid milestone chronology must return 400');
+    assert.strictEqual(res.body?.error?.code, 'CHRONOLOGY_VIOLATION');
+    assert.ok(res.body?.error?.message?.includes('registrationOpensAt must be before registrationClosesAt'));
+  } finally {
+    EventSettings.getOrCreateSingleton = origGetOrCreate;
   }
 }
 

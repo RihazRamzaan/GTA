@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import fs from 'node:fs';
-import path from 'node:path';
 import EventSettings from '../models/EventSettings.js';
 import Registration from '../models/Registration.js';
 import Team from '../models/Team.js';
@@ -8,75 +6,9 @@ import Submission from '../models/Submission.js';
 import { validateMilestonesChronology } from '../utils/dates.js';
 import { httpError } from '../middleware/error.js';
 import { getEffectiveGates } from '../services/gates.js';
+import { getSlipPath } from '../services/storage.js';
 
 const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
-
-/**
- * Generates an authenticated SVG voucher receipt for developer testing,
- * seed squads, and environments without physical object storage.
- */
-function generateReceiptSvg({ teamName, leaderName, reference, amount, date, status }) {
-  const formattedDate = date
-    ? new Date(date).toLocaleString('en-US', { timeZone: 'Asia/Colombo' }) + ' LK'
-    : 'Verified';
-  const statusColor = status === 'approved' ? '#34d399' : status === 'rejected' ? '#f43f5e' : '#00e5ff';
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a0c1b"/>
-      <stop offset="100%" stop-color="#050711"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00e5ff"/>
-      <stop offset="100%" stop-color="#8b3dff"/>
-    </linearGradient>
-  </defs>
-
-  <rect width="600" height="750" rx="20" fill="url(#bg)" stroke="#00e5ff" stroke-width="2" stroke-opacity="0.4"/>
-  <rect x="25" y="25" width="550" height="700" rx="14" fill="#0d1026" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
-
-  <!-- Header Banner -->
-  <rect x="25" y="25" width="550" height="80" rx="14" fill="url(#accent)" opacity="0.15"/>
-  <text x="300" y="65" font-family="'Orbitron', sans-serif, monospace" font-size="20" font-weight="900" fill="#00e5ff" text-anchor="middle" letter-spacing="2">OFFICIAL PAYMENT TRANSFER VOUCHER</text>
-  <text x="300" y="90" font-family="sans-serif" font-size="12" fill="#9aa7c1" text-anchor="middle">BANK OF CEYLON / CEFT ONLINE SETTLEMENT</text>
-
-  <!-- Status Badge -->
-  <rect x="200" y="125" width="200" height="34" rx="8" fill="${statusColor}" fill-opacity="0.15" stroke="${statusColor}" stroke-width="1.5"/>
-  <text x="300" y="147" font-family="'Orbitron', monospace" font-size="13" font-weight="bold" fill="${statusColor}" text-anchor="middle" letter-spacing="1.5">${status.toUpperCase()}</text>
-
-  <!-- Divider -->
-  <line x1="50" y1="180" x2="550" y2="180" stroke="#ffffff" stroke-opacity="0.1" stroke-dasharray="4 4"/>
-
-  <!-- Key-Value Fields -->
-  <g font-family="sans-serif" font-size="14" fill="#9aa7c1">
-    <text x="60" y="225">Squad Name:</text>
-    <text x="540" y="225" font-weight="bold" fill="#ffffff" text-anchor="end">${teamName}</text>
-
-    <text x="60" y="275">Team Leader:</text>
-    <text x="540" y="275" font-weight="bold" fill="#ffffff" text-anchor="end">${leaderName}</text>
-
-    <text x="60" y="325">Bank Reference No:</text>
-    <text x="540" y="325" font-family="monospace" font-weight="bold" fill="#00e5ff" text-anchor="end" font-size="16">${reference}</text>
-
-    <text x="60" y="375">Registration Fee:</text>
-    <text x="540" y="375" font-weight="bold" fill="#34d399" text-anchor="end" font-size="18">LKR ${Number(amount).toLocaleString()}</text>
-
-    <text x="60" y="425">Transfer Timestamp:</text>
-    <text x="540" y="425" fill="#ffffff" text-anchor="end" font-size="13">${formattedDate}</text>
-  </g>
-
-  <!-- Security Stamp -->
-  <rect x="50" y="480" width="500" height="150" rx="10" fill="#050711" stroke="#ffffff" stroke-opacity="0.08"/>
-  <text x="300" y="520" font-family="'Orbitron', monospace" font-size="12" font-weight="bold" fill="#9aa7c1" text-anchor="middle" letter-spacing="1">AUTHENTICATED DIGITAL RECEIPT</text>
-  <text x="300" y="545" font-family="sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Submitted via Buildathon Team Portal • Verified for Entry ID</text>
-  <text x="300" y="580" font-family="monospace" font-size="12" fill="#00e5ff" text-anchor="middle">TX-VERIFIED-SHA256-OK</text>
-
-  <!-- Footer Watermark -->
-  <text x="300" y="690" font-family="'Orbitron', sans-serif" font-size="10" fill="#475569" text-anchor="middle" letter-spacing="2">CYBERPUNK GAME BUILDATHON 2026</text>
-</svg>`;
-}
 
 /**
  * Helper to format a populated Registration document consistently
@@ -178,12 +110,12 @@ export async function updateAdminSettings(req, res, next) {
       };
 
       const validation = validateMilestonesChronology(mergedCandidate);
-      if (!validation.isValid) {
+      if (!validation.valid) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'CHRONOLOGY_VIOLATION',
-            message: validation.error,
+            message: validation.errors.join(' '),
           },
         });
       }
@@ -208,32 +140,6 @@ export async function updateAdminSettings(req, res, next) {
       success: true,
       data: settings,
     });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * GET /api/admin/registrations/:id/slip
- * Safely streams the private payment slip file for admin review.
- */
-export async function getRegistrationSlip(req, res, next) {
-  try {
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) {
-      throw httpError(404, 'REGISTRATION_NOT_FOUND', 'Registration not found.');
-    }
-    const slipKey = registration.payment?.slipKey;
-    if (!slipKey) {
-      throw httpError(404, 'SLIP_NOT_FOUND', 'No payment slip has been uploaded for this registration.');
-    }
-
-    const { getSlipPath } = await import('../services/storage.js');
-    const filePath = await getSlipPath(slipKey);
-    if (registration.payment.slipMime) {
-      res.type(registration.payment.slipMime);
-    }
-    res.sendFile(filePath);
   } catch (error) {
     next(error);
   }
@@ -399,7 +305,8 @@ export async function getAdminRegistrationSlip(req, res, next) {
       });
     }
 
-    if (!registration.payment?.slipKey) {
+    const slipKey = registration.payment?.slipKey;
+    if (!slipKey) {
       return res.status(404).json({
         success: false,
         error: {
@@ -409,41 +316,36 @@ export async function getAdminRegistrationSlip(req, res, next) {
       });
     }
 
-    const team = registration.teamId || {};
-    const slipKey = registration.payment.slipKey;
-    const slipMime = registration.payment.slipMime || 'image/png';
-
-    // 1. Check if physical file exists in candidate local directories
-    const candidatePaths = [
-      path.resolve(process.cwd(), slipKey),
-      path.resolve(process.cwd(), 'server', slipKey),
-      path.resolve(process.cwd(), 'uploads', slipKey),
-      path.resolve(process.cwd(), 'server', 'uploads', slipKey),
-    ];
-
-    for (const filePath of candidatePaths) {
-      if (fs.existsSync(filePath)) {
-        res.setHeader('Content-Type', slipMime);
-        return res.sendFile(filePath);
+    let filePath;
+    try {
+      filePath = await getSlipPath(slipKey);
+    } catch (err) {
+      if (err.errorCode === 'SLIP_NOT_FOUND' || err.status === 404) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'SLIP_NOT_FOUND',
+            message: err.message || 'Payment slip file was not found.',
+          },
+        });
       }
+      throw err;
     }
 
-    // 2. In dev/test environments without physical object storage, serve styled SVG voucher
-    const svgReceipt = generateReceiptSvg({
-      teamName: team.name || 'Unnamed Squad',
-      leaderName: team.leaderName || 'Team Leader',
-      reference: registration.payment.reference || 'REF-PENDING',
-      amount: registration.feeAmount || 4000,
-      date: registration.payment.submittedAt || registration.payment.date || registration.updatedAt,
-      status: registration.status,
-    });
+    const slipMime = registration.payment?.slipMime || 'image/png';
+    if (typeof res.type === 'function') {
+      res.type(slipMime);
+    } else if (typeof res.setHeader === 'function') {
+      res.setHeader('Content-Type', slipMime);
+    }
 
-    res.setHeader('Content-Type', 'image/svg+xml');
-    return res.send(svgReceipt);
+    return res.sendFile(filePath);
   } catch (error) {
     next(error);
   }
 }
+
+export const getRegistrationSlip = getAdminRegistrationSlip;
 
 /**
  * GET /api/admin/summary
