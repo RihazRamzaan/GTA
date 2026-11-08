@@ -23,8 +23,12 @@ export default function RegistrationNotice() {
   } else {
     const nowMs = Date.now() + (settings.offsetMs || 0);
     const opensAt = settings.milestones?.registrationOpensAt;
+    const resultsAt = Date.parse(settings.milestones?.resultsAt);
     if (opensAt && nowMs < Date.parse(opensAt)) {
       text = `Registration opens on ${formatColombo(opensAt)} (Sri Lanka time). See you then!`;
+    } else if (!Number.isNaN(resultsAt) && nowMs >= resultsAt) {
+      // The whole timeline is finished, so no login question here. Team Login is still in the menu.
+      text = 'The event has ended. Thank you to everyone who took part!';
     } else {
       text = 'Registration is closed. Thank you for your interest!';
       showLogin = true;
