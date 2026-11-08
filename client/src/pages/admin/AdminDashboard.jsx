@@ -163,7 +163,16 @@ export default function AdminDashboard() {
   return (
     <div className="pb-16 font-['Rajdhani',sans-serif]">
       {/* Admin Navigation Bar */}
-      <AdminNav activeTab="overview" />
+      <AdminNav
+        activeTab="overview"
+        badgeCounts={{
+          totalTeams: stats.totalTeams,
+          waitingForApproval: stats.waitingForApproval,
+          totalSubmissions: stats.totalSubmissions,
+          registrationOpen: gates.registrationEffective,
+          submissionOpen: gates.submissionEffective,
+        }}
+      />
 
       {/* Header Bar with Live Refresh Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
