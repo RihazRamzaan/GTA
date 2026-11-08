@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from "react";
 import useEventSettings from "../../hooks/useEventSettings.js";
+import { getApiError } from "../../api/http.js";
 import {
   getSubmission,
   saveSubmission,
@@ -14,7 +16,7 @@ const emptyGame = {
 };
 
 export default function SubmissionPage() {
-  const { status, settings } = useEventSettings();
+  const { status, settings } = useEventSettings({ fresh: true });
 
   const isOpen =
     status === "ready" && settings?.submissionOpen === true;
@@ -22,15 +24,22 @@ export default function SubmissionPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [game, setGame] = useState(emptyGame);
   const [savedGame, setSavedGame] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState("pending");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
 
+  // Load the saved submission and registration status
   useEffect(() => {
     async function loadSubmission() {
       try {
         const response = await getSubmission();
+
+        setRegistrationStatus(
+          response.registrationStatus || "pending"
+        );
+
         const submission = response.data;
 
         if (submission) {
@@ -133,11 +142,19 @@ export default function SubmissionPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
+  // Save a new game or update an existing game
   async function handleSave(event) {
     event.preventDefault();
 
     if (!isOpen) {
       setMessage("Submissions are currently closed.");
+      return;
+    }
+
+    if (registrationStatus !== "approved") {
+      setMessage(
+        "Your team must be approved before submitting a game."
+      );
       return;
     }
 
@@ -164,21 +181,30 @@ export default function SubmissionPage() {
 
       setIsEditing(false);
       setErrors({});
-      setMessage("Your game submission has been saved successfully!");
-    } catch (error) {
-      console.error("Failed to save submission:", error);
-
       setMessage(
-        error.response?.data?.error?.message ||
-          "Could not save your submission. Please try again."
+        "Your game submission has been saved successfully!"
       );
-    } finally {
+    }  catch (error) {
+  console.error("Failed to save submission:", error);
+
+  const apiError = getApiError(error);
+
+  setMessage(apiError.message);
+  setErrors(apiError.fields);
+} finally {
       setIsSaving(false);
     }
   }
 
+  // Edit an existing submission
   function handleEdit() {
-    if (!isOpen || !savedGame) return;
+    if (
+      !isOpen ||
+      registrationStatus !== "approved" ||
+      !savedGame
+    ) {
+      return;
+    }
 
     setGame({
       title: savedGame.title || "",
@@ -211,6 +237,7 @@ export default function SubmissionPage() {
     setIsEditing(false);
   }
 
+  // Loading screen
   if (isLoading || status === "loading") {
     return (
       <main className="submission-page">
@@ -224,6 +251,7 @@ export default function SubmissionPage() {
     );
   }
 
+  // Settings error screen
   if (status === "error") {
     return (
       <main className="submission-page">
@@ -571,7 +599,45 @@ export default function SubmissionPage() {
           </p>
         </header>
 
-        {isOpen && isEditing ? (
+        {/* Registration pending message */}
+        {isOpen && registrationStatus !== "approved" && (
+  <section className="sp-locked">
+    <h2>
+      {registrationStatus === "waiting_for_approval"
+        ? "Your Team Is Waiting for Approval"
+        : registrationStatus === "rejected"
+        ? "Team Registration Rejected"
+        : "Team Registration Not Approved"}
+    </h2>
+
+    <p>
+      {registrationStatus === "waiting_for_approval"
+        ? "Your team registration is currently waiting for admin approval. You can submit your game once your team has been approved."
+        : registrationStatus === "rejected"
+        ? "Your team registration was rejected. Please contact the event administrators for more information."
+        : "Your team registration is not approved yet. Please complete the registration process before submitting your game."}
+    </p>
+  </section>
+)}
+
+        {/* Submissions closed message */}
+        {!isOpen && (
+          <section className="sp-locked">
+            <div className="sp-lock-icon">🔒</div>
+            <h2>Submissions Are Closed</h2>
+            <p>
+              The game submission period is not currently open.
+              <br />
+              You can view your existing submission,
+              but you cannot create or edit it.
+            </p>
+          </section>
+        )}
+
+        {/* Show form only when event is open and team is approved */}
+        {isOpen &&
+        registrationStatus === "approved" &&
+        isEditing ? (
           <div className="sp-grid">
             <section className="sp-card">
               <span className="sp-status">
@@ -579,7 +645,9 @@ export default function SubmissionPage() {
               </span>
 
               <h2>
-                {savedGame ? "Edit Your Game Submission" : "Create Your Game Submission"}
+                {savedGame
+                  ? "Edit Your Game Submission"
+                  : "Create Your Game Submission"}
               </h2>
 
               <p className="sp-subtitle">
@@ -695,7 +763,9 @@ export default function SubmissionPage() {
                   className="sp-submit"
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving..." : "✦ Save Game Submission"}
+                  {isSaving
+                    ? "Saving..."
+                    : "✦ Save Game Submission"}
                 </button>
 
                 <button
@@ -760,19 +830,7 @@ export default function SubmissionPage() {
           </div>
         ) : (
           <>
-            {!isOpen && (
-              <section className="sp-locked">
-                <div className="sp-lock-icon">🔒</div>
-                <h2>Submissions Are Closed</h2>
-                <p>
-                  The game submission period is not currently open.
-                  <br />
-                  You can view your existing submission,
-                  but you cannot create or edit it.
-                </p>
-              </section>
-            )}
-
+            {/* Display previously saved game */}
             {savedGame ? (
               <section className="sp-card sp-saved">
                 <div className="sp-saved-head">
@@ -786,7 +844,11 @@ export default function SubmissionPage() {
 
                 <p>
                   <strong>GitHub Repository: </strong>
-                  <a href={savedGame.repoUrl} target="_blank" rel="noreferrer">
+                  <a
+                    href={savedGame.repoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     {savedGame.repoUrl}
                   </a>
                 </p>
@@ -794,26 +856,38 @@ export default function SubmissionPage() {
                 <p>
                   <strong>Playable Game: </strong>
                   {savedGame.playableUrl ? (
-                    <a href={savedGame.playableUrl} target="_blank" rel="noreferrer">
+                    <a
+                      href={savedGame.playableUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {savedGame.playableUrl}
                     </a>
-                  ) : "Not provided"}
+                  ) : (
+                    "Not provided"
+                  )}
                 </p>
 
                 <p>
                   <strong>Demo Video: </strong>
                   {savedGame.videoUrl ? (
-                    <a href={savedGame.videoUrl} target="_blank" rel="noreferrer">
+                    <a
+                      href={savedGame.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {savedGame.videoUrl}
                     </a>
-                  ) : "Not provided"}
+                  ) : (
+                    "Not provided"
+                  )}
                 </p>
 
                 {message && (
                   <div className="sp-message">{message}</div>
                 )}
 
-                {isOpen && (
+                {isOpen && registrationStatus === "approved" && (
                   <button
                     type="button"
                     className="sp-button sp-edit"
@@ -828,7 +902,7 @@ export default function SubmissionPage() {
                 <h2>No Game Submission Yet</h2>
                 <p>Your team has not submitted a game yet.</p>
 
-                {isOpen && (
+                {isOpen && registrationStatus === "approved" && (
                   <button
                     type="button"
                     className="sp-button sp-edit"
