@@ -19,6 +19,8 @@ https://vercel.com/docs/services
 https://vercel.com/docs/services/routing
 
 Set the following in the Vercel project's environment variable settings:
+Use the root `.env.example` as the combined import template. Replace its
+placeholders before importing; never commit the populated file.
 
 ```dotenv
 VITE_API_URL=/api
