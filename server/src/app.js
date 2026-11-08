@@ -17,7 +17,19 @@ const app = express();
 // Hosts put the API behind one proxy; secure cookies and rate limits need the real protocol and IP.
 if (env.nodeEnv === 'production') app.set('trust proxy', 1);
 app.use(helmet());
-app.use(cors({ origin: env.clientOrigin, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (env.nodeEnv !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    if (origin === env.clientOrigin) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(originCheck);
 app.use(express.json());
 app.use(cookieParser());
