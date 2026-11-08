@@ -523,21 +523,12 @@ export default function PaymentSlipArea({
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
-              <a
-                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/team/payment/slip`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-neon-cyan hover:underline font-body flex items-center gap-1 font-semibold"
-              >
-                <span>📄 View Raw Slip File</span>
-                <span>↗</span>
-              </a>
-
+            {/* Point 4: Do not show public links to private payment slips */}
+            <div className="mt-5 flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowReceiptModal(false)}
-                className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold font-body"
+                className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold font-body transition"
               >
                 Close
               </button>
