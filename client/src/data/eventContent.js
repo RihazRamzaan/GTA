@@ -22,7 +22,7 @@ export const eventContent = {
   navLinks: [
     { label: 'Home', href: '#home' },
     { label: 'About', href: '#about' },
-    { label: 'Timeline', href: '#timeline' },
+    { label: 'Agenda', href: '#timeline' },
     { label: 'Prizes', href: '#prizes' },
     { label: 'Rules', href: '#rules' },
     { label: 'Sponsors', href: '#sponsors' },

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Hero from '../components/event/Hero.jsx';
 import About from '../components/event/About.jsx';
 import Countdown from '../components/event/Countdown.jsx';
@@ -19,6 +21,17 @@ function Divider() {
 export default function Home() {
   const { settings, status } = useEventSettings();
 
+  
+  // When the address names a section (like /#rules), scroll to it once the page is shown.
+  // It runs again when the settings arrive, because the page height can change a little then.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const section = document.getElementById(hash.slice(1));
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [hash, status]);
+  
+
   return (
     <div className="full-bleed bg-night">
       <Hero />
@@ -27,7 +40,7 @@ export default function Home() {
 
       <section id="timeline" className="bg-night py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <p className="mb-3 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">EVENT TIMELINE</p>
+          <p className="mb-3 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">EVENT AGENDA</p>
           <h2 className="mb-8 font-display text-4xl font-black text-white md:text-5xl">
             YOUR JOURNEY TO <span className="text-neon-cyan">CREATION</span>
           </h2>
