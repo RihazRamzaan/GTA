@@ -8,11 +8,24 @@ export default function PaymentSlipArea({
 }) {
   const payment = registration?.payment || {};
   const status = registration?.status || 'waiting_for_slip';
+  const rejectionReason = payment.rejectionReason || registration?.rejectionReason;
+
+  // Safe ISO date string helper
+  const formatIsoDate = (val) => {
+    if (!val) return new Date().toISOString().split('T')[0];
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+      return d.toISOString().split('T')[0];
+    } catch {
+      return new Date().toISOString().split('T')[0];
+    }
+  };
 
   // State for the payment form
   const [reference, setReference] = useState(payment.reference || '');
   const [paymentDate, setPaymentDate] = useState(
-    payment.paymentDate || new Date().toISOString().split('T')[0]
+    payment.paymentDate || formatIsoDate(payment.date)
   );
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(payment.slipPreviewUrl || null);
@@ -23,13 +36,14 @@ export default function PaymentSlipArea({
   const [copied, setCopied] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
-  // Sync form if registration changes externally (e.g. preview dropdown)
+  // Sync form if registration changes externally (e.g. preview dropdown or /api/team/me fetch)
   useEffect(() => {
     setReference(payment.reference || '');
-    setPaymentDate(payment.paymentDate || new Date().toISOString().split('T')[0]);
+    setPaymentDate(payment.paymentDate || formatIsoDate(payment.date));
     setIsEditingExisting(false);
+    setSelectedFile(null);
     setErrors({});
-  }, [registration?.status, payment.reference, payment.paymentDate]);
+  }, [registration?.status, payment.reference, payment.paymentDate, payment.date, payment.rejectionReason, registration?.rejectionReason]);
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(bankDetails.accountNumber);
@@ -70,10 +84,13 @@ export default function PaymentSlipArea({
       nextErrors.paymentDate = 'Payment date is required.';
     }
 
-    // A file must be provided either currently selected or existing from previous upload
+    // A file must be provided: either freshly chosen or existing (if not rejected)
     const hasExistingFile = Boolean(payment.fileName || payment.reference);
-    if (!selectedFile && !hasExistingFile) {
-      nextErrors.file = 'Please select a photo or PDF of your bank deposit slip.';
+    if (!selectedFile && (status === 'rejected' || !hasExistingFile)) {
+      nextErrors.file =
+        status === 'rejected'
+          ? 'Please select a replacement bank deposit slip (photo or PDF).'
+          : 'Please select a photo or PDF of your bank deposit slip.';
     }
 
     setErrors(nextErrors);
@@ -99,6 +116,7 @@ export default function PaymentSlipArea({
       fileSize: fileSizeStr,
       slipPreviewUrl: previewUrl,
       submittedAt: new Date().toISOString(),
+      file: selectedFile,
     });
 
     setIsEditingExisting(false);
@@ -144,7 +162,7 @@ export default function PaymentSlipArea({
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
               💳 Payment Not Uploaded
             </span>
-          )}
+          )}1
         </div>
       </div>
 
@@ -215,13 +233,10 @@ export default function PaymentSlipArea({
             </h3>
 
             {!showForm && status === 'waiting_for_approval' && (
-              <button
-                type="button"
-                onClick={() => setIsEditingExisting(true)}
-                className="text-xs font-bold text-neon-cyan hover:underline font-body"
-              >
-                ✎ Edit / Replace Slip
-              </button>
+              <span className="text-xs font-semibold text-amber-300 font-body flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30">
+                <span>⏳</span>
+                <span>Under Review (Locked)</span>
+              </span>
             )}
           </div>
 
@@ -231,11 +246,11 @@ export default function PaymentSlipArea({
               <div className="flex items-center gap-2 text-red-400 font-bold font-display text-xs uppercase tracking-wider mb-1">
                 <span>⚠️ Reason For Rejection</span>
               </div>
-              <p className="text-red-200 text-sm">
-                "{payment.rejectionReason || 'The deposit slip was unclear. Please upload a legible receipt.'}"
+              <p className="text-red-100 text-sm font-semibold">
+                "{rejectionReason || 'The deposit slip could not be verified by organizers. Please upload a clear photo or digital banking PDF receipt.'}"
               </p>
-              <p className="text-xs text-slate-400 mt-2">
-                Update the reference number, date, or choose a clearer receipt below and resubmit.
+              <p className="text-xs text-slate-300 mt-2">
+                Upload a replacement bank slip below with the correct reference number and payment date.
               </p>
             </div>
           )}
@@ -431,7 +446,7 @@ export default function PaymentSlipArea({
               </div>
 
               {/* Actions */}
-              <div className="pt-2 flex items-center gap-3">
+              <div className="pt-2 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => setShowReceiptModal(true)}
@@ -441,13 +456,9 @@ export default function PaymentSlipArea({
                 </button>
 
                 {status === 'waiting_for_approval' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingExisting(true)}
-                    className="px-4 py-2 rounded-lg bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan border border-neon-cyan/40 text-sm font-bold font-body transition"
-                  >
-                    Edit / Replace
-                  </button>
+                  <span className="text-xs text-amber-300 font-semibold px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30">
+                    Slip locked during review
+                  </span>
                 )}
               </div>
             </div>
@@ -487,7 +498,7 @@ export default function PaymentSlipArea({
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Payment Date:</span>
-                <span className="text-white">{payment.paymentDate || '2026-10-31'}</span>
+                <span className="text-white">{payment.paymentDate || formatIsoDate(payment.date)}</span>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Beneficiary:</span>
@@ -507,7 +518,17 @@ export default function PaymentSlipArea({
               </div>
             </div>
 
-            <div className="mt-5 flex justify-end">
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <a
+                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/team/payment/slip`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-neon-cyan hover:underline font-body flex items-center gap-1 font-semibold"
+              >
+                <span>📄 View Raw Slip File</span>
+                <span>↗</span>
+              </a>
+
               <button
                 type="button"
                 onClick={() => setShowReceiptModal(false)}

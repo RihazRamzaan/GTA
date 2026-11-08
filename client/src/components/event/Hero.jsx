@@ -2,13 +2,22 @@ import RegisterButton from './RegisterButton.jsx';
 import Icon from '../ui/Icon.jsx';
 import heroCity from '../../assets/hero-city.png';
 import { eventContent } from '../../data/eventContent.js';
+import RegistrationNotice from './RegistrationNotice.jsx';
+import useEventSettings from '../../hooks/useEventSettings.js';
+import { formatColomboDateRange } from '../../utils/dates.js';
 
 const lineColors = ['text-white', 'text-neon-cyan', 'text-neon-pink'];
 
 export default function Hero() {
   const { label, heroLines, tagline, info } = eventContent;
+  const { status, settings } = useEventSettings();
+  const dateRange =
+    status === 'ready'
+      ? formatColomboDateRange(settings.milestones?.buildingStartsAt, settings.milestones?.submissionClosesAt)
+      : null;
+  const dateText = (dateRange || info.dates).toUpperCase();
   const infoItems = [
-    { icon: 'calendar', value: info.dates, caption: 'EVENT DATES' },
+    { icon: 'calendar', value: dateText, caption: 'EVENT DATES' },
     { icon: 'pin', value: info.venue, caption: 'VENUE' },
     { icon: 'users', value: info.teamSize, caption: 'TEAM SIZE' },
   ];
@@ -23,6 +32,10 @@ export default function Hero() {
       />
       {/* Dark layer on the left so the headline stays easy to read */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-night/80 via-night/20 to-transparent" />
+            {/* Soft fade at the bottom so the info row is easy to read */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night/90 to-transparent" />
+      {/* Darker cover on phones, where the text sits over the bright part of the picture */}
+      <div className="pointer-events-none absolute inset-0 bg-night/50 md:hidden" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
         <p className="mb-4 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">{label}</p>
@@ -46,6 +59,7 @@ export default function Hero() {
             Learn More
           </a>
         </div>
+         <RegistrationNotice />
 
         <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
           {infoItems.map((item) => (

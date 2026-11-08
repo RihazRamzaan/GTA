@@ -18,9 +18,8 @@ export default function Agenda({ settings, status }) {
   if (status === 'loading') {
     return <p className="font-body text-lg text-slate-400">Loading agenda...</p>;
   }
-  if (status === 'error') {
-    return <p className="font-body text-lg text-neon-pink">The agenda is not available right now.</p>;
-  }
+    // The countdown card above already shows the error message
+  if (status === 'error') return null;
 
   const steps = eventContent.agendaSteps.map((step) => {
     const iso = settings.milestones?.[step.key];
@@ -31,7 +30,7 @@ export default function Agenda({ settings, status }) {
 
   return (
     <section aria-label="Agenda">
-      <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-6">
         {steps.map((step, i) => {
           const hasDate = !Number.isNaN(step.time);
           const isDone = hasDate && step.time <= now;
@@ -50,11 +49,11 @@ export default function Agenda({ settings, status }) {
           const badge = isNext ? 'UP NEXT' : isDone ? 'COMPLETED' : hasDate ? 'UPCOMING' : 'TO BE ANNOUNCED';
 
           return (
-            <li key={step.key} className={`rounded-lg border bg-night-card p-4 text-center ${box}`}>
+            <li key={step.key} className={`rounded-lg border bg-night-card p-3 text-center sm:p-4 ${box}`}>
               <span className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 ${ring}`}>
                 <Icon name={stepIcons[step.key]} size={26} glow={!isDone} />
               </span>
-              <h3 className="mt-3 font-body text-lg font-bold text-white">{step.label}</h3>
+              <h3 className="mt-3 font-body text-base font-bold text-white sm:text-lg">{step.label}</h3>
               <p className="mt-1 font-body text-sm text-slate-400">
                 {hasDate ? formatColombo(step.iso) : 'Date to be announced'}
               </p>
