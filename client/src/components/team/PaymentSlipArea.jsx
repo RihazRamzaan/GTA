@@ -146,7 +146,7 @@ export default function PaymentSlipArea({
         <div className="flex items-center gap-2">
           {status === 'approved' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              ✓ Payment Approved & Verified
+              ✓ Approved — Officially Registered
             </span>
           )}
           {status === 'waiting_for_approval' && (
