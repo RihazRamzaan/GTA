@@ -1,4 +1,4 @@
-
+import { teamApi } from "../../api/team.js";
 import { useEffect, useState } from "react";
 import useEventSettings from "../../hooks/useEventSettings.js";
 import { getApiError } from "../../api/http.js";
@@ -25,6 +25,8 @@ export default function SubmissionPage() {
   const [game, setGame] = useState(emptyGame);
   const [savedGame, setSavedGame] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState("pending");
+  const [registrationError, setRegistrationError] = useState("");
+const [retryCount, setRetryCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -32,35 +34,45 @@ export default function SubmissionPage() {
 
   // Load the saved submission and registration status
   useEffect(() => {
-    async function loadSubmission() {
-      try {
-        const response = await getSubmission();
+  async function loadSubmission() {
+    setIsLoading(true);
+    setRegistrationError("");
 
-        setRegistrationStatus(
-          response.registrationStatus || "pending"
-        );
+    // Load the saved game submission
+    try {
+      const response = await getSubmission();
+      const submission = response.data;
 
-        const submission = response.data;
-
-        if (submission) {
-          setSavedGame(submission);
-          setGame({
-            title: submission.title || "",
-            description: submission.description || "",
-            repoUrl: submission.repoUrl || "",
-            playableUrl: submission.playableUrl || "",
-            videoUrl: submission.videoUrl || "",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load submission:", error);
-      } finally {
-        setIsLoading(false);
+      if (submission) {
+        setSavedGame(submission);
+        setGame({
+          title: submission.title || "",
+          description: submission.description || "",
+          repoUrl: submission.repoUrl || "",
+          playableUrl: submission.playableUrl || "",
+          videoUrl: submission.videoUrl || "",
+        });
       }
+    } catch (error) {
+      console.error("Failed to load submission:", error);
     }
 
-    loadSubmission();
-  }, []);
+    // Load the actual team registration status
+    try {
+      const teamData = await teamApi.getMyTeam();
+      setRegistrationStatus(teamData.registration.status);
+    } catch (error) {
+      console.error("Failed to load registration:", error);
+      setRegistrationError(
+        "Unable to load your team registration status. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  loadSubmission();
+}, [retryCount]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -267,6 +279,27 @@ export default function SubmissionPage() {
       </main>
     );
   }
+  // Registration error screen
+if (registrationError) {
+  return (
+    <main className="submission-page">
+      <div className="sp-container">
+        <section className="sp-locked">
+          <h2>Unable to Load Team Registration</h2>
+          <p>{registrationError}</p>
+
+          <button
+            type="button"
+            className="sp-button"
+            onClick={() => setRetryCount((count) => count + 1)}
+          >
+            Retry
+          </button>
+        </section>
+      </div>
+    </main>
+  );}
+
 
   return (
     <main className="submission-page">
