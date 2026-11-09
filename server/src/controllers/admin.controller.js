@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import EventSettings from '../models/EventSettings.js';
 import Registration from '../models/Registration.js';
 import Team from '../models/Team.js';
@@ -5,8 +6,55 @@ import Submission from '../models/Submission.js';
 import { validateMilestonesChronology } from '../utils/dates.js';
 import { httpError } from '../middleware/error.js';
 import { getEffectiveGates } from '../services/gates.js';
+import { getSlipPath } from '../services/storage.js';
 
 const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
+
+/**
+ * Helper to format a populated Registration document consistently
+ * for admin consumption (omitting sensitive raw storage keys).
+ */
+export function formatRegistrationRecord(reg) {
+  if (!reg) return null;
+  const team = reg.teamId || {};
+  const teamMembers = Array.isArray(team.members) ? team.members : [];
+  const allMembers = team.leaderName
+    ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
+    : teamMembers;
+
+  return {
+    id: reg._id,
+    _id: reg._id,
+    status: reg.status,
+    feeAmount: reg.feeAmount,
+    teamId: team._id || reg.teamId,
+    teamName: team.name || 'Unnamed Team',
+    leaderName: team.leaderName || 'Unknown Leader',
+    leaderEmail: team.leaderEmail || '',
+    members: allMembers,
+    membersCount: allMembers.length,
+    team: {
+      id: team._id,
+      name: team.name,
+      leaderName: team.leaderName,
+      leaderEmail: team.leaderEmail,
+      members: allMembers,
+      createdAt: team.createdAt,
+    },
+    payment: {
+      reference: reg.payment?.reference || '—',
+      date: reg.payment?.date,
+      slipMime: reg.payment?.slipMime,
+      hasSlip: Boolean(reg.payment?.slipKey),
+      submittedAt: reg.payment?.submittedAt,
+      reviewedBy: reg.payment?.reviewedBy,
+      reviewedAt: reg.payment?.reviewedAt,
+      rejectionReason: reg.payment?.rejectionReason,
+    },
+    createdAt: reg.createdAt,
+    updatedAt: reg.updatedAt,
+  };
+}
 
 /**
  * GET /api/admin/settings
@@ -33,40 +81,43 @@ export async function updateAdminSettings(req, res, next) {
   try {
     const { milestones, registrationMode, submissionMode } = req.body || {};
 
-    // Validate registrationMode if provided
     if (registrationMode !== undefined && !ALLOWED_MODES.includes(registrationMode)) {
-      throw httpError(
-        400,
-        'INVALID_GATE_MODE',
-        `registrationMode must be one of: ${ALLOWED_MODES.join(', ')}`
-      );
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_GATE_MODE',
+          message: `registrationMode must be one of: ${ALLOWED_MODES.join(', ')}`,
+        },
+      });
     }
 
-    // Validate submissionMode if provided
     if (submissionMode !== undefined && !ALLOWED_MODES.includes(submissionMode)) {
-      throw httpError(
-        400,
-        'INVALID_GATE_MODE',
-        `submissionMode must be one of: ${ALLOWED_MODES.join(', ')}`
-      );
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_GATE_MODE',
+          message: `submissionMode must be one of: ${ALLOWED_MODES.join(', ')}`,
+        },
+      });
     }
 
     const settings = await EventSettings.getOrCreateSingleton();
 
-    // If milestones are being updated, merge with existing milestones to validate chronology
-    if (milestones !== undefined) {
-      if (typeof milestones !== 'object' || milestones === null) {
-        throw httpError(400, 'INVALID_MILESTONES', 'Milestones must be an object with date values.');
-      }
-
-      const mergedMilestones = {
+    if (milestones && typeof milestones === 'object') {
+      const mergedCandidate = {
         ...settings.milestones.toObject(),
         ...milestones,
       };
 
-      const validation = validateMilestonesChronology(mergedMilestones);
+      const validation = validateMilestonesChronology(mergedCandidate);
       if (!validation.valid) {
-        throw httpError(400, 'INVALID_CHRONOLOGY', validation.errors.join(' '));
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'CHRONOLOGY_VIOLATION',
+            message: validation.errors.join(' '),
+          },
+        });
       }
 
       // Apply valid parsed dates
@@ -89,32 +140,6 @@ export async function updateAdminSettings(req, res, next) {
       success: true,
       data: settings,
     });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * GET /api/admin/registrations/:id/slip
- * Safely streams the private payment slip file for admin review.
- */
-export async function getRegistrationSlip(req, res, next) {
-  try {
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) {
-      throw httpError(404, 'REGISTRATION_NOT_FOUND', 'Registration not found.');
-    }
-    const slipKey = registration.payment?.slipKey;
-    if (!slipKey) {
-      throw httpError(404, 'SLIP_NOT_FOUND', 'No payment slip has been uploaded for this registration.');
-    }
-
-    const { getSlipPath } = await import('../services/storage.js');
-    const filePath = await getSlipPath(slipKey);
-    if (registration.payment.slipMime) {
-      res.type(registration.payment.slipMime);
-    }
-    res.sendFile(filePath);
   } catch (error) {
     next(error);
   }
@@ -151,47 +176,7 @@ export async function getAdminRegistrations(req, res, next) {
       .sort({ createdAt: -1 })
       .lean();
 
-    const data = registrations.map((reg) => {
-      const team = reg.teamId || {};
-      const teamMembers = Array.isArray(team.members) ? team.members : [];
-      // Include the leader in the members roster if available
-      const allMembers = team.leaderName
-        ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
-        : teamMembers;
-
-      return {
-        id: reg._id,
-        _id: reg._id,
-        status: reg.status,
-        feeAmount: reg.feeAmount,
-        teamId: team._id || reg.teamId,
-        teamName: team.name || 'Unnamed Team',
-        leaderName: team.leaderName || 'Unknown Leader',
-        leaderEmail: team.leaderEmail || '',
-        members: allMembers,
-        membersCount: allMembers.length,
-        team: {
-          id: team._id,
-          name: team.name,
-          leaderName: team.leaderName,
-          leaderEmail: team.leaderEmail,
-          members: allMembers,
-          createdAt: team.createdAt,
-        },
-        payment: {
-          reference: reg.payment?.reference || '—',
-          date: reg.payment?.date,
-          slipMime: reg.payment?.slipMime,
-          hasSlip: Boolean(reg.payment?.slipKey),
-          submittedAt: reg.payment?.submittedAt,
-          reviewedBy: reg.payment?.reviewedBy,
-          reviewedAt: reg.payment?.reviewedAt,
-          rejectionReason: reg.payment?.rejectionReason,
-        },
-        createdAt: reg.createdAt,
-        updatedAt: reg.updatedAt,
-      };
-    });
+    const data = registrations.map(formatRegistrationRecord);
 
     return res.json({
       success: true,
@@ -201,6 +186,166 @@ export async function getAdminRegistrations(req, res, next) {
     next(error);
   }
 }
+
+/**
+ * PATCH /api/admin/registrations/:id/review
+ * Reviews a registration payment slip.
+ * Body:
+ *   - status: 'approved' | 'rejected' (or decision: 'approve' | 'reject')
+ *   - rejectionReason: string (required if rejected)
+ */
+export async function reviewAdminRegistration(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_ID',
+          message: 'Invalid registration ID format.',
+        },
+      });
+    }
+
+    const { status, decision, rejectionReason, reason } = req.body || {};
+
+    let targetStatus = null;
+    if (status === 'approved' || decision === 'approve') {
+      targetStatus = 'approved';
+    } else if (status === 'rejected' || decision === 'reject') {
+      targetStatus = 'rejected';
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_STATUS',
+          message: 'Review decision must be "approved" or "rejected".',
+        },
+      });
+    }
+
+    const reasonText = (rejectionReason || reason || '').trim();
+    if (targetStatus === 'rejected' && !reasonText) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'REJECTION_REASON_REQUIRED',
+          message: 'A clear reason is required when rejecting a payment slip.',
+        },
+      });
+    }
+
+    const registration = await Registration.findById(id).populate('teamId');
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Registration record not found.',
+        },
+      });
+    }
+
+    if (!registration.payment) {
+      registration.payment = {};
+    }
+
+    const reviewerId = req.user?._id || req.session?.userId || null;
+    const now = new Date();
+
+    registration.status = targetStatus;
+    registration.payment.reviewedBy = reviewerId;
+    registration.payment.reviewedAt = now;
+
+    if (targetStatus === 'approved') {
+      registration.payment.rejectionReason = undefined;
+    } else {
+      registration.payment.rejectionReason = reasonText;
+    }
+
+    await registration.save();
+
+    const populated = await Registration.findById(registration._id).populate('teamId').lean();
+
+    return res.json({
+      success: true,
+      data: formatRegistrationRecord(populated),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/admin/registrations/:id/slip
+ * Retrieves or streams the private bank slip file for admin verification.
+ * Protected by requireAuth and requireAdmin. Never exposes private storage keys.
+ */
+export async function getAdminRegistrationSlip(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_ID',
+          message: 'Invalid registration ID format.',
+        },
+      });
+    }
+
+    const registration = await Registration.findById(id).populate('teamId');
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Registration record not found.',
+        },
+      });
+    }
+
+    const slipKey = registration.payment?.slipKey;
+    if (!slipKey) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'SLIP_NOT_FOUND',
+          message: 'No payment slip has been uploaded for this team.',
+        },
+      });
+    }
+
+    let filePath;
+    try {
+      filePath = await getSlipPath(slipKey);
+    } catch (err) {
+      if (err.errorCode === 'SLIP_NOT_FOUND' || err.status === 404) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'SLIP_NOT_FOUND',
+            message: err.message || 'Payment slip file was not found.',
+          },
+        });
+      }
+      throw err;
+    }
+
+    const slipMime = registration.payment?.slipMime || 'image/png';
+    if (typeof res.type === 'function') {
+      res.type(slipMime);
+    } else if (typeof res.setHeader === 'function') {
+      res.setHeader('Content-Type', slipMime);
+    }
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export const getRegistrationSlip = getAdminRegistrationSlip;
 
 /**
  * GET /api/admin/summary
@@ -262,3 +407,89 @@ export async function getAdminSummary(_req, res, next) {
     next(error);
   }
 }
+
+/**
+ * Helper to format a populated Submission document consistently
+ * for admin gallery consumption.
+ */
+export function formatSubmissionRecord(sub) {
+  if (!sub) return null;
+  const team = sub.teamId || {};
+  const teamMembers = Array.isArray(team.members) ? team.members : [];
+  const allMembers = team.leaderName
+    ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
+    : teamMembers;
+
+  return {
+    id: sub._id,
+    _id: sub._id,
+    teamId: team._id || sub.teamId,
+    teamName: team.name || 'Unnamed Squad',
+    leaderName: team.leaderName || 'Unknown Leader',
+    leaderEmail: team.leaderEmail || '',
+    members: allMembers,
+    membersCount: allMembers.length,
+    team: {
+      id: team._id,
+      name: team.name,
+      leaderName: team.leaderName,
+      leaderEmail: team.leaderEmail,
+      members: allMembers,
+    },
+    title: sub.title || 'Untitled Project',
+    description: sub.description || '',
+    repoUrl: sub.repoUrl || '',
+    playableUrl: sub.playableUrl || '',
+    videoUrl: sub.videoUrl || '',
+    submittedAt: sub.submittedAt || sub.createdAt,
+    createdAt: sub.createdAt,
+    updatedAt: sub.updatedAt,
+  };
+}
+
+/**
+ * GET /api/admin/submissions
+ * Retrieves all game submissions with populated team details.
+ * Supports optional search query (?q= or ?search=).
+ * Protected by requireAuth and requireAdmin.
+ */
+export async function getAdminSubmissions(req, res, next) {
+  try {
+    const { q, search } = req.query || {};
+    const searchTerm = (q || search || '').trim();
+
+    const query = {};
+    if (searchTerm) {
+      const matchingTeams = await Team.find({
+        $or: [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { leaderName: { $regex: searchTerm, $options: 'i' } },
+          { leaderEmail: { $regex: searchTerm, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const teamIds = matchingTeams.map((t) => t._id);
+
+      query.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { teamId: { $in: teamIds } },
+      ];
+    }
+
+    const submissions = await Submission.find(query)
+      .populate('teamId')
+      .sort({ submittedAt: -1, createdAt: -1 })
+      .lean();
+
+    const formatted = submissions.map(formatSubmissionRecord);
+
+    return res.json({
+      success: true,
+      data: formatted,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AdminNav from '../../components/admin/AdminNav.jsx';
-import { getAdminSummary, getRegistrations } from '../../api/admin.js';
+import { getAdminSummary, getRegistrations, getAdminSubmissions } from '../../api/admin.js';
 
 // Helper to format Colombo Sri Lankan time for display
 const formatColomboDate = (dateVal) => {
@@ -88,6 +88,7 @@ export default function AdminDashboard() {
   });
 
   const [pendingQueue, setPendingQueue] = useState([]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -101,9 +102,10 @@ export default function AdminDashboard() {
       }
       setError(null);
 
-      const [summaryRes, pendingRes] = await Promise.all([
+      const [summaryRes, pendingRes, subsRes] = await Promise.all([
         getAdminSummary(),
         getRegistrations({ status: 'waiting_for_approval' }),
+        getAdminSubmissions().catch(() => ({ data: { success: false, data: [] } })),
       ]);
 
       if (summaryRes.data?.success) {
@@ -147,6 +149,11 @@ export default function AdminDashboard() {
         });
         setPendingQueue(formatted);
       }
+
+      if (subsRes.data?.success) {
+        const rawSubs = subsRes.data.data || [];
+        setRecentSubmissions(rawSubs.slice(0, 4));
+      }
     } catch (err) {
       console.error('Failed to load admin dashboard summary:', err);
       setError(err.response?.data?.error?.message || err.message || 'Failed to connect to admin dashboard service.');
@@ -163,7 +170,16 @@ export default function AdminDashboard() {
   return (
     <div className="pb-16 font-['Rajdhani',sans-serif]">
       {/* Admin Navigation Bar */}
-      <AdminNav activeTab="overview" />
+      <AdminNav
+        activeTab="overview"
+        badgeCounts={{
+          totalTeams: stats.totalTeams,
+          waitingForApproval: stats.waitingForApproval,
+          totalSubmissions: stats.totalSubmissions,
+          registrationOpen: gates.registrationEffective,
+          submissionOpen: gates.submissionEffective,
+        }}
+      />
 
       {/* Header Bar with Live Refresh Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -566,6 +582,112 @@ export default function AdminDashboard() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Day 06: Live Game Submissions Activity */}
+      <div className="mt-8 rounded-2xl bg-[#0d0f24]/90 border border-white/10 p-6 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/5 gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#8b3dff] shadow-[0_0_8px_#8b3dff]" />
+              <h2 className="text-lg font-bold text-white font-['Orbitron',sans-serif]">
+                Game Submissions Transmissions
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-[#8b3dff]/20 text-[#8b3dff] border border-[#8b3dff]/30 font-mono">
+                {stats.totalSubmissions} Received
+              </span>
+            </div>
+            <p className="text-xs text-[#9aa7c1] mt-0.5">
+              Live game project builds and code repositories uploaded by verified squads
+            </p>
+          </div>
+
+          <Link
+            to="/admin/submissions"
+            className="self-start sm:self-auto text-xs text-[#00e5ff] hover:text-[#8b3dff] font-semibold tracking-wide transition-colors flex items-center gap-1 font-['Orbitron',sans-serif]"
+          >
+            <span>Open Gallery Dossier</span>
+            <span>&rarr;</span>
+          </Link>
+        </div>
+
+        {isLoading ? (
+          <div className="py-8 text-center text-xs text-[#9aa7c1] font-mono animate-pulse">
+            Querying transmission registry...
+          </div>
+        ) : recentSubmissions.length === 0 ? (
+          <div className="py-10 text-center border border-white/5 rounded-xl bg-[#070714]/60">
+            <div className="inline-flex p-3 rounded-xl bg-[#8b3dff]/10 text-[#8b3dff] mb-2">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            {!gates.submissionEffective ? (
+              <>
+                <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif]">Submissions Window Locked</h3>
+                <p className="text-xs text-[#9aa7c1] max-w-md mx-auto mt-1">
+                  The submission window is currently closed. Verified squads will be able to upload playable links and GitHub repos once the submission milestone opens.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif]">Awaiting Squad Submissions</h3>
+                <p className="text-xs text-[#9aa7c1] max-w-md mx-auto mt-1">
+                  The submissions window is live! As approved squads finalize their projects and submit playable builds, their entries will stream here in real time.
+                </p>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recentSubmissions.map((sub) => (
+              <div
+                key={sub.id || sub._id}
+                className="rounded-xl bg-[#070714] border border-white/5 p-4 flex flex-col justify-between hover:border-[#8b3dff]/40 transition-all group"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[11px] mb-2">
+                    <span className="text-[#00e5ff] font-bold font-['Orbitron',sans-serif] truncate">
+                      {sub.teamName}
+                    </span>
+                    <span className="text-[#9aa7c1] font-mono text-[10px]">
+                      {sub.submittedAt ? formatRelativeOrDate(sub.submittedAt) : 'Pending'}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif] group-hover:text-[#8b3dff] transition-colors line-clamp-1 mb-1">
+                    {sub.title}
+                  </h3>
+
+                  <p className="text-xs text-[#9aa7c1] line-clamp-2 mb-3">
+                    {sub.description}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {sub.playableUrl && (
+                      <span className="px-2 py-0.5 rounded bg-[#ff2bd6]/15 text-[#ff2bd6] text-[10px] font-bold font-mono">
+                        DEMO
+                      </span>
+                    )}
+                    {sub.repoUrl && (
+                      <span className="px-2 py-0.5 rounded bg-white/10 text-white text-[10px] font-mono">
+                        GIT
+                      </span>
+                    )}
+                  </div>
+                  <Link
+                    to="/admin/submissions"
+                    className="text-[11px] text-[#00e5ff] hover:underline font-bold"
+                  >
+                    View &rarr;
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

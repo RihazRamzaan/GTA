@@ -113,39 +113,12 @@ export default function PaymentsPage() {
   const handleApprove = async (regId) => {
     setIsProcessing(true);
     try {
-      // Attempt backend review API call (wired for Day 5)
       await reviewRegistration(regId, { status: 'approved' });
-      triggerAlert('Payment approved! Registration is now verified in database.', 'success');
-      fetchRegistrations();
+      triggerAlert('Payment approved! Squad registration verified in database.', 'success');
+      await fetchRegistrations();
     } catch (err) {
-      // On Day 04, if review mutation returns 501 NOT_IMPLEMENTED, handle gracefully
-      if (err.response?.status === 501) {
-        setRegistrations((prev) =>
-          prev.map((reg) =>
-            reg.id === regId
-              ? {
-                  ...reg,
-                  status: 'approved',
-                  payment: reg.payment
-                    ? {
-                        ...reg.payment,
-                        reviewedAt: new Date().toISOString(),
-                        reviewedBy: 'Admin (Rihaz)',
-                        rejectionReason: null,
-                      }
-                    : null,
-                }
-              : reg
-          )
-        );
-        const team = registrations.find((r) => r.id === regId);
-        triggerAlert(
-          `Payment verified for ${team ? team.teamName : 'Team'} (Day 04 UI preview). Permanent review backend hooks will merge on Day 05.`,
-          'success'
-        );
-      } else {
-        triggerAlert(err.response?.data?.error?.message || 'Failed to approve payment.', 'error');
-      }
+      console.error('Failed to approve registration:', err);
+      triggerAlert(err.response?.data?.error?.message || 'Failed to approve payment.', 'error');
     } finally {
       setIsProcessing(false);
       setSelectedSlip(null);
@@ -171,35 +144,11 @@ export default function PaymentsPage() {
         status: 'rejected',
         rejectionReason: reasonText,
       });
-      triggerAlert(`Payment rejected for ${teamName}. Team may re-upload a corrected slip.`, 'error');
-      fetchRegistrations();
+      triggerAlert(`Payment rejected for ${teamName}. Squad notified with reason.`, 'error');
+      await fetchRegistrations();
     } catch (err) {
-      if (err.response?.status === 501) {
-        setRegistrations((prev) =>
-          prev.map((reg) =>
-            reg.id === regId
-              ? {
-                  ...reg,
-                  status: 'rejected',
-                  payment: reg.payment
-                    ? {
-                        ...reg.payment,
-                        reviewedAt: new Date().toISOString(),
-                        reviewedBy: 'Admin (Rihaz)',
-                        rejectionReason: reasonText,
-                      }
-                    : null,
-                }
-              : reg
-          )
-        );
-        triggerAlert(
-          `Payment marked rejected for ${teamName} (Day 04 UI preview). Reason logged.`,
-          'error'
-        );
-      } else {
-        triggerAlert(err.response?.data?.error?.message || 'Failed to reject payment.', 'error');
-      }
+      console.error('Failed to reject registration:', err);
+      triggerAlert(err.response?.data?.error?.message || 'Failed to reject payment.', 'error');
     } finally {
       setIsProcessing(false);
       setRejectingItem(null);
@@ -227,6 +176,7 @@ export default function PaymentsPage() {
   const pendingCount = registrations.filter((r) => r.status === 'waiting_for_approval').length;
   const approvedCount = registrations.filter((r) => r.status === 'approved').length;
   const waitingSlipCount = registrations.filter((r) => r.status === 'waiting_for_slip').length;
+  const rejectedCount = registrations.filter((r) => r.status === 'rejected').length;
 
   return (
     <div className="pb-16 font-['Rajdhani',sans-serif]">
@@ -269,7 +219,7 @@ export default function PaymentsPage() {
 
         {/* Quick Stats Banner & Refresh */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#0d0f24] border border-white/10">
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#0d0f24] border border-white/10 flex-wrap">
             <div className="px-3 py-1.5 rounded-xl bg-[#ff2bd6]/10 border border-[#ff2bd6]/30 text-xs">
               <span className="text-[#ff2bd6] font-bold">Pending: </span>
               <span className="font-bold text-white font-mono">{pendingCount}</span>
@@ -279,8 +229,12 @@ export default function PaymentsPage() {
               <span className="font-bold text-white font-mono">{approvedCount}</span>
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
-              <span className="text-amber-400 font-bold">Awaiting Slip: </span>
+              <span className="text-amber-400 font-bold">Awaiting: </span>
               <span className="font-bold text-white font-mono">{waitingSlipCount}</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs">
+              <span className="text-red-400 font-bold">Rejected: </span>
+              <span className="font-bold text-white font-mono">{rejectedCount}</span>
             </div>
           </div>
           <button
@@ -302,43 +256,42 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Error Banner */}
+      {/* Error Alert */}
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center justify-between gap-3 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-red-400 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{error}</span>
           </div>
           <button
-            type="button"
             onClick={fetchRegistrations}
-            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold uppercase transition-colors"
+            className="px-3 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-xs font-bold font-mono uppercase"
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Filter and Search Controls */}
-      <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      {/* Control Bar: Filters & Search */}
+      <div className="p-4 rounded-2xl bg-[#0d0f24]/90 border border-white/10 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between shadow-lg">
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
           {[
-            { id: 'all', label: 'ALL PAYMENTS' },
-            { id: 'waiting_for_approval', label: 'PENDING REVIEW' },
-            { id: 'approved', label: 'APPROVED' },
-            { id: 'rejected', label: 'REJECTED' },
-            { id: 'waiting_for_slip', label: 'NO SLIP YET' },
+            { id: 'all', label: 'All Registrations' },
+            { id: 'waiting_for_approval', label: `Pending (${pendingCount})` },
+            { id: 'approved', label: `Approved (${approvedCount})` },
+            { id: 'rejected', label: `Rejected (${rejectedCount})` },
+            { id: 'waiting_for_slip', label: `Awaiting Slip (${waitingSlipCount})` },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all uppercase whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all whitespace-nowrap ${
                 filter === tab.id
-                  ? 'bg-gradient-to-r from-[#ff2bd6] to-[#8b3dff] text-white shadow-[0_0_15px_rgba(255,43,214,0.3)] font-["Orbitron",sans-serif]'
-                  : 'bg-[#0d0f24] border border-white/10 text-[#9aa7c1] hover:text-white hover:border-white/20'
+                  ? 'bg-gradient-to-r from-[#00e5ff]/20 to-[#ff2bd6]/20 border border-[#00e5ff] text-white shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                  : 'bg-white/5 border border-white/5 text-[#9aa7c1] hover:text-white hover:bg-white/10'
               }`}
             >
               {tab.label}
@@ -346,87 +299,100 @@ export default function PaymentsPage() {
           ))}
         </div>
 
-        {/* Search Bar */}
-        <div className="relative min-w-[260px]">
+        {/* Search Input */}
+        <div className="relative w-full md:w-72">
           <input
             type="text"
-            placeholder="Search team, leader, or ref..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3.5 py-2 pl-9 bg-[#0d0f24] border border-white/10 rounded-xl text-white text-xs placeholder-[#9aa7c1]/60 focus:outline-none focus:border-[#ff2bd6] transition-colors"
+            placeholder="Search squad, leader, ref..."
+            className="w-full pl-9 pr-4 py-2 bg-[#070714] border border-white/10 rounded-xl text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#00e5ff] transition-colors"
           />
           <svg
-            className="w-4 h-4 text-[#9aa7c1] absolute left-3 top-2.5"
+            className="w-4 h-4 text-gray-500 absolute left-3 top-2.5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-white"
+            >
+              &times;
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Payment Audit Table */}
-      <div className="rounded-2xl bg-[#0d0f24]/90 border border-white/10 overflow-hidden shadow-xl">
+      {/* Registrations & Payment Evidence Table */}
+      <div className="rounded-2xl bg-[#0d0f24]/90 border border-white/10 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-[#070714] text-[#9aa7c1] uppercase font-['Orbitron',sans-serif] tracking-wider text-[11px]">
-                <th className="py-4 px-4 font-bold">Squad & Leader</th>
-                <th className="py-4 px-4 font-bold">Bank Reference</th>
-                <th className="py-4 px-4 font-bold">Fee Amount</th>
-                <th className="py-4 px-4 font-bold text-center">Slip Evidence</th>
-                <th className="py-4 px-4 font-bold text-center">Status</th>
-                <th className="py-4 px-4 font-bold text-right">Review Action</th>
+              <tr className="text-xs text-[#9aa7c1] uppercase font-['Orbitron',sans-serif] border-b border-white/10 bg-[#070714]">
+                <th className="py-4 px-4">Squad & Leader</th>
+                <th className="py-4 px-4">Payment Reference</th>
+                <th className="py-4 px-4">Amount</th>
+                <th className="py-4 px-4 text-center">Evidence Slip</th>
+                <th className="py-4 px-4 text-center">Audit Status</th>
+                <th className="py-4 px-4 text-right">Review Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {isLoading && registrations.length === 0 ? (
+            <tbody className="divide-y divide-white/5 font-sans">
+              {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="py-16 text-center text-[#9aa7c1]">
+                  <td colSpan="6" className="py-12 text-center text-[#9aa7c1]">
                     <div className="inline-flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#ff2bd6] animate-ping"></span>
-                      <span className="text-sm">Loading payment registrations from database...</span>
+                      <div className="w-4 h-4 rounded-full border-2 border-[#00e5ff] border-t-transparent animate-spin"></div>
+                      <span className="font-['Orbitron',sans-serif] text-xs">
+                        Loading payment audit ledger...
+                      </span>
                     </div>
                   </td>
                 </tr>
               ) : filteredRegistrations.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-16 text-center text-[#9aa7c1]">
-                    {registrations.length === 0 ? (
-                      <div>
-                        <svg className="w-10 h-10 mx-auto text-white/20 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p className="text-sm font-semibold text-white">No payment registrations recorded yet.</p>
-                        <p className="text-xs text-[#9aa7c1] mt-1">Registrations will appear here as teams register and submit payment slips.</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm">No payment records match your filter criteria.</p>
-                    )}
+                  <td colSpan="6" className="py-12 text-center text-[#9aa7c1]">
+                    <div className="max-w-xs mx-auto space-y-2">
+                      <div className="text-2xl text-gray-600">Ø</div>
+                      <p className="font-['Orbitron',sans-serif] text-xs font-bold text-white">
+                        No registrations match this criteria
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        Try clearing search terms or selecting another filter tab.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredRegistrations.map((reg) => (
-                  <tr key={reg.id} className="hover:bg-white/[0.02] transition-colors">
-                    {/* Team & Leader */}
+                  <tr
+                    key={reg.id}
+                    className="hover:bg-white/[0.02] transition-colors group"
+                  >
+                    {/* Squad Details */}
                     <td className="py-4 px-4">
-                      <div className="font-bold text-white text-base">{reg.teamName}</div>
-                      <div className="text-xs text-[#9aa7c1] mt-0.5">
-                        {reg.leaderName} • <span className="font-mono text-white/70">{reg.leaderEmail}</span>
+                      <div className="font-bold text-white font-['Orbitron',sans-serif] text-sm group-hover:text-[#00e5ff] transition-colors">
+                        {reg.teamName}
                       </div>
-                      <div className="text-[10px] text-[#00e5ff] mt-0.5 font-mono">
-                        {reg.membersCount} Members Registered
+                      <div className="text-xs text-[#9aa7c1]">
+                        {reg.leaderName} • <span className="font-mono text-[11px]">{reg.leaderEmail}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">
+                        {reg.membersCount} squad members registered • {reg.createdAt}
                       </div>
                     </td>
 
-                    {/* Reference */}
+                    {/* Payment Ref */}
                     <td className="py-4 px-4">
                       {reg.payment ? (
                         <div>
-                          <div className="font-mono font-bold text-white text-sm">
+                          <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-[#070714] border border-[#00e5ff]/20 text-[#00e5ff] font-bold">
                             {reg.payment.reference}
-                          </div>
+                          </span>
                           <div className="text-[11px] text-[#9aa7c1]">
                             {reg.payment.bankName}
                           </div>
@@ -583,32 +549,43 @@ export default function PaymentsPage() {
                 <span className="font-mono text-[#00e5ff]">{selectedSlip.payment.slipFileName}</span>
               </div>
 
-              {/* Bank Slip Visual Card */}
-              <div className="relative rounded-lg border-2 border-dashed border-[#00e5ff]/30 bg-[#0b1020] p-6 text-center my-4">
-                <div className="w-12 h-12 rounded-full bg-[#00e5ff]/10 text-[#00e5ff] mx-auto flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+              {/* Bank Slip Visual Card with Inline Document Stream */}
+              <div className="relative rounded-lg border border-[#00e5ff]/30 bg-[#0b1020] p-4 text-center my-4 overflow-hidden">
+                <div className="mb-3 max-h-[360px] overflow-hidden rounded-md border border-white/5 flex items-center justify-center bg-[#070714]">
+                  <img
+                    src={getRegistrationSlipUrl(selectedSlip.id)}
+                    alt={`Bank Slip for ${selectedSlip.teamName}`}
+                    className="max-h-[350px] w-auto max-w-full object-contain mx-auto shadow-md"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = document.getElementById('slip-fallback-icon');
+                      if (fallback) fallback.style.display = 'block';
+                    }}
+                  />
+                  <div id="slip-fallback-icon" style={{ display: 'none' }} className="py-8 text-center">
+                    <svg className="w-12 h-12 text-[#00e5ff] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-xs text-[#9aa7c1] font-mono">PDF / Document Receipt Attached</span>
+                  </div>
                 </div>
-                <div className="text-sm font-bold text-white font-['Orbitron',sans-serif] mb-1">
-                  OFFICIAL BANK TRANSFER SLIP
-                </div>
-                <div className="text-xs text-[#9aa7c1] max-w-sm mx-auto space-y-1 font-mono">
+
+                <div className="text-xs text-[#9aa7c1] max-w-sm mx-auto space-y-1 font-mono text-left bg-[#070714]/80 p-3 rounded-lg border border-white/5">
                   <div>Bank: <span className="text-white">{selectedSlip.payment.bankName}</span></div>
-                  <div>Transaction Reference: <span className="text-[#00e5ff] font-bold">{selectedSlip.payment.reference}</span></div>
+                  <div>Reference: <span className="text-[#00e5ff] font-bold">{selectedSlip.payment.reference}</span></div>
                   <div>Amount: <span className="text-emerald-400 font-bold">{selectedSlip.feeAmount}</span></div>
                   <div>Payment Date: <span className="text-white">{selectedSlip.payment.date}</span></div>
                 </div>
 
-                {/* Secure Slip Stream Link (ready for Day 5) */}
-                <div className="mt-4 pt-3 border-t border-white/10">
+                {/* Direct Download/Full tab link */}
+                <div className="mt-3 pt-2 border-t border-white/10">
                   <a
                     href={getRegistrationSlipUrl(selectedSlip.id)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-[#00e5ff] hover:text-white font-bold tracking-wide underline transition-colors"
                   >
-                    <span>View / Download Uploaded Slip Evidence</span>
+                    <span>Open Slip Document in Full Tab</span>
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>

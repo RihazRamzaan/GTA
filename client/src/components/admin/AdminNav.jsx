@@ -1,9 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { getAdminSummary } from '../../api/admin.js';
 
-export default function AdminNav({ activeTab = 'overview' }) {
+export default function AdminNav({ activeTab = 'overview', badgeCounts = null }) {
   const { logout } = useAuth();
+  const [counts, setCounts] = useState(badgeCounts);
+
+  useEffect(() => {
+    if (badgeCounts) {
+      setCounts(badgeCounts);
+      return;
+    }
+
+    let isMounted = true;
+    getAdminSummary()
+      .then((res) => {
+        if (isMounted && res.data?.success) {
+          const d = res.data.data || {};
+          setCounts({
+            totalTeams: d.totalTeams ?? 0,
+            waitingForApproval: d.waitingForApproval ?? (d.statusCounts?.waiting_for_approval || 0),
+            totalSubmissions: d.totalSubmissions ?? 0,
+            registrationOpen: Boolean(d.gates?.registrationOpen),
+            submissionOpen: Boolean(d.gates?.submissionOpen),
+          });
+        }
+      })
+      .catch((err) => {
+        // Non-blocking background fetch failure
+        console.debug('AdminNav: could not load badge summary', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [badgeCounts]);
+
+  const teamsBadge = counts
+    ? `${counts.totalTeams ?? 0} Squads`
+    : null;
+
+  const paymentsBadge = counts
+    ? counts.waitingForApproval > 0
+      ? `${counts.waitingForApproval} Pending`
+      : 'All Clean'
+    : null;
+
+  const paymentsBadgeColor =
+    counts && counts.waitingForApproval > 0
+      ? 'bg-[#ff2bd6]/20 text-[#ff2bd6] border-[#ff2bd6]/40 shadow-[0_0_10px_rgba(255,43,214,0.3)] animate-pulse'
+      : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+
+  const submissionsBadge = counts
+    ? `${counts.totalSubmissions ?? 0} Entries`
+    : null;
+
+  const gatesBadge = counts
+    ? counts.submissionOpen
+      ? 'Submissions Live'
+      : counts.registrationOpen
+      ? 'Reg Active'
+      : 'Gates Set'
+    : null;
+
+  const gatesBadgeColor =
+    counts && (counts.submissionOpen || counts.registrationOpen)
+      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+      : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+
   const navItems = [
     {
       to: '/admin',
@@ -18,6 +83,8 @@ export default function AdminNav({ activeTab = 'overview' }) {
     {
       to: '/admin/agenda',
       label: 'Event Controls & Gates',
+      badge: gatesBadge,
+      badgeColor: gatesBadgeColor,
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -27,7 +94,7 @@ export default function AdminNav({ activeTab = 'overview' }) {
     {
       to: '/admin/teams',
       label: 'Teams',
-      badge: '6 Squads',
+      badge: teamsBadge,
       badgeColor: 'bg-[#00e5ff]/20 text-[#00e5ff] border-[#00e5ff]/40',
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,8 +105,8 @@ export default function AdminNav({ activeTab = 'overview' }) {
     {
       to: '/admin/payments',
       label: 'Payment Reviews',
-      badge: '3 Pending',
-      badgeColor: 'bg-[#ff2bd6]/20 text-[#ff2bd6] border-[#ff2bd6]/40',
+      badge: paymentsBadge,
+      badgeColor: paymentsBadgeColor,
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -49,8 +116,8 @@ export default function AdminNav({ activeTab = 'overview' }) {
     {
       to: '/admin/submissions',
       label: 'Submissions',
-      badge: '12 Entries',
-      badgeColor: 'bg-[#00e5ff]/20 text-[#00e5ff] border-[#00e5ff]/40',
+      badge: submissionsBadge,
+      badgeColor: 'bg-[#8b3dff]/20 text-[#8b3dff] border-[#8b3dff]/40',
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -65,7 +132,7 @@ export default function AdminNav({ activeTab = 'overview' }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 mb-5 border-b border-[#00e5ff]/15 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00e5ff] shadow-[0_0_8px_#00e5ff] animate-pulse"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#00e5ff] shadow-[0_0_8px_#00e5ff] animate-pulse" />
             <span className="text-xs uppercase tracking-widest text-[#00e5ff] font-['Orbitron',sans-serif] font-bold">
               Command Nexus • Admin Portal
             </span>
@@ -114,7 +181,7 @@ export default function AdminNav({ activeTab = 'overview' }) {
             {item.icon}
             <span>{item.label}</span>
             {item.badge && (
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${item.badgeColor} font-bold`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${item.badgeColor} font-bold font-mono`}>
                 {item.badge}
               </span>
             )}

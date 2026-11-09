@@ -21,8 +21,16 @@ export const reviewRegistration = (id, data) => http.patch(`/admin/registrations
 export const getRegistrationSlip = (id) => http.get(`/admin/registrations/${id}/slip`);
 export const getRegistrationSlipUrl = (id) => `${http.defaults.baseURL || '/api'}/admin/registrations/${id}/slip`;
 
-// Day 05: Submissions review
-export const getAdminSubmissions = (params) => http.get('/admin/submissions', { params });
+// Day 06: Game Submissions gallery and review
+/**
+ * Retrieves game submissions for the admin gallery.
+ * @param {Object|string} [params] - Optional query parameters object or search string.
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+export const getAdminSubmissions = (params) => {
+  const queryParams = typeof params === 'string' ? { q: params } : params;
+  return http.get('/admin/submissions', { params: queryParams });
+};
 export const getSubmissions = getAdminSubmissions;
 
 export const adminApi = {
