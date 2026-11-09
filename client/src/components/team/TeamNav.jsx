@@ -6,6 +6,7 @@ const statusBadges = {
     label: 'Not Uploaded',
     style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
   },
+  // Point 2: After upload, show Waiting for Approval status badge
   waiting_for_approval: {
     label: 'Waiting for Approval',
     style: 'bg-amber-500/15 text-amber-300 border-amber-500/40',

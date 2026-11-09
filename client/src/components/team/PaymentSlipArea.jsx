@@ -109,6 +109,7 @@ export default function PaymentSlipArea({
       ? selectedFile.name
       : payment.fileName || 'boc_transfer_slip.png';
 
+    // Point 1: Upload selected slip file, payment reference, and date
     onSubmitPayment({
       reference: reference.trim().toUpperCase(),
       paymentDate: paymentDate,
@@ -145,12 +146,12 @@ export default function PaymentSlipArea({
         <div className="flex items-center gap-2">
           {status === 'approved' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              ✓ Payment Approved & Verified
+              ✓ Approved — Officially Registered
             </span>
           )}
           {status === 'waiting_for_approval' && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              ⏳ Waiting for Admin Review
+              ⏳ Waiting for Approval
             </span>
           )}
           {status === 'rejected' && (
@@ -162,7 +163,7 @@ export default function PaymentSlipArea({
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
               💳 Payment Not Uploaded
             </span>
-          )}1
+          )}
         </div>
       </div>
 
@@ -229,7 +230,11 @@ export default function PaymentSlipArea({
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-300 uppercase tracking-[0.2em] font-display">
-              {showForm ? 'Submit Payment Information' : 'Your Submitted Payment'}
+              {status === 'rejected'
+                ? 'Upload Replacement Deposit Slip'
+                : showForm
+                ? 'Submit Payment Information'
+                : 'Your Submitted Payment'}
             </h3>
 
             {!showForm && status === 'waiting_for_approval' && (
@@ -240,7 +245,7 @@ export default function PaymentSlipArea({
             )}
           </div>
 
-          {/* Admin Rejection Callout (if rejected) */}
+          {/* Point 3: If a slip is rejected, show the reason and allow a replacement */}
           {status === 'rejected' && (
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-sm">
               <div className="flex items-center gap-2 text-red-400 font-bold font-display text-xs uppercase tracking-wider mb-1">
@@ -440,7 +445,7 @@ export default function PaymentSlipArea({
                   </span>
                 ) : (
                   <span className="px-3 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300">
-                    ⏳ In Verification Queue (6-12 hrs)
+                    ⏳ Waiting for Approval (In Queue)
                   </span>
                 )}
               </div>
@@ -518,21 +523,12 @@ export default function PaymentSlipArea({
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
-              <a
-                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/team/payment/slip`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-neon-cyan hover:underline font-body flex items-center gap-1 font-semibold"
-              >
-                <span>📄 View Raw Slip File</span>
-                <span>↗</span>
-              </a>
-
+            {/* Point 4: Do not show public links to private payment slips */}
+            <div className="mt-5 flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowReceiptModal(false)}
-                className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold font-body"
+                className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold font-body transition"
               >
                 Close
               </button>

@@ -49,7 +49,7 @@ export default function StatusBanner({ registration }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                  Payment Slip Under Review
+                  Payment Slip Under Review (Waiting for Approval)
                 </h3>
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   Waiting for Approval
@@ -85,11 +85,11 @@ export default function StatusBanner({ registration }) {
                   Registration Approved
                 </h3>
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Verified Team
+                  Officially Registered
                 </span>
               </div>
               <p className="mt-1 text-base text-slate-300">
-                Your team registration and payment of <strong className="text-white">LKR 4,000</strong> have been approved by the organizers. Your slot is confirmed and you are ready for the buildathon.
+                Your team registration and payment of <strong className="text-white">LKR 4,000</strong> have been approved by the organizers. Your team is <strong className="text-emerald-300">officially registered</strong> and confirmed for the buildathon.
               </p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function StatusBanner({ registration }) {
                 Your payment slip could not be verified by the admin team. Please review the reason below and upload a clear receipt.
               </p>
 
-              {/* Admin Reason Callout */}
+              {/* Point 3: Admin Rejection Reason Callout & Replacement Slip Link */}
               <div className="mt-3 p-3.5 rounded-lg bg-black/40 border border-red-500/30 text-base">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-400 block mb-0.5">
                   Reason for Rejection:
@@ -140,7 +140,7 @@ export default function StatusBanner({ registration }) {
             to="/team/payment"
             className="shrink-0 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white text-base font-bold transition text-center"
           >
-            Upload Replacement Slip
+            Replace Slip
           </Link>
         </div>
       </div>
