@@ -87,7 +87,7 @@ export default function AdminDashboard() {
     nextMilestoneTime: '—',
   });
 
-  const [pendingQueue, setPendingQueue] = useState([]);
+  const [recentTeams, setRecentTeams] = useState([]);
   const [recentSubmissions, setRecentSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -102,9 +102,9 @@ export default function AdminDashboard() {
       }
       setError(null);
 
-      const [summaryRes, pendingRes, subsRes] = await Promise.all([
+      const [summaryRes, teamsRes, subsRes] = await Promise.all([
         getAdminSummary(),
-        getRegistrations({ status: 'waiting_for_approval' }),
+        getRegistrations(),
         getAdminSubmissions().catch(() => ({ data: { success: false, data: [] } })),
       ]);
 
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
           totalTeams: sum.totalTeams ?? 0,
           waitingForSlip: sum.waitingForSlip ?? (sum.statusCounts?.waiting_for_slip || 0),
           waitingForApproval: sum.waitingForApproval ?? (sum.statusCounts?.waiting_for_approval || 0),
-          approved: sum.approved ?? (sum.statusCounts?.approved || 0),
+          approved: sum.approved ?? (sum.statusCounts?.approved || sum.totalTeams || 0),
           rejected: sum.rejected ?? (sum.statusCounts?.rejected || 0),
           totalSubmissions: sum.totalSubmissions ?? 0,
         });
@@ -130,24 +130,27 @@ export default function AdminDashboard() {
         });
       }
 
-      if (pendingRes.data?.success) {
-        const rawList = pendingRes.data.data || [];
-        const formatted = rawList.map((reg) => {
+      if (teamsRes.data?.success) {
+        const rawList = teamsRes.data.data || [];
+        const formatted = rawList.slice(0, 5).map((reg) => {
           const t = reg.team || {};
-          const p = reg.payment || {};
+          const members =
+            Array.isArray(reg.members) && reg.members.length > 0
+              ? reg.members
+              : Array.isArray(t.members) && t.members.length > 0
+              ? t.members
+              : [];
           return {
             id: reg.id || reg._id,
             teamName: reg.teamName || t.name || 'Unnamed Squad',
             leaderName: reg.leaderName || t.leaderName || 'Unknown Leader',
             leaderEmail: reg.leaderEmail || t.leaderEmail || '',
-            bankRef: p.reference && p.reference !== '—' ? p.reference : 'Slip Attached',
-            submittedAt: formatRelativeOrDate(p.submittedAt || reg.updatedAt || reg.createdAt),
-            amount: reg.feeAmount ? `LKR ${Number(reg.feeAmount).toLocaleString()}` : 'LKR 4,000',
-            slipType: p.slipMime ? (p.slipMime.split('/')[1] || p.slipMime).toUpperCase() : (p.hasSlip ? 'FILE' : 'NONE'),
-            hasSlip: Boolean(p.hasSlip),
+            membersCount: members.length > 0 ? members.length : 1,
+            registeredAt: formatRelativeOrDate(reg.createdAt || reg.updatedAt),
+            status: reg.status || 'approved',
           };
         });
-        setPendingQueue(formatted);
+        setRecentTeams(formatted);
       }
 
       if (subsRes.data?.success) {
@@ -174,7 +177,6 @@ export default function AdminDashboard() {
         activeTab="overview"
         badgeCounts={{
           totalTeams: stats.totalTeams,
-          waitingForApproval: stats.waitingForApproval,
           totalSubmissions: stats.totalSubmissions,
           registrationOpen: gates.registrationEffective,
           submissionOpen: gates.submissionEffective,
@@ -238,13 +240,13 @@ export default function AdminDashboard() {
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Teams Card */}
+        {/* Total Confirmed Teams Card */}
         <Link
           to="/admin/teams"
           className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#00e5ff]/20 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden group hover:border-[#00e5ff]/50 hover:bg-[#0d0f24] transition-all"
         >
           <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
-            <span>Total Teams</span>
+            <span>Confirmed Squads</span>
             <span className="p-2 rounded-lg bg-[#00e5ff]/10 text-[#00e5ff]">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -264,67 +266,70 @@ export default function AdminDashboard() {
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00e5ff]/40 to-transparent"></div>
         </Link>
 
-        {/* Pending Review Card */}
+        {/* Registration Gate Card */}
         <Link
-          to="/admin/payments"
-          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#ff2bd6]/30 p-5 shadow-[0_4px_20px_rgba(255,43,214,0.1)] overflow-hidden group hover:border-[#ff2bd6]/60 hover:bg-[#0d0f24] transition-all"
+          to="/admin/agenda"
+          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-emerald-500/25 p-5 shadow-[0_4px_20px_rgba(52,211,153,0.1)] overflow-hidden group hover:border-emerald-500/50 hover:bg-[#0d0f24] transition-all"
         >
           <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
-            <span>Awaiting Approval</span>
-            <span className="p-2 rounded-lg bg-[#ff2bd6]/15 text-[#ff2bd6]">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
-          </div>
-          <div className="text-3xl font-extrabold text-[#ff2bd6] font-['Orbitron',sans-serif] flex items-baseline gap-2">
-            {isLoading ? (
-              <span className="inline-block w-12 h-8 bg-white/10 rounded animate-pulse"></span>
-            ) : (
-              stats.waitingForApproval
-            )}
-            <span className="text-xs text-white/70 font-sans font-normal">slips to review</span>
-          </div>
-          <div className="mt-2 text-xs text-[#ff2bd6]/90 flex items-center gap-1 font-semibold">
-            <span>Open Review Queue &rarr;</span>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff2bd6] to-transparent"></div>
-        </Link>
-
-        {/* Approved Teams Card */}
-        <Link
-          to="/admin/teams"
-          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-emerald-500/20 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden group hover:border-emerald-500/40 hover:bg-[#0d0f24] transition-all"
-        >
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
-            <span>Approved Teams</span>
+            <span>Registration Gate</span>
             <span className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
               </svg>
             </span>
           </div>
-          <div className="text-3xl font-extrabold text-white font-['Orbitron',sans-serif]">
+          <div className={`text-3xl font-extrabold font-['Orbitron',sans-serif] ${gates.registrationEffective ? 'text-emerald-400' : 'text-rose-400'}`}>
             {isLoading ? (
               <span className="inline-block w-12 h-8 bg-white/10 rounded animate-pulse"></span>
+            ) : gates.registrationEffective ? (
+              'OPEN'
             ) : (
-              stats.approved
+              'CLOSED'
             )}
           </div>
-          <div className="mt-2 text-xs text-emerald-400 flex items-center gap-1 font-semibold">
-            <span>Verified & Eligible to compete</span>
+          <div className="mt-2 text-xs text-white/70 flex items-center gap-1 font-mono">
+            <span>Mode: {gates.registrationMode} • Free Entry</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
         </Link>
 
-        {/* Submissions Card */}
+        {/* Submission Gate Card */}
         <Link
-          to="/admin/submissions"
-          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#8b3dff]/25 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden group hover:border-[#8b3dff]/50 hover:bg-[#0d0f24] transition-all"
+          to="/admin/agenda"
+          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#8b3dff]/25 p-5 shadow-[0_4px_20px_rgba(139,61,255,0.1)] overflow-hidden group hover:border-[#8b3dff]/50 hover:bg-[#0d0f24] transition-all"
         >
           <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
-            <span>Submissions</span>
+            <span>Submission Gate</span>
             <span className="p-2 rounded-lg bg-[#8b3dff]/15 text-[#8b3dff]">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </span>
+          </div>
+          <div className={`text-3xl font-extrabold font-['Orbitron',sans-serif] ${gates.submissionEffective ? 'text-emerald-400' : 'text-purple-300'}`}>
+            {isLoading ? (
+              <span className="inline-block w-12 h-8 bg-white/10 rounded animate-pulse"></span>
+            ) : gates.submissionEffective ? (
+              'OPEN'
+            ) : (
+              'LOCKED'
+            )}
+          </div>
+          <div className="mt-2 text-xs text-white/70 flex items-center gap-1 font-mono">
+            <span>Mode: {gates.submissionMode} • Repositories</span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#8b3dff]/40 to-transparent"></div>
+        </Link>
+
+        {/* Submissions Received Card */}
+        <Link
+          to="/admin/submissions"
+          className="relative block rounded-2xl bg-[#0d0f24]/80 border border-[#00e5ff]/20 p-5 shadow-[0_4px_20px_rgba(0,229,255,0.1)] overflow-hidden group hover:border-[#00e5ff]/50 hover:bg-[#0d0f24] transition-all"
+        >
+          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#9aa7c1] font-['Orbitron',sans-serif] mb-2">
+            <span>Game Submissions</span>
+            <span className="p-2 rounded-lg bg-[#00e5ff]/15 text-[#00e5ff]">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
@@ -337,14 +342,14 @@ export default function AdminDashboard() {
               stats.totalSubmissions
             )}
           </div>
-          <div className="mt-2 text-xs text-[#8b3dff] flex items-center gap-1 font-semibold">
+          <div className="mt-2 text-xs text-[#00e5ff] flex items-center gap-1 font-semibold">
             <span>
-              {stats.approved > 0
-                ? `${Math.round((stats.totalSubmissions / stats.approved) * 100)}% approved team turnover`
+              {stats.totalTeams > 0
+                ? `${Math.round((stats.totalSubmissions / stats.totalTeams) * 100)}% squad turnout`
                 : 'Awaiting team submissions'}
             </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#8b3dff]/40 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00e5ff]/40 to-transparent"></div>
         </Link>
       </div>
 
@@ -433,25 +438,25 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main Grid: Pending Reviews + Overview */}
+      {/* Main Grid: Recent Confirmed Squads + Free Event Governance */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Pending Review Table (2 cols) */}
+        {/* Recent Confirmed Squads Table (2 cols) */}
         <div className="lg:col-span-2 rounded-2xl bg-[#0d0f24]/90 border border-white/10 p-6 shadow-lg">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/5">
             <div>
               <h2 className="text-lg font-bold text-white font-['Orbitron',sans-serif] flex items-center gap-2">
-                <span>Pending Payment Reviews</span>
-                <span className="px-2 py-0.5 rounded-full text-xs bg-[#ff2bd6]/20 text-[#ff2bd6] border border-[#ff2bd6]/30">
-                  {pendingQueue.length}
+                <span>Confirmed Squads</span>
+                <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  {recentTeams.length} Recent
                 </span>
               </h2>
-              <p className="text-xs text-[#9aa7c1]">Bank transfers awaiting verification before team activation</p>
+              <p className="text-xs text-[#9aa7c1]">Automatically confirmed squads registered for the Buildathon</p>
             </div>
             <Link
-              to="/admin/payments"
-              className="text-xs text-[#00e5ff] hover:text-[#ff2bd6] font-semibold tracking-wide transition-colors"
+              to="/admin/teams"
+              className="text-xs text-[#00e5ff] hover:text-white font-semibold tracking-wide transition-colors"
             >
-              View All Slips &rarr;
+              View Full Roster &rarr;
             </Link>
           </div>
 
@@ -459,19 +464,19 @@ export default function AdminDashboard() {
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-[#00e5ff] border-t-transparent animate-spin"></div>
               <span className="text-xs text-[#9aa7c1] font-['Orbitron',sans-serif]">
-                Loading pending approval queue...
+                Loading registered squads...
               </span>
             </div>
-          ) : pendingQueue.length === 0 ? (
+          ) : recentTeams.length === 0 ? (
             <div className="py-12 text-center border border-white/5 rounded-xl bg-[#070714]/60">
-              <div className="inline-flex p-3 rounded-xl bg-emerald-500/10 text-emerald-400 mb-2">
+              <div className="inline-flex p-3 rounded-xl bg-white/5 text-[#9aa7c1] mb-2">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif]">All Slips Reviewed</h3>
+              <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif]">No Squads Registered Yet</h3>
               <p className="text-xs text-[#9aa7c1] max-w-sm mx-auto mt-1">
-                There are no pending payment slips awaiting admin review right now.
+                Teams registering while the registration gate is open will automatically confirm and appear here.
               </p>
             </div>
           ) : (
@@ -479,15 +484,15 @@ export default function AdminDashboard() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs text-[#9aa7c1] uppercase font-['Orbitron',sans-serif] border-b border-white/5">
-                    <th className="py-3 px-3">Team & Leader</th>
-                    <th className="py-3 px-3">Reference / Slip</th>
-                    <th className="py-3 px-3">Amount</th>
-                    <th className="py-3 px-3">Uploaded</th>
+                    <th className="py-3 px-3">Squad & Leader</th>
+                    <th className="py-3 px-3">Roster</th>
+                    <th className="py-3 px-3">Registered</th>
+                    <th className="py-3 px-3 text-center">Status</th>
                     <th className="py-3 px-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {pendingQueue.map((item) => (
+                  {recentTeams.map((item) => (
                     <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3 px-3">
                         <div className="font-bold text-white">{item.teamName}</div>
@@ -496,25 +501,25 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="py-3 px-3">
-                        <span className="font-mono text-xs px-2 py-1 rounded bg-[#070714] border border-[#00e5ff]/20 text-[#00e5ff]">
-                          {item.bankRef}
+                        <span className="font-mono text-xs px-2 py-1 rounded bg-[#070714] border border-[#8b3dff]/30 text-[#8b3dff]">
+                          {item.membersCount} members
                         </span>
-                        <span className="ml-2 text-[10px] text-[#9aa7c1] uppercase font-mono">
-                          {item.slipType}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 font-semibold text-white">
-                        {item.amount}
                       </td>
                       <td className="py-3 px-3 text-xs text-[#9aa7c1]">
-                        {item.submittedAt}
+                        {item.registeredAt}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 text-[10px] font-bold font-mono tracking-wider">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          CONFIRMED
+                        </span>
                       </td>
                       <td className="py-3 px-3 text-right">
                         <Link
-                          to="/admin/payments"
-                          className="inline-block px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#00e5ff]/20 to-[#8b3dff]/20 hover:from-[#00e5ff]/30 hover:to-[#8b3dff]/30 text-[#00e5ff] border border-[#00e5ff]/40 text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all"
+                          to="/admin/teams"
+                          className="inline-block px-3 py-1.5 rounded-lg bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs font-bold font-['Orbitron',sans-serif] tracking-wider transition-all"
                         >
-                          REVIEW
+                          VIEW
                         </Link>
                       </td>
                     </tr>
@@ -531,54 +536,60 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/5">
               <div>
                 <h2 className="text-lg font-bold text-white font-['Orbitron',sans-serif]">
-                  Registration Breakdown
+                  Event Governance
                 </h2>
-                <p className="text-xs text-[#9aa7c1]">Team pipeline status summary</p>
+                <p className="text-xs text-[#9aa7c1]">Free registration rules & gate controls</p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 text-xs">
               <div className="p-3 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                  <span className="text-xs font-semibold text-white">Approved & Verified</span>
+                  <span className="font-semibold text-white">Entry Fee</span>
                 </div>
-                <span className="font-mono font-bold text-sm text-emerald-400">{stats.approved}</span>
+                <span className="font-mono font-bold text-emerald-400">FREE (LKR 0)</span>
               </div>
 
               <div className="p-3 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff2bd6]"></span>
-                  <span className="text-xs font-semibold text-white">Pending Slip Review</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#00e5ff]"></span>
+                  <span className="font-semibold text-white">Confirmation</span>
                 </div>
-                <span className="font-mono font-bold text-sm text-[#ff2bd6]">{stats.waitingForApproval}</span>
+                <span className="font-mono font-bold text-[#00e5ff]">AUTO-CONFIRMED</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#8b3dff]"></span>
+                  <span className="font-semibold text-white">Roster Edit Cutoff</span>
+                </div>
+                <span className="font-mono font-bold text-[#8b3dff]">At Reg Closes</span>
               </div>
 
               <div className="p-3 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                  <span className="text-xs font-semibold text-white">Awaiting Bank Slip</span>
+                  <span className="font-semibold text-white">Project Repo</span>
                 </div>
-                <span className="font-mono font-bold text-sm text-amber-400">{stats.waitingForSlip}</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                  <span className="text-xs font-semibold text-white">Rejected Slips</span>
-                </div>
-                <span className="font-mono font-bold text-sm text-rose-400">{stats.rejected}</span>
+                <span className="font-mono font-bold text-amber-400">GitHub Validated</span>
               </div>
             </div>
           </div>
 
-          {/* Quick link button */}
-          <div className="mt-6 pt-4 border-t border-white/5">
+          {/* Quick link buttons */}
+          <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
             <Link
-              to="/admin/teams"
+              to="/admin/agenda"
               className="w-full block text-center py-2.5 px-4 rounded-xl bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-xs font-['Orbitron',sans-serif] font-bold text-[#00e5ff] tracking-wider border border-[#00e5ff]/30 transition-colors"
             >
-              Open Squad Management Roster &rarr;
+              Configure Agenda & Gates &rarr;
+            </Link>
+            <Link
+              to="/admin/teams"
+              className="w-full block text-center py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-['Orbitron',sans-serif] font-semibold text-white/80 hover:text-white transition-colors"
+            >
+              View Full Squads Roster &rarr;
             </Link>
           </div>
         </div>

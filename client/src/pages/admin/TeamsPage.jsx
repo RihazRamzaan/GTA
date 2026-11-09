@@ -39,8 +39,11 @@ export default function TeamsPage() {
                   year: 'numeric',
                 })
               : 'Recent',
-            status: reg.status || 'waiting_for_slip',
-            feeAmount: reg.feeAmount ? `LKR ${Number(reg.feeAmount).toLocaleString()}` : 'LKR 4,000',
+            status: reg.status || 'approved',
+            feeAmount:
+              Number(reg.feeAmount) > 0
+                ? `LKR ${Number(reg.feeAmount).toLocaleString()}`
+                : 'LKR 0 (Free Entry)',
             paymentRef: reg.payment?.reference || '—',
             paymentDate: reg.payment?.date,
             hasSlip: reg.payment?.hasSlip,
@@ -82,41 +85,39 @@ export default function TeamsPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved':
+      case 'confirmed':
         return {
-          label: 'APPROVED',
+          label: 'CONFIRMED',
           classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
           dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
         };
       case 'waiting_for_approval':
+      case 'waiting_for_slip':
         return {
-          label: 'AWAITING APPROVAL',
+          label: 'REGISTERED',
           classes: 'bg-[#00e5ff]/15 text-[#00e5ff] border-[#00e5ff]/30',
           dot: 'bg-[#00e5ff] shadow-[0_0_8px_#00e5ff]',
         };
-      case 'waiting_for_slip':
+      case 'rejected':
         return {
-          label: 'WAITING SLIP',
+          label: 'NEEDS ATTENTION',
           classes: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
           dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
         };
-      case 'rejected':
-        return {
-          label: 'REJECTED',
-          classes: 'bg-red-500/15 text-red-400 border-red-500/30',
-          dot: 'bg-red-400 shadow-[0_0_8px_#f87171]',
-        };
       default:
         return {
-          label: status,
-          classes: 'bg-white/10 text-white/70 border-white/20',
-          dot: 'bg-white/50',
+          label: 'CONFIRMED',
+          classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+          dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
         };
     }
   };
 
   // Filtered teams list based on active tab and search query
   const filteredTeams = teams.filter((team) => {
-    const matchesFilter = filter === 'all' || team.status === filter;
+    const matchesFilter =
+      filter === 'all' ||
+      (filter === 'approved' ? team.status === 'approved' || !team.status : team.status === filter);
     const matchesSearch =
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.leaderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,7 +141,7 @@ export default function TeamsPage() {
             PARTICIPATING <span className="text-[#00e5ff] drop-shadow-[0_0_10px_rgba(0,229,255,0.6)]">TEAMS</span>
           </h2>
           <p className="text-sm text-[#9aa7c1] mt-1 max-w-2xl">
-            Browse all registered Buildathon squads, inspect team leader contact details, track membership rosters, and monitor live registration statuses.
+            Browse all registered Buildathon squads, inspect team leader contact details, track membership rosters, and monitor confirmed participants.
           </p>
         </div>
 
@@ -151,9 +152,9 @@ export default function TeamsPage() {
             <span className="font-bold text-white font-mono text-sm ml-1">{teams.length}</span>
           </div>
           <div className="px-4 py-2.5 rounded-xl bg-[#0d0f24] border border-emerald-500/20 text-xs">
-            <span className="text-emerald-400 font-semibold">Approved: </span>
+            <span className="text-emerald-400 font-semibold">Confirmed: </span>
             <span className="font-bold text-white font-mono text-sm ml-1">
-              {teams.filter((t) => t.status === 'approved').length}
+              {teams.filter((t) => t.status === 'approved' || !t.status).length}
             </span>
           </div>
           <button
@@ -199,11 +200,8 @@ export default function TeamsPage() {
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {[
-            { id: 'all', label: 'ALL TEAMS' },
-            { id: 'approved', label: 'APPROVED' },
-            { id: 'waiting_for_approval', label: 'AWAITING APPROVAL' },
-            { id: 'waiting_for_slip', label: 'WAITING SLIP' },
-            { id: 'rejected', label: 'REJECTED' },
+            { id: 'all', label: 'ALL SQUADS' },
+            { id: 'approved', label: 'CONFIRMED' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -248,7 +246,7 @@ export default function TeamsPage() {
                 <th className="py-4 px-4 font-bold">Team Squad</th>
                 <th className="py-4 px-4 font-bold">Team Leader</th>
                 <th className="py-4 px-4 font-bold text-center">Roster</th>
-                <th className="py-4 px-4 font-bold">Payment Ref</th>
+                <th className="py-4 px-4 font-bold">Entry Type</th>
                 <th className="py-4 px-4 font-bold text-center">Reg Status</th>
                 <th className="py-4 px-4 font-bold text-right">Actions</th>
               </tr>
@@ -313,10 +311,10 @@ export default function TeamsPage() {
                         </span>
                       </td>
 
-                      {/* Payment Ref */}
+                      {/* Entry Type */}
                       <td className="py-4 px-4">
-                        <div className="font-mono text-[#00e5ff]">{team.paymentRef}</div>
-                        <div className="text-[10px] text-[#9aa7c1]">{team.feeAmount}</div>
+                        <div className="font-semibold text-emerald-400 font-mono">Free Registration</div>
+                        <div className="text-[10px] text-[#9aa7c1]">Fee: LKR 0 (Waived)</div>
                       </td>
 
                       {/* Status Badge */}
@@ -366,8 +364,8 @@ export default function TeamsPage() {
                   {selectedTeam.name}
                 </h3>
                 <div className="text-xs text-[#9aa7c1] mt-1">
-                  Registered: {selectedTeam.createdAt} • Ref:{' '}
-                  <span className="font-mono text-cyan-400">{selectedTeam.paymentRef}</span>
+                  Registered: {selectedTeam.createdAt} • Entry:{' '}
+                  <span className="font-mono text-emerald-400 font-semibold">Free Registration (LKR 0)</span>
                 </div>
               </div>
               <button
