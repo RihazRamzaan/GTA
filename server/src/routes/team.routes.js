@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { getMyTeam, updateMyTeam, submitPayment, getMyPaymentSlip } from '../controllers/team.controller.js';
 import { requireAuth, requireTeam } from '../middleware/auth.js';
 import { loadRegistration } from '../middleware/loadRegistration.js';
+import { paymentsRetired } from '../middleware/paymentsRetired.js';
 import { handleSlipUpload } from '../middleware/upload.js';
 
 import {
@@ -19,8 +20,9 @@ router.use(requireAuth, requireTeam, loadRegistration);
 router.get('/me', getMyTeam);
 router.patch('/me', updateMyTeam);
 
-// Bank-transfer slip upload & viewing
-router.post('/payment', handleSlipUpload, submitPayment);
+// Bank-transfer slip upload & viewing. Uploads are retired because registration is free;
+// paymentsRetired runs first so no file is accepted. Teams can still view an old slip.
+router.post('/payment', paymentsRetired, handleSlipUpload, submitPayment);
 router.get('/payment/slip', getMyPaymentSlip);
 
 // Game submission routes

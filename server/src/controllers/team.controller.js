@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { httpError } from '../middleware/error.js';
 import Submission from '../models/Submission.js';
 import Team from '../models/Team.js';
+import { getCurrentGates } from '../services/gates.js';
 import { saveSlip, getSlipPath, deleteSlip } from '../services/storage.js';
 import { publicRegistration, publicTeam } from '../utils/serializers.js';
 import { validateTeamUpdate, validatePaymentSubmission } from '../utils/validators.js';
@@ -14,20 +15,27 @@ async function loadOwnTeam(req) {
   return team;
 }
 
+// Agreed roster cutoff for the free event: the team can be edited while registration is open,
+// so the admin's open/closed setting and dates decide it. Approval no longer locks it.
+async function canEditTeam() {
+  return (await getCurrentGates()).registrationOpen;
+}
+
 export async function getMyTeam(req, res) {
-  const [team, submission] = await Promise.all([loadOwnTeam(req), Submission.findOne({ teamId: req.user.teamId })]);
+  const [team, submission, editable] = await Promise.all([loadOwnTeam(req), Submission.findOne({ teamId: req.user.teamId }), canEditTeam()]);
   res.json({
     success: true,
     data: {
       team: publicTeam(team),
       registration: publicRegistration(req.registration),
       submission: submission && { id: submission.id, title: submission.title, submittedAt: submission.submittedAt, updatedAt: submission.updatedAt },
+      canEditTeam: editable,
     },
   });
 }
 
 export async function updateMyTeam(req, res) {
-  if (req.registration.status === 'approved') throw httpError(403, 'TEAM_LOCKED', 'Team details cannot be changed after approval.');
+  if (!(await canEditTeam())) throw httpError(403, 'TEAM_LOCKED', 'Team details cannot be changed after registration closes.');
 
   const team = await loadOwnTeam(req);
   const { errors, value } = validateTeamUpdate(req.body, team, { minSize: env.teamMinSize, maxSize: env.teamMaxSize });

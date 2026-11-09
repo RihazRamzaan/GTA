@@ -18,7 +18,7 @@ There are five collections and no others.
 
 ## Statuses and modes
 
-**Registration status:** `waiting_for_slip` → `waiting_for_approval` → `approved` or `rejected`. A rejected team returns to `waiting_for_approval` by uploading a new slip. *(The SRS and architecture document call the first two `pending_payment` and `pending_review`; this sheet replaces those names.)*
+**Registration status:** registration is free, so a new team is saved as `approved` with `feeAmount` 0. `approved` now means **registration confirmed**; show it to participants as "Registration confirmed" or "Registered". `waiting_for_slip`, `waiting_for_approval` and `rejected` stay in the model only for records from the paid version, which the one-time migration in `docs/BACKEND_HANDOVER.md` moves to `approved`.
 
 **Window mode:** `auto`, `force_open` or `force_closed`, set separately for registration and submission.
 
@@ -79,7 +79,7 @@ Every response uses `{ "success": true, "data": {} }` or `{ "success": false, "e
         { "name": "Example Member", "email": "member@example.com" }
       ]
     },
-    "registration": { "id": "665f1c0a2b3c4d5e6f708194", "status": "waiting_for_slip", "feeAmount": 0, "payment": {} }
+    "registration": { "id": "665f1c0a2b3c4d5e6f708194", "status": "approved", "feeAmount": 0, "payment": {} }
   }
 }
 ```
@@ -104,7 +104,6 @@ throw httpError(403, 'SUBMISSION_CLOSED', 'Submissions are closed.');
 ## Open decisions for the supervisor
 
 - Team size, currently set by `TEAM_MIN_SIZE` and `TEAM_MAX_SIZE`.
-- Registration fee, currently set by `REGISTRATION_FEE`.
 - Member fields.
 - Whether an admin Teams page is needed. The SRS has none, although Day 1 lists one.
 - Hosting, because the session cookie only works if the client and API share a site.

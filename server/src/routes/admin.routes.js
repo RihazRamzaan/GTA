@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
+import { paymentsRetired } from '../middleware/paymentsRetired.js';
 import {
   getAdminSettings,
   updateAdminSettings,
@@ -25,7 +26,8 @@ router.get('/summary', getAdminSummary);
 router.get('/registrations', getAdminRegistrations);
 
 // Day 05: Payment reviews and slip retrieval (Rihaz)
-router.patch('/registrations/:id/review', reviewAdminRegistration);
+// Reviews are retired because registration is free; old slips can still be viewed.
+router.patch('/registrations/:id/review', paymentsRetired, reviewAdminRegistration);
 router.get('/registrations/:id/slip', getAdminRegistrationSlip);
 
 // Day 06: Game submissions gallery (Rihaz)

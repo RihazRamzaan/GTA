@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { getApiError } from '../../api/http.js';
 import { homePathFor, useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { user, loading, login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -14,6 +15,9 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Already signed in: go to that account's home. Skipped while submitting so the redirect below can return to the page the admin asked for.
+  if (!loading && user && !isLoading) return <Navigate to={homePathFor(user)} replace />;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -30,8 +34,8 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const user = await login({ email: formData.email, password: formData.password });
-      navigate(homePathFor(user), { replace: true });
+      const signedIn = await login({ email: formData.email, password: formData.password });
+      navigate(location.state?.from || homePathFor(signedIn), { replace: true });
     } catch (err) {
       setError(getApiError(err).message);
       setIsLoading(false);
