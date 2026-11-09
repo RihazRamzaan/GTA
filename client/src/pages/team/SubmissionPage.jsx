@@ -26,7 +26,7 @@ export default function SubmissionPage() {
   const [savedGame, setSavedGame] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState("pending");
   const [registrationError, setRegistrationError] = useState("");
-const [retryCount, setRetryCount] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -34,45 +34,51 @@ const [retryCount, setRetryCount] = useState(0);
 
   // Load the saved submission and registration status
   useEffect(() => {
-  async function loadSubmission() {
-    setIsLoading(true);
-    setRegistrationError("");
+    async function loadSubmission() {
+      setIsLoading(true);
+      setRegistrationError("");
 
-    // Load the saved game submission
-    try {
-      const response = await getSubmission();
-      const submission = response.data;
+      // Load the saved game submission
+      try {
+        const response = await getSubmission();
+        const submission = response.data;
 
-      if (submission) {
-        setSavedGame(submission);
-        setGame({
-          title: submission.title || "",
-          description: submission.description || "",
-          repoUrl: submission.repoUrl || "",
-          playableUrl: submission.playableUrl || "",
-          videoUrl: submission.videoUrl || "",
-        });
+        if (submission) {
+          setSavedGame(submission);
+          setGame({
+            title: submission.title || "",
+            description: submission.description || "",
+            repoUrl: submission.repoUrl || "",
+            playableUrl: submission.playableUrl || "",
+            videoUrl: submission.videoUrl || "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load submission:", error);
       }
-    } catch (error) {
-      console.error("Failed to load submission:", error);
+
+      // Load the actual team registration status
+      try {
+        const teamData = await teamApi.getMyTeam();
+        const actualStatus = teamData?.registration?.status;
+
+        if (!actualStatus) {
+          throw new Error("Team registration status is missing.");
+        }
+
+        setRegistrationStatus(actualStatus);
+      } catch (error) {
+        console.error("Failed to load registration:", error);
+        setRegistrationError(
+          "Unable to load your team registration status. Please try again."
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    // Load the actual team registration status
-    try {
-      const teamData = await teamApi.getMyTeam();
-      setRegistrationStatus(teamData.registration.status);
-    } catch (error) {
-      console.error("Failed to load registration:", error);
-      setRegistrationError(
-        "Unable to load your team registration status. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  loadSubmission();
-}, [retryCount]);
+    loadSubmission();
+  }, [retryCount]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -196,14 +202,14 @@ const [retryCount, setRetryCount] = useState(0);
       setMessage(
         "Your game submission has been saved successfully!"
       );
-    }  catch (error) {
-  console.error("Failed to save submission:", error);
+    } catch (error) {
+      console.error("Failed to save submission:", error);
 
-  const apiError = getApiError(error);
+      const apiError = getApiError(error);
 
-  setMessage(apiError.message);
-  setErrors(apiError.fields);
-} finally {
+      setMessage(apiError.message);
+      setErrors(apiError.fields);
+    } finally {
       setIsSaving(false);
     }
   }
@@ -279,27 +285,28 @@ const [retryCount, setRetryCount] = useState(0);
       </main>
     );
   }
+
   // Registration error screen
-if (registrationError) {
-  return (
-    <main className="submission-page">
-      <div className="sp-container">
-        <section className="sp-locked">
-          <h2>Unable to Load Team Registration</h2>
-          <p>{registrationError}</p>
+  if (registrationError) {
+    return (
+      <main className="submission-page">
+        <div className="sp-container">
+          <section className="sp-locked">
+            <h2>Unable to Load Team Registration</h2>
+            <p>{registrationError}</p>
 
-          <button
-            type="button"
-            className="sp-button"
-            onClick={() => setRetryCount((count) => count + 1)}
-          >
-            Retry
-          </button>
-        </section>
-      </div>
-    </main>
-  );}
-
+            <button
+              type="button"
+              className="sp-button"
+              onClick={() => setRetryCount((count) => count + 1)}
+            >
+              Retry
+            </button>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="submission-page">
@@ -634,24 +641,24 @@ if (registrationError) {
 
         {/* Registration pending message */}
         {isOpen && registrationStatus !== "approved" && (
-  <section className="sp-locked">
-    <h2>
-      {registrationStatus === "waiting_for_approval"
-        ? "Your Team Is Waiting for Approval"
-        : registrationStatus === "rejected"
-        ? "Team Registration Rejected"
-        : "Team Registration Not Approved"}
-    </h2>
+          <section className="sp-locked">
+            <h2>
+              {registrationStatus === "waiting_for_approval"
+                ? "Your Team Is Waiting for Approval"
+                : registrationStatus === "rejected"
+                ? "Team Registration Rejected"
+                : "Team Registration Not Approved"}
+            </h2>
 
-    <p>
-      {registrationStatus === "waiting_for_approval"
-        ? "Your team registration is currently waiting for admin approval. You can submit your game once your team has been approved."
-        : registrationStatus === "rejected"
-        ? "Your team registration was rejected. Please contact the event administrators for more information."
-        : "Your team registration is not approved yet. Please complete the registration process before submitting your game."}
-    </p>
-  </section>
-)}
+            <p>
+              {registrationStatus === "waiting_for_approval"
+                ? "Your team registration is currently waiting for admin approval. You can submit your game once your team has been approved."
+                : registrationStatus === "rejected"
+                ? "Your team registration was rejected. Please contact the event administrators for more information."
+                : "Your team registration is not approved yet. Please complete the registration process before submitting your game."}
+            </p>
+          </section>
+        )}
 
         {/* Submissions closed message */}
         {!isOpen && (
