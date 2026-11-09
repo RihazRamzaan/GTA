@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "seed:admin": "node src/scripts/seedAdmin.js"
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "migrate:free-registration": "node src/scripts/migrateFreeRegistration.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

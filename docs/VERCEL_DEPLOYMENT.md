@@ -29,7 +29,6 @@ NODE_ENV=production
 MONGODB_URI=REPLACE_WITH_PRODUCTION_MONGODB_URI
 SESSION_SECRET=REPLACE_WITH_LONG_RANDOM_SECRET
 CLIENT_ORIGIN=https://YOUR_PROJECT.vercel.app
-REGISTRATION_FEE=0
 TEAM_MIN_SIZE=2
 TEAM_MAX_SIZE=4
 ```
@@ -44,7 +43,8 @@ After deployment, visit `/api/health` and confirm a JSON response, refresh a
 frontend route directly, and verify login, registration, and an authenticated
 team API call. An unknown `/api` path must return an API error rather than HTML.
 
-This configuration does not implement the free-registration business changes.
-Setting the fee to zero alone does not remove approval requirements. The current
-disk-based slip storage is also not durable serverless storage; retire payment
-uploads as planned before using this deployment for the free event.
+Registration is free: new teams are confirmed straight away, there is no fee
+setting, and payment uploads and reviews return `410 PAYMENTS_RETIRED`. Old slips
+are kept on local disk, which is not durable serverless storage, so they will not
+be available on Vercel. Before deploying, run the one-time migration in
+`docs/BACKEND_HANDOVER.md` against the production database.
