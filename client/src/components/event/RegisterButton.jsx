@@ -11,14 +11,9 @@ export default function RegisterButton({ className = '', arrow = false, onClick 
       <Link
         to="/register"
         onClick={onClick}
-        className={`group inline-flex items-center justify-center rounded bg-neon-pink font-body font-bold text-white shadow-[0_0_16px_rgba(255,43,214,0.45)] transition-all duration-200 hover:scale-[1.03] hover:brightness-110 hover:shadow-[0_0_28px_rgba(255,43,214,0.85)] active:scale-[0.98] ${className}`}
+        className={`glow-pulse rounded bg-neon-pink font-body font-bold text-white shadow-[0_0_18px_rgba(255,43,214,0.55)] transition hover:brightness-110 ${className}`}
       >
-        <span>Register Now</span>
-        {arrow && (
-          <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-            &nbsp;→
-          </span>
-        )}
+        Register Now{arrow ? ' →' : ''}
       </Link>
     );
   }

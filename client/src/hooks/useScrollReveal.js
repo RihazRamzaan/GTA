@@ -42,3 +42,4 @@ export default function useScrollReveal(options = {}) {
 
   return [ref, isRevealed];
 }
+
