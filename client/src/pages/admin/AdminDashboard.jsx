@@ -68,6 +68,43 @@ const computeNextMilestone = (milestones) => {
   };
 };
 
+// Helper for registration status badges reflecting real saved statuses
+const getStatusBadge = (status) => {
+  switch (status) {
+    case 'approved':
+    case 'confirmed':
+      return {
+        label: 'CONFIRMED',
+        classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+        dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+      };
+    case 'waiting_for_slip':
+      return {
+        label: 'WAITING FOR SLIP',
+        classes: 'bg-[#00e5ff]/15 text-[#00e5ff] border-[#00e5ff]/30',
+        dot: 'bg-[#00e5ff] shadow-[0_0_8px_#00e5ff]',
+      };
+    case 'waiting_for_approval':
+      return {
+        label: 'WAITING FOR APPROVAL',
+        classes: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+        dot: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
+      };
+    case 'rejected':
+      return {
+        label: 'REJECTED',
+        classes: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+        dot: 'bg-rose-400 shadow-[0_0_8px_#f43f5e]',
+      };
+    default:
+      return {
+        label: status ? String(status).toUpperCase() : 'PENDING',
+        classes: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+        dot: 'bg-slate-400',
+      };
+  }
+};
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalTeams: 0,
@@ -114,7 +151,7 @@ export default function AdminDashboard() {
           totalTeams: sum.totalTeams ?? 0,
           waitingForSlip: sum.waitingForSlip ?? (sum.statusCounts?.waiting_for_slip || 0),
           waitingForApproval: sum.waitingForApproval ?? (sum.statusCounts?.waiting_for_approval || 0),
-          approved: sum.approved ?? (sum.statusCounts?.approved || sum.totalTeams || 0),
+          approved: typeof sum.approved === 'number' ? sum.approved : (sum.statusCounts?.approved ?? 0),
           rejected: sum.rejected ?? (sum.statusCounts?.rejected || 0),
           totalSubmissions: sum.totalSubmissions ?? 0,
         });
@@ -147,7 +184,7 @@ export default function AdminDashboard() {
             leaderEmail: reg.leaderEmail || t.leaderEmail || '',
             membersCount: members.length > 0 ? members.length : 1,
             registeredAt: formatRelativeOrDate(reg.createdAt || reg.updatedAt),
-            status: reg.status || 'approved',
+            status: reg.status || 'pending',
           };
         });
         setRecentTeams(formatted);
@@ -177,6 +214,7 @@ export default function AdminDashboard() {
         activeTab="overview"
         badgeCounts={{
           totalTeams: stats.totalTeams,
+          approved: stats.approved,
           totalSubmissions: stats.totalSubmissions,
           registrationOpen: gates.registrationEffective,
           submissionOpen: gates.submissionEffective,
@@ -257,11 +295,11 @@ export default function AdminDashboard() {
             {isLoading ? (
               <span className="inline-block w-12 h-8 bg-white/10 rounded animate-pulse"></span>
             ) : (
-              stats.totalTeams
+              stats.approved
             )}
           </div>
           <div className="mt-2 text-xs text-[#00e5ff] flex items-center gap-1 font-semibold">
-            <span>View All Registered Squads &rarr;</span>
+            <span>View All Registered Squads ({stats.totalTeams} Total) &rarr;</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00e5ff]/40 to-transparent"></div>
         </Link>
@@ -445,12 +483,12 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/5">
             <div>
               <h2 className="text-lg font-bold text-white font-['Orbitron',sans-serif] flex items-center gap-2">
-                <span>Confirmed Squads</span>
-                <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span>Recent Squads</span>
+                <span className="px-2 py-0.5 rounded-full text-xs bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30">
                   {recentTeams.length} Recent
                 </span>
               </h2>
-              <p className="text-xs text-[#9aa7c1]">Automatically confirmed squads registered for the Buildathon</p>
+              <p className="text-xs text-[#9aa7c1]">Registered squads for the Buildathon and their saved status</p>
             </div>
             <Link
               to="/admin/teams"
@@ -476,7 +514,7 @@ export default function AdminDashboard() {
               </div>
               <h3 className="text-sm font-bold text-white font-['Orbitron',sans-serif]">No Squads Registered Yet</h3>
               <p className="text-xs text-[#9aa7c1] max-w-sm mx-auto mt-1">
-                Teams registering while the registration gate is open will automatically confirm and appear here.
+                Teams registering while the registration gate is open will automatically appear here.
               </p>
             </div>
           ) : (
@@ -509,10 +547,17 @@ export default function AdminDashboard() {
                         {item.registeredAt}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 text-[10px] font-bold font-mono tracking-wider">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          CONFIRMED
-                        </span>
+                        {(() => {
+                          const badge = getStatusBadge(item.status);
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono tracking-wider ${badge.classes}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+                              {badge.label}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-3 px-3 text-right">
                         <Link

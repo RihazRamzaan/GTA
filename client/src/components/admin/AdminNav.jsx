@@ -20,7 +20,7 @@ export default function AdminNav({ activeTab = 'overview', badgeCounts = null })
           const d = res.data.data || {};
           setCounts({
             totalTeams: d.totalTeams ?? 0,
-            approved: d.approved ?? (d.statusCounts?.approved || d.totalTeams || 0),
+            approved: typeof d.approved === 'number' ? d.approved : (d.statusCounts?.approved ?? 0),
             totalSubmissions: d.totalSubmissions ?? 0,
             registrationOpen: Boolean(d.gates?.registrationOpen),
             submissionOpen: Boolean(d.gates?.submissionOpen),
@@ -38,7 +38,7 @@ export default function AdminNav({ activeTab = 'overview', badgeCounts = null })
   }, [badgeCounts]);
 
   const teamsBadge = counts
-    ? `${counts.totalTeams ?? 0} Confirmed`
+    ? `${counts.approved ?? 0} Confirmed`
     : null;
 
   const submissionsBadge = counts

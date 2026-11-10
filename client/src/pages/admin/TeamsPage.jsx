@@ -39,7 +39,7 @@ export default function TeamsPage() {
                   year: 'numeric',
                 })
               : 'Recent',
-            status: reg.status || 'approved',
+            status: reg.status || 'pending',
             feeAmount:
               Number(reg.feeAmount) > 0
                 ? `LKR ${Number(reg.feeAmount).toLocaleString()}`
@@ -91,6 +91,12 @@ export default function TeamsPage() {
           classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
           dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
         };
+      case 'rejected':
+        return {
+          label: 'REJECTED',
+          classes: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+          dot: 'bg-rose-400 shadow-[0_0_8px_#f43f5e]',
+        };
       case 'waiting_for_approval':
       case 'waiting_for_slip':
         return {
@@ -98,17 +104,11 @@ export default function TeamsPage() {
           classes: 'bg-[#00e5ff]/15 text-[#00e5ff] border-[#00e5ff]/30',
           dot: 'bg-[#00e5ff] shadow-[0_0_8px_#00e5ff]',
         };
-      case 'rejected':
-        return {
-          label: 'NEEDS ATTENTION',
-          classes: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-          dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-        };
       default:
         return {
-          label: 'CONFIRMED',
-          classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-          dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+          label: status ? String(status).toUpperCase() : 'PENDING',
+          classes: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+          dot: 'bg-slate-400',
         };
     }
   };
@@ -117,7 +117,9 @@ export default function TeamsPage() {
   const filteredTeams = teams.filter((team) => {
     const matchesFilter =
       filter === 'all' ||
-      (filter === 'approved' ? team.status === 'approved' || !team.status : team.status === filter);
+      (filter === 'approved'
+        ? team.status === 'approved' || team.status === 'confirmed'
+        : team.status === filter);
     const matchesSearch =
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.leaderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
