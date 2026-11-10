@@ -46,7 +46,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/login" className="hidden font-body text-lg font-semibold text-neon-cyan hover:underline sm:block">
-               Team Login
+                Login
               </Link>
               <RegisterButton className="hidden px-4 py-2 text-base sm:block" />
             </>
@@ -83,7 +83,7 @@ export default function Navbar() {
             ) : (
               <>
                 <Link to="/login" onClick={close} className="text-neon-cyan">
-                 Team Login
+                  Login
                 </Link>
                 <RegisterButton onClick={close} className="w-fit px-5 py-2 text-lg" />
               </>
