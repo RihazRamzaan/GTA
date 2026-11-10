@@ -25,17 +25,17 @@ Public frontend content is cleanly separated between:
 1. **Static and Semi-Static Event Copy**: Maintained in `client/src/data/eventContent.js`.
 2. **Dynamic Live Milestone Dates and Window States**: Provided by the API (`GET /api/public/settings`) and managed by the Admin in `server/src/models/EventSettings.js`.
 
-| Content Area                | Source File                                               | Managed By       | Dynamic / Static                          |
-| --------------------------- | --------------------------------------------------------- | ---------------- | ----------------------------------------- |
-| Event Branding & Tagline    | `client/src/data/eventContent.js`                         | Yuwandhi         | Static                                    |
-| Navigation Links            | `client/src/data/eventContent.js`                         | Yuwandhi         | Static                                    |
-| Hero Section Content        | `client/src/components/event/Hero.jsx`                    | Yuwandhi         | Hybrid (Text is static; dates from API)   |
-| Milestone Dates & Countdown | `client/src/components/event/Countdown.jsx`, `Agenda.jsx` | Yuwandhi / Rihaz | Dynamic (`EventSettings`)                 |
-| Prizes & Awards             | `client/src/data/eventContent.js`, `Prizes.jsx`           | Yuwandhi         | Static                                    |
-| Hackathon Rules & Rubric    | `client/src/data/eventContent.js`, `Rules.jsx`            | Yuwandhi         | Static (Supervisor approved)              |
-| Sponsors & Partners         | `client/src/data/eventContent.js`, `Sponsors.jsx`         | Yuwandhi         | Static (SVG assets in `assets/sponsors/`) |
-| FAQ Section                 | `client/src/data/eventContent.js`, `Faq.jsx`              | Yuwandhi         | Static                                    |
-| Registration Status Notice  | `client/src/components/event/RegistrationNotice.jsx`      | Yuwandhi         | Dynamic (`EventSettings`)                 |
+| Content Area                | Source File                                               | Managed By       | Dynamic / Static                               |
+| --------------------------- | --------------------------------------------------------- | ---------------- | ---------------------------------------------- |
+| Event Branding & Tagline    | `client/src/data/eventContent.js`                         | Yuwandhi         | Static                                         |
+| Navigation Links            | `client/src/data/eventContent.js`                         | Yuwandhi         | Static                                         |
+| Hero Section Content        | `client/src/components/event/Hero.jsx`                    | Yuwandhi         | Hybrid (Text is static; dates from API)        |
+| Milestone Dates & Countdown | `client/src/components/event/Countdown.jsx`, `Agenda.jsx` | Yuwandhi / Rihaz | Dynamic (`EventSettings`)                      |
+| Prizes & Awards             | `client/src/data/eventContent.js`, `Prizes.jsx`           | Yuwandhi         | Static                                         |
+| Hackathon Rules & Rubric    | `client/src/data/eventContent.js`, `Rules.jsx`            | Yuwandhi         | Static (placeholder until supervisor confirms) |
+| Sponsors & Partners         | `client/src/data/eventContent.js`, `Sponsors.jsx`         | Yuwandhi         | Static (SVG assets in `assets/sponsors/`)      |
+| FAQ Section                 | `client/src/data/eventContent.js`, `Faq.jsx`              | Yuwandhi         | Static                                         |
+| Registration Status Notice  | `client/src/components/event/RegistrationNotice.jsx`      | Yuwandhi         | Dynamic (`EventSettings`)                      |
 
 ---
 
@@ -104,7 +104,7 @@ Event milestones are not hardcoded on the public site. They are fetched from `GE
 
 ## 5. Free Registration Policy Implementation
 
-As of Day 7, registration is completely free. All public content reflects this policy:
+Day 7 content assumes registration is free. This wording is a placeholder until the supervisor and committee confirm it. The public content currently reflects it:
 
 1. **Zero Fees**: No participant-facing screen requests money, entry fees, or bank transfers.
 2. **No Slip Uploads**: All references to bank slips, deposit slips, payment verification, and manual review have been removed from the homepage, registration page, and FAQ.
@@ -122,3 +122,12 @@ The public pages use the NEXUS Cyberpunk neon palette:
 - Neon Purple: `#8b3dff`
 - Night Background: `#070714`
 - Night Card Surface: `#0d0f24`
+
+---
+
+## 7. Layout and Content Formats (Day 7)
+
+- **Hero layout** (`Hero.jsx`): on phones the hero uses its natural height. From the `md` breakpoint up it fills the screen, with the info row pinned to the bottom.
+- **Scroll reveal** (`client/src/hooks/useScrollReveal.js`): used by About and Prizes. Cards fade in one after another, and it respects reduced-motion settings.
+- **Rules format** (`eventContent.js`): each rule can be a plain string or an object `{ title, text, tag }`. Objects render as cards in `Rules.jsx`.
+- **Placeholders to confirm:** team size, eligibility, submission format, rule wording, FAQ answers about registration and the roster, and prize perks. These are not in the sponsor proposal.
