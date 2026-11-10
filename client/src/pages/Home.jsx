@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Hero from '../components/event/Hero.jsx';
 import About from '../components/event/About.jsx';
@@ -9,6 +9,7 @@ import Rules from '../components/event/Rules.jsx';
 import Sponsors from '../components/event/Sponsors.jsx';
 import Faq from '../components/event/Faq.jsx';
 import useEventSettings from '../hooks/useEventSettings.js';
+import VaultIntro, { shouldShowVault, VAULT_SESSION_KEY } from '../components/event/VaultIntro.jsx';
 
 function Divider() {
   return (
@@ -20,20 +21,27 @@ function Divider() {
 
 export default function Home() {
   const { settings, status } = useEventSettings();
+  const [showVault, setShowVault] = useState(shouldShowVault);
+  const finishVault = useCallback(() => {
+    try { sessionStorage.setItem(VAULT_SESSION_KEY, '1'); } catch { /* Storage can be disabled. */ }
+    setShowVault(false);
+  }, []);
 
   
   // When the address names a section (like /#rules), scroll to it once the page is shown.
   // It runs again when the settings arrive, because the page height can change a little then.
   const { hash } = useLocation();
   useEffect(() => {
+    if (hash && showVault) finishVault();
     if (!hash) return;
     const section = document.getElementById(hash.slice(1));
     if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [hash, status]);
+  }, [hash, status, showVault, finishVault]);
   
 
   return (
     <div className="full-bleed bg-night">
+      {showVault && <VaultIntro onComplete={finishVault} />}
       <Hero />
       <About />
       <Divider />

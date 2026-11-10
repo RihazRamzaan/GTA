@@ -19,6 +19,27 @@
 :root { --color-bg: #0b1020; --color-surface: #141b2d; --color-text: #eef2ff; --color-muted: #9aa7c1; --color-accent: #67e8f9; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+
+/* A slim neon rail for the page scrollbar. */
+html::-webkit-scrollbar { width: 6px; height: 6px; }
+html::-webkit-scrollbar-track { background: var(--color-night); }
+html::-webkit-scrollbar-thumb {
+  min-height: 48px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-neon-cyan), var(--color-neon-purple), var(--color-neon-pink));
+}
+html::-webkit-scrollbar-thumb:hover { background: var(--color-neon-cyan); }
+html::-webkit-scrollbar-thumb:active { background: var(--color-neon-pink); }
+html::-webkit-scrollbar-corner { background: var(--color-night); }
+@supports not selector(::-webkit-scrollbar) {
+  html { scrollbar-width: thin; scrollbar-color: var(--color-neon-cyan) var(--color-night); }
+}
+@media (forced-colors: active) {
+  html { scrollbar-width: auto; scrollbar-color: auto; }
+  html::-webkit-scrollbar { width: auto; height: auto; }
+  html::-webkit-scrollbar-track, html::-webkit-scrollbar-corner { background: Canvas; }
+  html::-webkit-scrollbar-thumb { background: ButtonText; }
+}
 body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
 @layer base { a { color: var(--color-accent); text-decoration: none; } }
 .app-shell { min-height: 100vh; display: flex; flex-direction: column; }

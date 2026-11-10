@@ -1,0 +1,51 @@
+.vault-intro { position: fixed; inset: 0; z-index: 1000; overflow: hidden; background: #070714; isolation: isolate; }
+.vault-preload { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.vault-intro.is-playing { background: transparent; }
+.vault-scene { position: absolute; left: 50%; top: 50%; width: max(100vw, 177.778vh); width: max(100vw, 177.778dvh); aspect-ratio: 16 / 9; transform: translate(-50%, -50%); container-type: inline-size; }
+.vault-half, .vault-rotor-half, .vault-ring, .vault-core, .vault-skin { position: absolute; inset: 0; }
+.vault-skin { background: var(--vault-art) center / 100% 100% no-repeat; }
+.vault-half { mask-image: radial-gradient(circle at center, transparent 0 12.4cqw, #000 12.5cqw); will-change: transform; }
+.vault-top { clip-path: inset(0 0 50% 0); }
+.vault-bottom { clip-path: inset(50% 0 0 0); }
+.vault-rotor-half { z-index: 2; will-change: transform; }
+.vault-ring { mask-image: radial-gradient(circle at center, transparent 0 9cqw, #000 9.05cqw 12.5cqw, transparent 12.55cqw); }
+.vault-core { clip-path: circle(9.05cqw at 50% 50%); }
+.vault-energy { position: absolute; left: 37.2%; top: calc(50% - 12.8cqw); width: 25.6cqw; height: 25.6cqw; border: 2px solid #72fcff; border-radius: 50%; box-shadow: 0 0 18px #00e5ff88, inset 0 0 18px #00e5ff66; opacity: 0; z-index: 3; }
+.vault-seam { position: absolute; top: calc(50% - 1px); left: 0; right: 0; height: 2px; background: #b5ffff; box-shadow: 0 0 14px 3px #00e5ff77; z-index: 4; opacity: 0; }
+.vault-bloom { position: absolute; inset: 0; z-index: 5; opacity: 0; background: radial-gradient(ellipse at center, #d6ffffbb, #00e5ff55 15%, #8b3dff22 42%, transparent 70%); }
+.vault-wave { position: absolute; left: 50%; top: 50%; width: 25cqw; height: 25cqw; border: 2px solid #8ffaff; border-radius: 50%; box-shadow: 0 0 35px #00e5ff66; transform: translate(-50%, -50%); opacity: 0; z-index: 5; }
+.vault-letterbox { position: absolute; left: 0; right: 0; height: 7%; background: #03030c; z-index: 6; }
+.vault-letterbox-top { top: 0; }
+.vault-letterbox-bottom { bottom: 0; }
+.vault-intro.is-playing .vault-half.vault-top, .vault-intro.is-playing .vault-rotor-half.vault-top { animation: vault-open-top 6s both; }
+.vault-intro.is-playing .vault-half.vault-bottom, .vault-intro.is-playing .vault-rotor-half.vault-bottom { animation: vault-open-bottom 6s both; }
+.vault-intro.is-playing .vault-half .vault-skin { animation: vault-power 6s both; }
+.vault-intro.is-playing .vault-ring { animation: vault-turn-ring 6s both; }
+.vault-intro.is-playing .vault-core .vault-skin { animation: vault-turn-core 6s both; }
+.vault-intro.is-playing .vault-energy { animation: vault-charge 6s both; }
+.vault-intro.is-playing .vault-seam { animation: vault-seam 6s both; }
+.vault-intro.is-playing .vault-bloom { animation: vault-bloom 6s both; }
+.vault-intro.is-playing .vault-wave { animation: vault-wave 6s both; }
+.vault-intro.is-playing .vault-letterbox-top { animation: vault-bars-top 6s both; }
+.vault-intro.is-playing .vault-letterbox-bottom { animation: vault-bars-bottom 6s both; }
+.vault-revealing #home > img { animation: vault-hero-image 6s cubic-bezier(.2,.7,.2,1) both; transform-origin: 73% 50%; }
+.vault-revealing #home h1 { animation: vault-hero-title 6s both; }
+.vault-revealing #home > .relative > :not(h1) { animation: vault-hero-copy 6s both; }
+@keyframes vault-open-top { 0%,59% { transform: translateY(0); animation-timing-function: ease-out; } 64% { transform: translateY(-1.5%); } 69% { transform: translateY(-1.5%); animation-timing-function: cubic-bezier(.75,0,.15,1); } 89%,100% { transform: translateY(-102%); } }
+@keyframes vault-open-bottom { 0%,59% { transform: translateY(0); animation-timing-function: ease-out; } 64% { transform: translateY(1.5%); } 69% { transform: translateY(1.5%); animation-timing-function: cubic-bezier(.75,0,.15,1); } 89%,100% { transform: translateY(102%); } }
+@keyframes vault-turn-ring { 0%,8% { transform: rotate(0); } 28% { transform: rotate(110deg); } 37% { transform: rotate(95deg); } 51%,100% { transform: rotate(180deg); } }
+@keyframes vault-turn-core { 0%,15% { transform: rotate(0); } 37% { transform: rotate(-140deg); } 51%,100% { transform: rotate(-180deg); } }
+@keyframes vault-power { 0% { filter: brightness(.35) saturate(.7); } 30% { filter: brightness(.75) saturate(1.1); } 58% { filter: brightness(1.15) saturate(1.2); } 100% { filter: brightness(1) saturate(1.1); } }
+@keyframes vault-charge { 0%,7% { opacity: 0; transform: scale(.9); } 30% { opacity: .35; transform: scale(1); } 52%,59% { opacity: .9; transform: scale(1); } 68%,100% { opacity: 0; transform: scale(1.15); } }
+@keyframes vault-seam { 0%,49% { opacity: 0; transform: scaleX(.01); } 58% { opacity: .6; transform: scaleX(.25); } 66%,71% { opacity: 1; transform: scaleX(1); } 79%,100% { opacity: 0; } }
+@keyframes vault-bloom { 0%,62% { opacity: 0; transform: scaleY(.03); } 70% { opacity: .8; transform: scaleY(.16); } 77% { opacity: .65; transform: scaleY(1.5); } 89%,100% { opacity: 0; transform: scaleY(2); } }
+@keyframes vault-wave { 0%,67% { opacity: 0; transform: translate(-50%,-50%) scale(.7); } 70% { opacity: .75; } 86%,100% { opacity: 0; transform: translate(-50%,-50%) scale(5); } }
+@keyframes vault-bars-top { 0%,66% { transform: none; } 93%,100% { transform: translateY(-105%); } }
+@keyframes vault-bars-bottom { 0%,66% { transform: none; } 93%,100% { transform: translateY(105%); } }
+@keyframes vault-hero-image { 0%,64% { transform: scale(1.2); filter: brightness(.3) saturate(.7); } 83% { filter: brightness(.9) saturate(1.1); } 100% { transform: scale(1); filter: none; } }
+@keyframes vault-hero-title { 0%,78% { opacity: 0; transform: translateY(30px) scale(.94); filter: blur(6px); } 96%,100% { opacity: 1; transform: none; filter: none; } }
+@keyframes vault-hero-copy { 0%,85% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vault-intro { display: none; }
+  .vault-revealing #home > img, .vault-revealing #home h1, .vault-revealing #home > .relative > :not(h1) { animation: none; }
+}
