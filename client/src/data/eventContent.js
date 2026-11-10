@@ -8,7 +8,7 @@ export const eventContent = {
   name: 'GAMORA',
   logo: { first: 'GAM', second: 'ORA' },
   label: 'GAMING BUILDATHON & INTERACTIVE EXPO',
-  heroLines: ['IMAGINE', 'BUILD', 'UNLEASH'],
+  heroLines: ['CREATE', 'PLAY', 'BEYOND'],
   tagline: "Sri Lanka's premier multiplayer game development buildathon and interactive gaming expo.",
 
   // Fallback info when settings are loading or offline (matches official proposal dates & venue)
@@ -29,8 +29,8 @@ export const eventContent = {
   ],
 
   about: {
-    title: 'IMAGINE & BUILD',
-    highlight: 'UNLEASH GAMING',
+    title: 'BUILD GAMES',
+    highlight: 'THAT MATTER',
     text: 'Organized collaboratively by the Software Engineering Students’ Association (SESA) and the IEEE Student Branch of the University of Kelaniya (IEEE SB UOK), GAMORA bridges academic rigor with high-growth industry disciplines: networked systems, real-time multiplayer synchronization, artificial intelligence, and interactive entertainment.',
     cards: [
       { title: 'Multiplayer Systems', text: 'Authoritative synchronization & low-latency replication' },

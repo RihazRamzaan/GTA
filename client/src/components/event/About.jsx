@@ -37,7 +37,7 @@ export default function About() {
             <div
               key={card.title}
               style={{ transitionDelay: isRevealed ? `${i * 100}ms` : '0ms' }}
-              className={`reveal-scale-up rounded-lg border border-neon-purple/40 bg-night-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-neon-cyan hover:shadow-[0_0_22px_rgba(0,229,255,0.25)] ${
+              className={`reveal-scale-up rounded-lg border border-neon-purple/40 bg-night-card p-5 transition-all duration-300 hover:border-neon-cyan hover:shadow-[0_0_22px_rgba(0,229,255,0.25)] ${
                 isRevealed ? 'is-revealed' : ''
               }`}
             >

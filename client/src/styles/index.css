@@ -64,6 +64,23 @@ section[id] { scroll-margin-top: 5rem; }
   opacity: 0.5;
 }
 
+/* Pulsing glow on the Register button */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(255, 43, 214, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(255, 43, 214, 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glow-pulse {
+    animation: glow-pulse 2.6s ease-in-out infinite;
+  }
+}
+
 /* Hero sequential entrance animations */
 @keyframes heroFadeUp {
   from {
