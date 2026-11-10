@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative flex min-h-[calc(100vh-60px)] flex-col justify-between overflow-hidden bg-night"
+      className="relative overflow-hidden bg-night md:flex md:min-h-[calc(100vh-60px)] md:flex-col md:justify-between"
     >
       <img
         src={heroCity}
@@ -33,28 +33,28 @@ export default function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right"
       />
-      {/* Dark layer on the left so the headline stays easy to read */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-night via-night/70 to-transparent" />
+      {/* Dark layer on the left so the headline stays easy to read (stronger on desktop) */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-night/80 via-night/20 to-transparent md:from-night md:via-night/70" />
       {/* Soft fade at the bottom so the info row is easy to read */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night/90 to-transparent" />
       {/* Darker cover on phones, where the text sits over the bright part of the picture */}
-      <div className="pointer-events-none absolute inset-0 bg-night/60 md:hidden" />
+      <div className="pointer-events-none absolute inset-0 bg-night/50 md:hidden" />
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between px-4 pt-6 pb-6 md:px-8 md:pt-7 md:pb-8">
+      <div className="relative mx-auto w-full max-w-7xl px-4 pt-16 pb-16 md:flex md:flex-1 md:flex-col md:justify-between md:px-8 md:pt-7 md:pb-8">
         <div>
-          <p className="mb-2 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">{label}</p>
+          <p className="mb-4 font-body text-sm font-bold tracking-[0.3em] text-neon-pink md:mb-2">{label}</p>
 
-          <h1 className="font-display font-black leading-[0.92]">
+          <h1 className="font-display font-black leading-[0.95] md:leading-[0.92]">
             {heroLines.map((line, i) => (
-              <span key={line} className={`block text-5xl sm:text-6xl md:text-7xl lg:text-8xl ${lineColors[i]}`}>
+              <span key={line} className={`block text-5xl sm:text-7xl lg:text-8xl ${lineColors[i]}`}>
                 {line}
               </span>
             ))}
           </h1>
 
-          <p className="mt-5 max-w-md font-body text-lg text-slate-200 md:text-xl">{tagline}</p>
+          <p className="mt-6 max-w-md font-body text-xl text-slate-200 md:mt-5">{tagline}</p>
 
-          <div className="mt-6 flex flex-wrap gap-4 md:mt-8">
+          <div className="mt-8 flex flex-wrap gap-4">
             <RegisterButton arrow className="px-7 py-3 text-lg" />
             <a
               href="/#about"
@@ -66,12 +66,12 @@ export default function Hero() {
           <RegistrationNotice />
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4 md:mt-12">
+        <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6 md:gap-y-4">
           {infoItems.map((item) => (
             <div key={item.caption} className="flex items-center gap-3">
               <Icon name={item.icon} size={30} className="text-neon-pink" />
               <div>
-                <p className="font-body text-base font-bold text-white md:text-lg">{item.value}</p>
+                <p className="font-body text-lg font-bold text-white">{item.value}</p>
                 <p className="font-body text-xs tracking-widest text-slate-400">{item.caption}</p>
               </div>
             </div>
