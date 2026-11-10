@@ -92,9 +92,8 @@ const closesAt = settings.milestones?.submissionClosesAt;
         }
       });
     }
-
-    const { title, description, repoUrl, playableUrl, videoUrl } = req.body;
-
+      const { title, description, repoUrl, playableUrl, videoUrl } = req.body;
+    // Check required fields
     if (!title?.trim() || !description?.trim() || !repoUrl?.trim()) {
       return res.status(400).json({
         success: false,
@@ -105,6 +104,34 @@ const closesAt = settings.milestones?.submissionClosesAt;
       });
     }
 
+    // Validate GitHub repository URL
+    let parsedRepoUrl;
+
+    try {
+      parsedRepoUrl = new URL(repoUrl.trim());
+    } catch {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_GITHUB_URL',
+          message: 'Please provide a valid GitHub repository URL.'
+        }
+      });
+    }
+
+    if (
+      !['http:', 'https:'].includes(parsedRepoUrl.protocol) ||
+      parsedRepoUrl.hostname !== 'github.com' ||
+      parsedRepoUrl.pathname.split('/').filter(Boolean).length < 2
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_GITHUB_URL',
+          message: 'Please provide a valid GitHub repository URL.'
+        }
+      });
+    }
     const submission = await Submission.findOneAndUpdate(
       { teamId },
       {
