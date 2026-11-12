@@ -7,6 +7,15 @@ import { validateMilestonesChronology } from '../utils/dates.js';
 import { httpError } from '../middleware/error.js';
 import { getEffectiveGates } from '../services/gates.js';
 import { getSlipPath } from '../services/storage.js';
+import { resolveAgenda, validateAgenda, validateSponsors, validateEvent } from '../services/eventContent.js';
+import { DEFAULT_AGENDA, DEFAULT_MILESTONES, DEFAULT_EVENT } from '../config/eventDefaults.js';
+
+function adminSettings(settings) {
+  return { ...settings.toObject(), agenda: resolveAgenda(settings), proposalDefaults: {
+    agenda: resolveAgenda({ agenda: DEFAULT_AGENDA, milestones: DEFAULT_MILESTONES }),
+    milestones: DEFAULT_MILESTONES, event: DEFAULT_EVENT,
+  } };
+}
 
 const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
 
@@ -65,7 +74,7 @@ export async function getAdminSettings(_req, res, next) {
     const settings = await EventSettings.getOrCreateSingleton();
     return res.json({
       success: true,
-      data: settings,
+      data: adminSettings(settings),
     });
   } catch (error) {
     next(error);
@@ -79,7 +88,7 @@ export async function getAdminSettings(_req, res, next) {
  */
 export async function updateAdminSettings(req, res, next) {
   try {
-    const { milestones, registrationMode, submissionMode } = req.body || {};
+    const { milestones, registrationMode, submissionMode, agenda, sponsors, event, submissionOpensAt } = req.body || {};
 
     if (registrationMode !== undefined && !ALLOWED_MODES.includes(registrationMode)) {
       return res.status(400).json({
@@ -103,11 +112,28 @@ export async function updateAdminSettings(req, res, next) {
 
     const settings = await EventSettings.getOrCreateSingleton();
 
-    if (milestones && typeof milestones === 'object') {
-      const mergedCandidate = {
-        ...settings.milestones.toObject(),
-        ...milestones,
-      };
+    if (agenda !== undefined && milestones !== undefined) throw httpError(400, 'INVALID_CONTENT', 'Save linked agenda dates or milestone dates, not both in one request.');
+    // Validate the whole request before changing the document.
+    const nextSponsors = sponsors === undefined ? undefined : validateSponsors(sponsors);
+    const nextEvent = event === undefined ? undefined : validateEvent(event);
+    let nextAgenda;
+    let nextMilestones;
+    if (agenda !== undefined) {
+      const validated = validateAgenda(agenda, settings.milestones.toObject());
+      nextAgenda = validated.agenda;
+      nextMilestones = validated.milestones;
+    }
+    if (milestones !== undefined) {
+      if (!milestones || typeof milestones !== 'object' || Array.isArray(milestones)) throw httpError(400, 'INVALID_MILESTONES', 'Milestones must be an object.');
+      nextMilestones = { ...settings.milestones.toObject(), ...milestones };
+    }
+    if (submissionOpensAt !== undefined) {
+      if (typeof submissionOpensAt !== 'string' || !/(Z|[+-]\d{2}:\d{2})$/.test(submissionOpensAt) || Number.isNaN(Date.parse(submissionOpensAt))) throw httpError(400, 'INVALID_CONTENT', 'Submission opening requires a valid date with timezone.');
+      nextMilestones = { ...(nextMilestones ?? settings.milestones.toObject()), submissionOpensAt };
+    }
+
+    if (nextMilestones) {
+      const mergedCandidate = nextMilestones;
 
       const validation = validateMilestonesChronology(mergedCandidate);
       if (!validation.valid) {
@@ -125,6 +151,12 @@ export async function updateAdminSettings(req, res, next) {
         settings.milestones[key] = val;
       }
     }
+    // Legacy milestone edits must also keep linked event end times valid.
+    const resolved = resolveAgenda({ agenda: nextAgenda ?? settings.agenda, milestones: nextMilestones ?? settings.milestones, event: nextEvent ?? settings.event });
+    if (resolved.some(entry => entry.endsAt && new Date(entry.endsAt) <= new Date(entry.startsAt))) throw httpError(400, 'INVALID_CONTENT', 'An agenda event must end after it starts. Update the linked start and end together.');
+    if (nextAgenda !== undefined) settings.agenda = nextAgenda;
+    if (nextSponsors !== undefined) settings.sponsors = nextSponsors;
+    if (nextEvent !== undefined) settings.event = nextEvent;
 
     if (registrationMode !== undefined) {
       settings.registrationMode = registrationMode;
@@ -138,7 +170,7 @@ export async function updateAdminSettings(req, res, next) {
 
     return res.json({
       success: true,
-      data: settings,
+      data: adminSettings(settings),
     });
   } catch (error) {
     next(error);
@@ -401,6 +433,7 @@ export async function getAdminSummary(_req, res, next) {
           submissionMode: settings.submissionMode,
         },
         milestones: settings.milestones,
+        agenda: resolveAgenda(settings, true),
       },
     });
   } catch (error) {

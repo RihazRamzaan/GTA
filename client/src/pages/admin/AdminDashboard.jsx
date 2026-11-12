@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AdminNav from '../../components/admin/AdminNav.jsx';
 import { getAdminSummary, getRegistrations, getAdminSubmissions } from '../../api/admin.js';
+import { getAgenda } from '../../utils/eventAgenda.js';
 
 // Helper to format Colombo Sri Lankan time for display
 const formatColomboDate = (dateVal) => {
@@ -36,36 +37,13 @@ const formatRelativeOrDate = (dateVal) => {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-// Milestone keys in chronological order
-const MILESTONE_ORDER = [
-  { key: 'registrationOpensAt', label: 'Registration Opens' },
-  { key: 'registrationClosesAt', label: 'Registration Closes' },
-  { key: 'buildingStartsAt', label: 'Hackathon Starts' },
-  { key: 'submissionOpensAt', label: 'Submissions Open' },
-  { key: 'submissionClosesAt', label: 'Submissions Close' },
-  { key: 'resultsAt', label: 'Results Announcement' },
-];
-
-const computeNextMilestone = (milestones) => {
-  if (!milestones) return { name: 'Agenda Configured', time: 'Active' };
+const computeNextMilestone = (settings) => {
   const now = Date.now();
-  for (const item of MILESTONE_ORDER) {
-    const val = milestones[item.key];
-    if (val) {
-      const ms = new Date(val).getTime();
-      if (!Number.isNaN(ms) && ms > now) {
-        return {
-          name: item.label,
-          time: formatColomboDate(val),
-        };
-      }
-    }
-  }
-  const lastVal = milestones.resultsAt;
-  return {
-    name: 'Event Concluded',
-    time: lastVal ? formatColomboDate(lastVal) : 'All milestones passed',
-  };
+  const agenda = getAgenda(settings);
+  const active = agenda.find(entry => entry.time <= now && entry.endTime > now);
+  const next = active || agenda.find(entry => entry.time > now);
+  return next ? { name: `${next.title}${active ? ' (in progress)' : ''}`, time: formatColomboDate(active ? next.endsAt : next.startsAt) }
+    : { name: agenda.length ? 'Event Concluded' : 'Agenda pending', time: 'No upcoming entries' };
 };
 
 // Helper for registration status badges reflecting real saved statuses
@@ -156,7 +134,7 @@ export default function AdminDashboard() {
           totalSubmissions: sum.totalSubmissions ?? 0,
         });
 
-        const nextMile = computeNextMilestone(sum.milestones);
+        const nextMile = computeNextMilestone(sum);
         setGates({
           registrationMode: sum.gates?.registrationMode || 'auto',
           registrationEffective: Boolean(sum.gates?.registrationOpen),

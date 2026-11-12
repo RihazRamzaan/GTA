@@ -13,6 +13,7 @@ import AgendaPage from '../pages/admin/AgendaPage.jsx';
 import TeamsPage from '../pages/admin/TeamsPage.jsx';
 import PaymentsPage from '../pages/admin/PaymentsPage.jsx';
 import SubmissionsPage from '../pages/admin/SubmissionsPage.jsx';
+import SponsorsPage from '../pages/admin/SponsorsPage.jsx';
 
 const team = (page) => <RequireAuth role="team">{page}</RequireAuth>;
 const admin = (page) => <RequireAuth role="admin">{page}</RequireAuth>;
@@ -26,5 +27,6 @@ export const router = createBrowserRouter([{ path: '/', element: <App />, childr
   { path: 'admin/teams', element: admin(<TeamsPage />) },
   { path: 'admin/payments', element: admin(<PaymentsPage />) },
   { path: 'admin/submissions', element: admin(<SubmissionsPage />) },
+  { path: 'admin/sponsors', element: admin(<SponsorsPage />) },
   { path: '*', element: <p>Page not found.</p> },
 ]}]);

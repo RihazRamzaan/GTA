@@ -1,5 +1,7 @@
 import EventSettings from '../models/EventSettings.js';
 import { httpError } from '../middleware/error.js';
+import { resolveAgenda } from './eventContent.js';
+import { env } from '../config/env.js';
 
 /**
  * Evaluates whether a gate is open based on its mode and milestone dates.
@@ -98,6 +100,13 @@ export async function getEffectiveSettings(now = new Date()) {
 
   return {
     milestones: settings.milestones,
+    agenda: resolveAgenda(settings, true),
+    sponsors: (settings.sponsors || []).filter(sponsor => sponsor.published).map(sponsor => ({
+      id: sponsor.id, name: sponsor.name, category: sponsor.category,
+      logoUrl: sponsor.logoUrl, websiteUrl: sponsor.websiteUrl, order: sponsor.order,
+    })).sort((a, b) => a.order - b.order),
+    event: settings.event,
+    teamSize: { min: env.teamMinSize, max: env.teamMaxSize },
     registrationMode: settings.registrationMode,
     submissionMode: settings.submissionMode,
     registrationOpen: statuses.registrationOpen,

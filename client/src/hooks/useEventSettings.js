@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { getPublicSettings } from '../api/public.js';
 import { sampleSettings } from '../data/sampleSettings.js';
-import { eventContent } from '../data/eventContent.js';
+import { getAgenda } from '../utils/eventAgenda.js';
 
 // Dummy data is ON only when explicitly requested via VITE_USE_SAMPLE_SETTINGS=true.
 // By default, the application connects to the authoritative public settings API.
 const USE_SAMPLE = import.meta.env.VITE_USE_SAMPLE_SETTINGS === 'true';
 
 const MIN_WAIT = 1000; // never refresh more often than once a second
-const MAX_WAIT = 5 * 60 * 1000; // refresh at least every 5 minutes (also picks up admin changes)
+const MAX_WAIT = 60 * 1000; // pick up edits from other admin sessions
 const RETRY_WAIT = 30 * 1000; // if a load fails, try again after 30 seconds
 const LOADING = { status: 'loading', settings: null };
 
@@ -32,21 +32,9 @@ async function request() {
   if (USE_SAMPLE) {
     data = sampleSettings();
   } else {
-    try {
-      const res = await getPublicSettings();
-      if (res.data?.success && res.data?.data) {
-        data = res.data.data;
-      } else {
-        throw new Error(res.data?.error?.message || 'Public settings request failed');
-      }
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        console.warn('Could not fetch authoritative public settings, falling back to sample:', err);
-        data = sampleSettings();
-      } else {
-        throw err;
-      }
-    }
+    const res = await getPublicSettings();
+    if (!res.data?.success || !res.data?.data) throw new Error('Public settings request failed');
+    data = res.data.data;
   }
   const serverMs = Date.parse(data.serverTime);
   const offsetMs = Number.isNaN(serverMs) ? 0 : serverMs - Date.now();
@@ -59,8 +47,7 @@ function scheduleNext(settings) {
   clearTimeout(timer);
 
   const serverNow = Date.now() + (settings?.offsetMs || 0);
-  const upcoming = eventContent.agendaSteps
-    .map((step) => Date.parse(settings?.milestones?.[step.key]))
+  const upcoming = [...getAgenda(settings).flatMap(entry => [entry.time, entry.endTime]), ...Object.values(settings?.milestones || {}).map(value => Date.parse(value))]
     .filter((time) => !Number.isNaN(time) && time > serverNow)
     .sort((a, b) => a - b)[0];
 
@@ -111,6 +98,8 @@ function subscribe(listener) {
   if (!started) {
     started = true;
     load();
+    window.addEventListener('focus', () => { if (!USE_SAMPLE) refreshEventSettings(); });
+    document.addEventListener('visibilitychange', () => { if (!USE_SAMPLE && document.visibilityState === 'visible') refreshEventSettings(); });
   }
   return () => listeners.delete(listener);
 }

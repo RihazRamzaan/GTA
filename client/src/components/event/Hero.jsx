@@ -5,21 +5,24 @@ import { eventContent } from '../../data/eventContent.js';
 import RegistrationNotice from './RegistrationNotice.jsx';
 import useEventSettings from '../../hooks/useEventSettings.js';
 import { formatColomboDateRange } from '../../utils/dates.js';
+import { getAgenda, eventEnd } from '../../utils/eventAgenda.js';
 
 const lineColors = ['text-white', 'text-neon-cyan', 'text-neon-pink'];
 
 export default function Hero() {
-  const { label, heroLines, tagline, info } = eventContent;
+  const { label, heroLines, tagline } = eventContent;
   const { status, settings } = useEventSettings();
+  const agenda = getAgenda(settings);
+  const end = eventEnd(settings);
   const dateRange =
-    status === 'ready'
-      ? formatColomboDateRange(settings.milestones?.buildingStartsAt, settings.milestones?.submissionClosesAt)
+    status === 'ready' && agenda.length && Number.isFinite(end)
+      ? formatColomboDateRange(agenda[0].startsAt, new Date(end).toISOString())
       : null;
-  const dateText = (dateRange || info.dates).toUpperCase();
+  const dateText = (dateRange || 'Dates to be announced').toUpperCase();
   const infoItems = [
     { icon: 'calendar', value: dateText, caption: 'EVENT DATES' },
-    { icon: 'pin', value: info.venue, caption: 'VENUE' },
-    { icon: 'users', value: info.teamSize, caption: 'TEAM SIZE' },
+    { icon: 'pin', value: settings?.event?.venue || 'Venue to be announced', caption: 'VENUE' },
+    { icon: 'users', value: settings?.teamSize ? `TEAMS OF ${settings.teamSize.min}–${settings.teamSize.max}` : 'Team size to be announced', caption: 'TEAM SIZE' },
   ];
 
   return (

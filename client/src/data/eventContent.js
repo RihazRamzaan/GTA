@@ -1,8 +1,4 @@
 // Public event copy belongs to Yuwandhi. Keep this file as the shared content boundary.
-import sponsor1 from '../assets/sponsors/sponsor-1.svg';
-import sponsor2 from '../assets/sponsors/sponsor-2.svg';
-import sponsor3 from '../assets/sponsors/sponsor-3.svg';
-import sponsor4 from '../assets/sponsors/sponsor-4.svg';
 
 export const eventContent = {
   name: 'GAMORA',
@@ -11,12 +7,6 @@ export const eventContent = {
   heroLines: ['CREATE', 'PLAY', 'BEYOND'],
   tagline: "Sri Lanka's premier multiplayer game development buildathon and interactive gaming expo.",
 
-  // Fallback info when settings are loading or offline (matches official proposal dates & venue)
-  info: {
-    dates: '13 NOV – 17 DEC 2026',
-    venue: 'DHARMALOKA HALL, UOK',
-    teamSize: 'TEAMS OF 2 – 4',
-  },
 
   navLinks: [
     { label: 'Home', href: '#home' },
@@ -36,7 +26,7 @@ export const eventContent = {
       { title: 'Multiplayer Systems', text: 'Authoritative synchronization & low-latency replication' },
       { title: 'Game AI Systems', text: 'Custom NPC behaviors, decision trees & adaptive algorithms' },
       { title: 'Interactive Expo', text: 'Public Gaming Zone & Grand Finale stage at Dharmaloka Hall' },
-      { title: 'LKR 150K Prize Pool', text: '100% locked & ring-fenced core cash prizes and trophies' },
+      { title: 'LKR 150K Prize Pool', text: 'Core cash prizes and trophies' },
     ],
   },
 
@@ -58,8 +48,6 @@ export const eventContent = {
       color: 'gold',
       perks: [
         'Cash Prize + Official Trophy',
-        'Main Stage Finalist Demo',
-        'Industry Mentorship & Certificates',
       ],
     },
     {
@@ -68,8 +56,6 @@ export const eventContent = {
       color: 'silver',
       perks: [
         'Cash Prize + Official Trophy',
-        'Interactive Expo Showcase',
-        'Industry Mentorship & Certificates',
       ],
     },
     {
@@ -78,30 +64,21 @@ export const eventContent = {
       color: 'bronze',
       perks: [
         'Cash Prize + Official Trophy',
-        'Interactive Expo Showcase',
-        'Industry Mentorship & Certificates',
       ],
     },
   ],
 
-  // Official Partnership Tiers from Proposal
-  sponsors: [
-    { name: 'Title Partner', logo: sponsor1 },
-    { name: 'Gold Partner', logo: sponsor2 },
-    { name: 'Silver Partner', logo: sponsor3 },
-    { name: 'Bronze Partner', logo: sponsor4 },
-  ],
 
   // Guideline wording awaits final organizer confirmation.
   rules: [
     {
       title: 'Eligibility & Team Size',
-      text: 'Open to all currently enrolled undergraduate university students nationwide. Teams must consist of 2 to 4 members. Cross-faculty and cross-university teams are welcome, but each participant may only belong to one team.',
+      text: 'Open to all currently enrolled undergraduate university students nationwide. Teams must consist of {{teamMin}} to {{teamMax}} members. Cross-faculty and cross-university teams are welcome, but each participant may only belong to one team.',
       tag: 'Eligibility',
     },
     {
       title: 'Original Multiplayer Game Work',
-      text: 'All game projects must be original works developed during the buildathon window shown in the live event agenda, from Round 1 Begins to Round 1 Deadline. Pre-existing games or source code created prior to topic release are strictly prohibited.',
+      text: 'All game projects must be original works developed during the buildathon window from {{round1Start}} to {{round1Deadline}}. Pre-existing games or source code created prior to topic release are strictly prohibited.',
       tag: 'Originality',
     },
     {
@@ -148,11 +125,11 @@ export const eventContent = {
     },
     {
       q: 'Where and when does the Grand Finale take place?',
-      a: 'The Grand Finale & Interactive Gaming Expo will take place at Dharmaloka Hall, University of Kelaniya. See Grand Finale & Expo in the live event agenda for the current date and time.',
+      a: 'The Grand Finale & Interactive Gaming Expo takes place at {{venue}}, from {{finale}} to {{finaleEnd}}.',
     },
     {
       q: 'How does team registration work?',
-      a: 'Click "Register Now", enter your team leader details, add your team members (2 to 4 members), and submit. Your registration is confirmed automatically without manual verification.',
+      a: 'Click "Register Now", enter your team leader details, add your team members ({{teamMin}} to {{teamMax}} members), and submit. Your registration is confirmed automatically without manual verification.',
     },
     {
       q: 'What do we need to submit for Round 1?',
@@ -164,11 +141,11 @@ export const eventContent = {
     },
     {
       q: 'How are finalists selected?',
-      a: 'The Top 06 finalist teams will be announced on December 13, 2026, and will advance to Round 2 to showcase their games live on stage and in the public Gaming Zone at Dharmaloka Hall.',
+      a: 'The Top 6 finalist teams will be announced at {{finalists}} and will advance to Round 2 to showcase their games live on stage and in the public Gaming Zone at {{venue}}.',
     },
     {
       q: 'Can we change our team members after registering?',
-      a: 'Yes. Team leaders can edit team members from the team dashboard while registration is open. See Registration Closes in the live event agenda for the scheduled deadline. The organizers can override the registration gate; your dashboard shows whether editing is currently available.',
+      a: 'Yes. Team leaders can edit team members while registration is open. The scheduled deadline is {{registrationClose}}. Organizers can override the gate; your dashboard shows whether editing is currently available.',
     },
   ],
 

@@ -1,5 +1,10 @@
 # Content Update Guide — GAMORA
 
+Agenda dates, event name/venue and confirmed sponsors are now database-managed
+through `/admin/agenda` and `/admin/sponsors`. See [Event content administration](EVENT_CONTENT_ADMIN.md)
+for the current workflow. The frontend file no longer owns sponsor lists or
+deadline values; date placeholders in rules and FAQs resolve from the saved API settings.
+
 Public event wording, hackathon guidelines, and event copy belong to **Yuwandhi**.
 This document outlines where frontend content lives, how to update it, which dates are driven dynamically by backend admin settings, and how the official **GAMORA** proposal data and free-registration policy are integrated across participant-facing pages.
 

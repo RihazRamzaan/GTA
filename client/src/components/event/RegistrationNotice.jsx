@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import useEventSettings from '../../hooks/useEventSettings.js';
 import { formatColombo } from '../../utils/dates.js';
+import { eventEnd } from '../../utils/eventAgenda.js';
 
 export default function RegistrationNotice() {
   const { status, settings } = useEventSettings();
@@ -23,7 +24,7 @@ export default function RegistrationNotice() {
   } else {
     const nowMs = Date.now() + (settings.offsetMs || 0);
     const opensAt = settings.milestones?.registrationOpensAt;
-    const resultsAt = Date.parse(settings.milestones?.resultsAt);
+    const resultsAt = eventEnd(settings);
     if (opensAt && nowMs < Date.parse(opensAt)) {
       text = `Registration opens on ${formatColombo(opensAt)} (Sri Lanka time). See you then!`;
     } else if (!Number.isNaN(resultsAt) && nowMs >= resultsAt) {

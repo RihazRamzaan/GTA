@@ -1,6 +1,9 @@
 import { eventContent } from '../../data/eventContent.js';
+import useEventSettings from '../../hooks/useEventSettings.js';
+import { resolveEventText } from '../../utils/eventAgenda.js';
 
 export default function Faq() {
+  const { settings } = useEventSettings();
   return (
     <section id="faq" className="bg-night py-16 md:py-24">
       <div className="mx-auto max-w-4xl px-4 md:px-8">
@@ -21,7 +24,7 @@ export default function Faq() {
                   +
                 </span>
               </summary>
-              <p className="mt-3 font-body text-lg text-slate-300">{item.a}</p>
+              <p className="mt-3 font-body text-lg text-slate-300">{resolveEventText(item.a, settings)}</p>
             </details>
           ))}
         </div>

@@ -1,5 +1,9 @@
 # Cyberpunk Game Buildathon — Admin Operating Guide
 
+For the expanded eleven-entry agenda, proposal reset and sponsor management,
+follow [Event content administration](EVENT_CONTENT_ADMIN.md). The current admin
+screens use saved database values rather than a fixed six-step schedule.
+
 **Document Version:** 2.0 (Free Registration Pivot)  
 **Audience:** Event Administrators & Organizers  
 **Owner:** Rihaz (Admin Dashboard, Event Settings, & Event Governance)

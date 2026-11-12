@@ -1,19 +1,28 @@
 import mongoose from 'mongoose';
+import { DEFAULT_MILESTONES, DEFAULT_AGENDA, DEFAULT_EVENT } from '../config/eventDefaults.js';
+export { DEFAULT_MILESTONES } from '../config/eventDefaults.js';
 
-export const DEFAULT_MILESTONES = {
-  registrationOpensAt: new Date('2026-11-05T00:00:00.000Z'),
-  registrationClosesAt: new Date('2026-11-15T23:59:59.000Z'),
-  buildingStartsAt: new Date('2026-11-16T09:00:00.000Z'),
-  submissionOpensAt: new Date('2026-11-27T12:00:00.000Z'),
-  submissionClosesAt: new Date('2026-12-10T18:00:00.000Z'),
-  resultsAt: new Date('2026-12-15T15:00:00.000Z'),
-};
+const agendaSchema = new mongoose.Schema({
+  id: { type: String, required: true }, title: { type: String, required: true },
+  description: String, startsAt: Date, endsAt: Date, location: String, url: String,
+  milestoneKey: String, published: { type: Boolean, default: true }, order: Number,
+}, { _id: false });
+const sponsorSchema = new mongoose.Schema({
+  id: { type: String, required: true }, name: { type: String, required: true }, category: String,
+  logoUrl: String, websiteUrl: String, published: { type: Boolean, default: false }, order: Number,
+}, { _id: false });
 
 const eventSettingsSchema = new mongoose.Schema(
   {
     _id: {
       type: String,
       default: 'current',
+    },
+    agenda: { type: [agendaSchema], default: undefined },
+    sponsors: { type: [sponsorSchema], default: [] },
+    event: {
+      name: { type: String, default: DEFAULT_EVENT.name },
+      venue: { type: String, default: DEFAULT_EVENT.venue },
     },
     milestones: {
       registrationOpensAt: {
@@ -67,9 +76,17 @@ eventSettingsSchema.statics.getOrCreateSingleton = async function () {
     settings = await this.create({
       _id: 'current',
       milestones: DEFAULT_MILESTONES,
+      agenda: DEFAULT_AGENDA,
       registrationMode: 'auto',
       submissionMode: 'auto',
     });
+  }
+  // Extend old settings without replacing dates or gate overrides edited by admins.
+  if (!settings.agenda) {
+    settings.agenda = DEFAULT_AGENDA.map(entry => entry.id === 'finale'
+      ? { ...entry, endsAt: new Date(new Date(settings.milestones.resultsAt).getTime() + 8 * 60 * 60 * 1000) }
+      : entry);
+    await settings.save();
   }
   return settings;
 };
