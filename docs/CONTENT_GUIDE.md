@@ -104,7 +104,7 @@ Event milestones are not hardcoded on the public site. They are fetched from `GE
 
 ## 5. Free Registration Policy Implementation
 
-Day 7 content assumes registration is free. This wording is a placeholder until the supervisor and committee confirm it. The public content currently reflects it:
+Registration is free under the revised Day 7 plan. The public content reflects it:
 
 1. **Zero Fees**: No participant-facing screen requests money, entry fees, or bank transfers.
 2. **No Slip Uploads**: All references to bank slips, deposit slips, payment verification, and manual review have been removed from the homepage, registration page, and FAQ.

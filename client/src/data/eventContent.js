@@ -92,7 +92,7 @@ export const eventContent = {
     { name: 'Bronze Partner', logo: sponsor4 },
   ],
 
-  // Approved Hackathon Guidelines & Technical Scope Rubric
+  // Guideline wording awaits final organizer confirmation.
   rules: [
     {
       title: 'Eligibility & Team Size',
@@ -101,7 +101,7 @@ export const eventContent = {
     },
     {
       title: 'Original Multiplayer Game Work',
-      text: 'All game projects must be original works developed during the buildathon window (Nov 29 – Dec 10, 2026). Pre-existing games or source code created prior to topic release are strictly prohibited.',
+      text: 'All game projects must be original works developed during the buildathon window shown in the live event agenda, from Round 1 Begins to Round 1 Deadline. Pre-existing games or source code created prior to topic release are strictly prohibited.',
       tag: 'Originality',
     },
     {
@@ -148,7 +148,7 @@ export const eventContent = {
     },
     {
       q: 'Where and when does the Grand Finale take place?',
-      a: 'The Grand Finale & Interactive Gaming Expo will take place on Thursday, December 17, 2026, from 9:00 AM to 5:00 PM at Dharmaloka Hall, University of Kelaniya.',
+      a: 'The Grand Finale & Interactive Gaming Expo will take place at Dharmaloka Hall, University of Kelaniya. See Grand Finale & Expo in the live event agenda for the current date and time.',
     },
     {
       q: 'How does team registration work?',
@@ -168,7 +168,7 @@ export const eventContent = {
     },
     {
       q: 'Can we change our team members after registering?',
-      a: 'Yes. Team leaders can edit team members from the team dashboard up until registration closes on November 27, 2026. After that deadline, rosters are locked.',
+      a: 'Yes. Team leaders can edit team members from the team dashboard while registration is open. See Registration Closes in the live event agenda for the scheduled deadline. The organizers can override the registration gate; your dashboard shows whether editing is currently available.',
     },
   ],
 
