@@ -13,10 +13,9 @@ export default function Sponsors() {
           {eventContent.sponsors.map((sponsor) => (
             <div
               key={sponsor.name}
-              className="flex h-28 items-center justify-center rounded-lg border border-neon-purple/40 bg-night-card p-4 text-center transition hover:border-neon-cyan"
+              className="flex h-28 items-center justify-center rounded-lg border border-neon-purple/40 bg-night-card p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-neon-cyan hover:shadow-[0_0_18px_rgba(0,229,255,0.2)]"
             >
-              {/* When we get real logos: use <img src={sponsor.logo} alt={sponsor.name} /> here */}
-                            {sponsor.logo ? (
+              {sponsor.logo ? (
                 <img src={sponsor.logo} alt={sponsor.name} className="max-h-full w-full object-contain" />
               ) : (
                 <span className="font-display text-sm font-bold tracking-wider text-slate-300">{sponsor.name}</span>

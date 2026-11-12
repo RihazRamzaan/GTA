@@ -18,7 +18,7 @@ export default function Agenda({ settings, status }) {
   if (status === 'loading') {
     return <p className="font-body text-lg text-slate-400">Loading agenda...</p>;
   }
-    // The countdown card above already shows the error message
+  // The countdown card above already shows the error message
   if (status === 'error') return null;
 
   const steps = eventContent.agendaSteps.map((step) => {

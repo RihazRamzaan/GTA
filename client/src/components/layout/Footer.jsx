@@ -18,7 +18,17 @@ export default function Footer() {
           ))}
         </nav>
 
-        <p className="font-body text-sm text-slate-500">© {new Date().getFullYear()} {eventContent.name} Game Buildathon</p>
+        <div className="font-body text-sm text-slate-400">
+          <p>© {new Date().getFullYear()} {eventContent.name} • SESA & IEEE SB UOK</p>
+          <a
+            href={eventContent.contact?.website || 'https://www.sesa.lk'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neon-cyan hover:underline"
+          >
+            www.sesa.lk
+          </a>
+        </div>
       </div>
     </footer>
   );
