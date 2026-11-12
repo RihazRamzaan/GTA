@@ -2,22 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const statusBadges = {
-  waiting_for_slip: {
-    label: 'Not Uploaded',
-    style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
-  },
-  // Point 2: After upload, show Waiting for Approval status badge
-  waiting_for_approval: {
-    label: 'Waiting for Approval',
-    style: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  },
   approved: {
-    label: 'Approved',
+    label: 'Registration Confirmed',
     style: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-  },
-  rejected: {
-    label: 'Action Required',
-    style: 'bg-red-500/15 text-red-300 border-red-500/40',
   },
   unregistered: {
     label: 'Not Registered',
@@ -25,12 +12,18 @@ const statusBadges = {
   },
 };
 
-export default function TeamNav({ team, user, currentStatus = 'waiting_for_approval', onStatusChange }) {
-  const currentBadge = statusBadges[currentStatus] || statusBadges.waiting_for_approval;
+const pendingConfirmationBadge = {
+  label: 'Confirmation Pending',
+  style: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+};
+
+export default function TeamNav({ team, user, currentStatus }) {
+  const currentBadge = currentStatus
+    ? statusBadges[currentStatus] || pendingConfirmationBadge
+    : null;
 
   const links = [
     { to: '/team', label: 'Team Overview', exact: true },
-    { to: '/team/payment', label: 'Payment & Slip' },
     { to: '/team/submission', label: 'Game Submission' },
   ];
 
@@ -42,9 +35,11 @@ export default function TeamNav({ team, user, currentStatus = 'waiting_for_appro
           {/* Signed-in Account Identifier */}
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span className="text-slate-400">Account:</span>
-              <span className="text-white font-mono font-medium">{user?.email || 'signed-in user'}</span>
+              <span className="text-white font-mono font-medium">
+                {user?.email || 'signed-in account'}
+              </span>
             </div>
             {team?.code && (
               <span className="text-xs font-bold tracking-[0.2em] text-neon-cyan uppercase">
@@ -53,40 +48,23 @@ export default function TeamNav({ team, user, currentStatus = 'waiting_for_appro
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
-              {team?.name || (import.meta.env.DEV ? 'Cyber Synapse' : 'Your Team')}
+              {team?.name || 'Your Team'}
             </h1>
-            <span
-              className={`px-3 py-0.5 rounded-full text-xs font-bold font-body border ${currentBadge.style}`}
-            >
-              {currentBadge.label}
-            </span>
+            {currentBadge && (
+              <span
+                className={`px-3 py-0.5 rounded-full text-xs font-bold font-body border ${currentBadge.style}`}
+              >
+                {currentBadge.label}
+              </span>
+            )}
           </div>
         </div>
-
-        {/* Clean, discreet state selector to preview and test each state (Development only) */}
-        {import.meta.env.DEV && onStatusChange && (
-          <div className="flex items-center gap-2 text-sm font-body">
-            <span className="text-slate-400 hidden sm:inline">Preview Status:</span>
-            <select
-              value={currentStatus}
-              onChange={(e) => onStatusChange(e.target.value)}
-              className="bg-night-card border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold font-body focus:outline-none focus:border-neon-cyan transition"
-              aria-label="Preview registration status"
-            >
-              <option value="waiting_for_approval">⏳ Waiting for Review</option>
-              <option value="approved">✓ Approved</option>
-              <option value="rejected">✕ Rejected</option>
-              <option value="waiting_for_slip">💳 Not Uploaded</option>
-              <option value="unregistered">📝 Not Registered (Preview)</option>
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mt-4">
+      <div className="flex flex-wrap gap-2 mt-4">
         {links.map((link) => (
           <NavLink
             key={link.to}

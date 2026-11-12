@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function StatusBanner({ registration }) {
-  // If no registration is provided or status is unregistered, show clear registration banner
+export default function StatusBanner({ registration, submission }) {
+  // No registration found for this account
   if (!registration || registration.status === 'unregistered') {
     return (
       <div className="rounded-xl border border-neon-pink/50 bg-gradient-to-r from-neon-pink/15 via-neon-purple/15 to-transparent p-5 text-slate-200 font-body shadow-lg">
@@ -10,16 +10,16 @@ export default function StatusBanner({ registration }) {
           <div className="flex items-start gap-3.5">
             <span className="text-2xl mt-0.5">🚀</span>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-lg font-bold text-white font-display tracking-wide">
                   No Team Registration Found
                 </h3>
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-neon-pink/20 text-neon-pink border border-neon-pink/40">
-                  Action Required
+                  Not Registered
                 </span>
               </div>
               <p className="mt-1 text-base text-slate-300 max-w-2xl">
-                Your account is signed in, but you haven't registered a team for the Cyberpunk Game Buildathon yet. Complete registration to lock in your spot and compete.
+                Your account is signed in, but no registered team is linked yet. Register your team (2–4 members, free entry) to compete and unlock game submissions.
               </p>
             </div>
           </div>
@@ -35,143 +35,66 @@ export default function StatusBanner({ registration }) {
     );
   }
 
-  const status = registration?.status || 'waiting_for_slip';
-  const payment = registration?.payment || {};
-  const rejectionReason = payment.rejectionReason || registration?.rejectionReason;
-
-  // 1. WAITING / PENDING REVIEW
-  if (status === 'waiting_for_approval' || status === 'pending_review') {
-    return (
-      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 text-slate-200 font-body">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <span className="text-2xl mt-0.5">⏳</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                  Payment Slip Under Review (Waiting for Approval)
-                </h3>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Waiting for Approval
-                </span>
-              </div>
-              <p className="mt-1 text-base text-slate-300">
-                Your payment slip for <strong className="text-white">LKR 4,000</strong> (Ref:{' '}
-                <span className="font-mono text-amber-300 font-semibold">{payment.reference || 'BOC-TXN-88392019'}</span>) has been submitted. The organizers are verifying your deposit. Verification normally takes <strong>6 to 12 hours</strong>.
-              </p>
-            </div>
-          </div>
-          <Link
-            to="/team/payment"
-            className="shrink-0 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-base font-bold transition text-center"
-          >
-            View Payment Details
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. APPROVED
-  if (status === 'approved') {
+  // Confirmed free registration
+  if (registration.status === 'approved') {
     return (
       <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-slate-200 font-body">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <span className="text-2xl mt-0.5">✓</span>
+            <span className="text-2xl mt-0.5 text-emerald-300">✓</span>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                  Registration Approved
+                  Registration Confirmed
                 </h3>
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   Officially Registered
                 </span>
+                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30">
+                  Free Entry
+                </span>
               </div>
-              <p className="mt-1 text-base text-slate-300">
-                Your team registration and payment of <strong className="text-white">LKR 4,000</strong> have been approved by the organizers. Your team is <strong className="text-emerald-300">officially registered</strong> and confirmed for the buildathon.
+              <p className="mt-1 text-base text-slate-300 max-w-2xl">
+                Your team is <strong className="text-emerald-300">officially registered</strong> for the Cyberpunk Game Buildathon. Registration is completely free — no payment is required. Keep your roster up to date before registration closes, then submit your game when ready.
               </p>
             </div>
           </div>
           <Link
             to="/team/submission"
-            className="shrink-0 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-base font-bold transition text-center"
+            className="shrink-0 px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-base font-bold transition text-center whitespace-nowrap"
           >
-            Go to Submissions
+            {submission ? 'View Game Submission →' : 'Go to Game Submission →'}
           </Link>
         </div>
       </div>
     );
   }
 
-  // 3. REJECTED
-  if (status === 'rejected') {
-    return (
-      <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-5 text-slate-200 font-body">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <span className="text-2xl mt-0.5">⚠️</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                  Action Required: Payment Slip Rejected
-                </h3>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-red-500/20 text-red-300 border border-red-500/40">
-                  Rejected
-                </span>
-              </div>
-              <p className="mt-1 text-base text-slate-300">
-                Your payment slip could not be verified by the admin team. Please review the reason below and upload a clear receipt.
-              </p>
-
-              {/* Point 3: Admin Rejection Reason Callout & Replacement Slip Link */}
-              <div className="mt-3 p-3.5 rounded-lg bg-black/40 border border-red-500/30 text-base">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-400 block mb-0.5">
-                  Reason for Rejection:
-                </span>
-                <p className="text-red-100 font-semibold">
-                  "{rejectionReason || 'The deposit slip could not be verified by organizers. Please upload a clear photo or online banking PDF.'}"
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/team/payment"
-            className="shrink-0 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white text-base font-bold transition text-center"
-          >
-            Replace Slip
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. PENDING PAYMENT
+  // Fallback for any pre-migration record from earlier database state
   return (
-    <div className="rounded-xl border border-neon-cyan/40 bg-neon-cyan/10 p-5 text-slate-200 font-body">
+    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 text-slate-200 font-body">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <span className="text-2xl mt-0.5">💳</span>
+          <span className="text-2xl mt-0.5">⏳</span>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-lg font-bold text-white font-display tracking-wide">
-                Payment Required
+                Registration Confirmation Pending
               </h3>
-              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30">
-                LKR 4,000 Due
+              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Free Event
               </span>
             </div>
-            <p className="mt-1 text-base text-slate-300">
-              Your team profile is registered, but your spot is tentative. Please transfer the <strong className="text-white">LKR 4,000</strong> entry fee to Bank of Ceylon and upload your receipt to confirm your registration.
+            <p className="mt-1 text-base text-slate-300 max-w-2xl">
+              Registration for the Cyberpunk Game Buildathon is free — no payment or slip upload is needed. Your team record is queued for confirmation by the organizers; your roster details remain visible below.
             </p>
           </div>
         </div>
         <Link
-          to="/team/payment"
-          className="shrink-0 px-4 py-2 rounded-lg bg-neon-cyan hover:opacity-90 text-black text-base font-bold transition text-center"
+          to="/team/submission"
+          className="shrink-0 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-base font-bold transition text-center whitespace-nowrap"
         >
-          Pay & Upload Slip
+          Game Submission →
         </Link>
       </div>
     </div>
