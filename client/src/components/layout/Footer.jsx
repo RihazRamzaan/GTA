@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { eventContent } from '../../data/eventContent.js';
 import Logo from '../ui/Logo.jsx';
 import useEventSettings from '../../hooks/useEventSettings.js';
-import { hasSponsors } from '../../utils/eventAgenda.js';
 
 export default function Footer() {
   const { settings } = useEventSettings();
@@ -12,14 +11,6 @@ export default function Footer() {
         <Link to="/" aria-label={`${settings?.event?.name || eventContent.name} home`}>
           <Logo />
         </Link>
-
-        <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-2 font-body text-lg">
-          {eventContent.navLinks.filter(link => link.href !== '#sponsors' || hasSponsors(settings)).map((link) => (
-            <a key={link.label} href={`/${link.href}`} className="text-slate-300 transition hover:text-neon-cyan">
-              {link.label}
-            </a>
-          ))}
-        </nav>
 
         <div className="font-body text-sm text-slate-400">
           <p>© {new Date().getFullYear()} {settings?.event?.name || eventContent.name} • SESA & IEEE SB UOK</p>
