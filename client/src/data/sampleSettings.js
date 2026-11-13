@@ -31,6 +31,7 @@ export function sampleSettings() {
 
   return {
     milestones,
+    teamSize: { min: 2, max: 4 },
     registrationMode,
     submissionMode,
     registrationOpen: isOpen(registrationMode, milestones.registrationOpensAt, milestones.registrationClosesAt),

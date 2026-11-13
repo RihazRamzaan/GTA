@@ -5,13 +5,11 @@ import { eventContent } from '../../data/eventContent.js';
 import RegisterButton from '../event/RegisterButton.jsx';
 import Logo from '../ui/Logo.jsx';
 import useEventSettings from '../../hooks/useEventSettings.js';
-import { hasSponsors } from '../../utils/eventAgenda.js';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const { settings } = useEventSettings();
-  const navLinks = eventContent.navLinks.filter(link => link.href !== '#sponsors' || hasSponsors(settings));
   const navigate = useNavigate();
   const close = () => setOpen(false);
 
@@ -28,14 +26,6 @@ export default function Navbar() {
         <Link to="/" aria-label={`${settings?.event?.name || eventContent.name} home`}>
           <Logo />
         </Link>
-
-        <nav aria-label="Main navigation" className="hidden items-center gap-6 font-body text-lg font-semibold lg:flex">
-          {navLinks.map((link) => (
-            <a key={link.label} href={`/${link.href}`} className="text-slate-200 transition hover:text-neon-cyan">
-              {link.label}
-            </a>
-          ))}
-        </nav>
 
         <div className="flex items-center gap-4">
           {user ? (
@@ -70,11 +60,6 @@ export default function Navbar() {
       {open && (
         <nav aria-label="Mobile navigation" className="border-t border-neon-purple/30 bg-night px-4 pb-5 pt-3 lg:hidden">
           <div className="flex flex-col gap-3 font-body text-xl font-semibold">
-            {navLinks.map((link) => (
-              <a key={link.label} href={`/${link.href}`} onClick={close} className="text-slate-200">
-                {link.label}
-              </a>
-            ))}
             {user ? (
               <>
                 <Link to={homePathFor(user)} onClick={close} className="text-neon-cyan">

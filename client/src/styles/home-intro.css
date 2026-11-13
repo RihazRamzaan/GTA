@@ -1,0 +1,2 @@
+.home-intro { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; overflow:hidden; outline:none; background:#070714; }
+.home-intro-video { display:block; flex-shrink:0; width:100%; height:auto; max-height:none; pointer-events:none; }

@@ -19,6 +19,16 @@ function adminSettings(settings) {
 
 const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
 
+function adminRoster(team) {
+  const members = Array.isArray(team.members) ? team.members : [];
+  if (!team.leaderName) return members;
+  const leaderEmail = String(team.leaderEmail ?? '').trim().toLowerCase();
+  return [
+    { name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' },
+    ...members.filter(member => !leaderEmail || String(member.email ?? '').trim().toLowerCase() !== leaderEmail),
+  ];
+}
+
 /**
  * Helper to format a populated Registration document consistently
  * for admin consumption (omitting sensitive raw storage keys).
@@ -26,10 +36,7 @@ const ALLOWED_MODES = ['auto', 'force_open', 'force_closed'];
 export function formatRegistrationRecord(reg) {
   if (!reg) return null;
   const team = reg.teamId || {};
-  const teamMembers = Array.isArray(team.members) ? team.members : [];
-  const allMembers = team.leaderName
-    ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
-    : teamMembers;
+  const allMembers = adminRoster(team);
 
   return {
     id: reg._id,
@@ -448,10 +455,7 @@ export async function getAdminSummary(_req, res, next) {
 export function formatSubmissionRecord(sub) {
   if (!sub) return null;
   const team = sub.teamId || {};
-  const teamMembers = Array.isArray(team.members) ? team.members : [];
-  const allMembers = team.leaderName
-    ? [{ name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' }, ...teamMembers]
-    : teamMembers;
+  const allMembers = adminRoster(team);
 
   return {
     id: sub._id,

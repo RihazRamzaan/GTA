@@ -1,5 +1,9 @@
-export default function TextField({ id, label, error, hint, ...inputProps }) {
+export default function TextField({ id, label, error, hint, reserveFeedback = false, ...inputProps }) {
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+  const feedback = <>
+    {hint && !error && <p id={`${id}-hint`} className="mt-1 font-body text-sm text-slate-400">{hint}</p>}
+    {error && <p id={`${id}-error`} className="mt-1 font-body text-base text-red-300">{error}</p>}
+  </>;
 
   return (
     <div>
@@ -14,8 +18,7 @@ export default function TextField({ id, label, error, hint, ...inputProps }) {
         className={`w-full rounded-lg border bg-night px-3 py-2.5 font-body text-lg text-white placeholder-slate-500 focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-neon-cyan ${error ? 'border-red-400' : 'border-neon-purple/50'}`}
         {...inputProps}
       />
-      {hint && !error && <p id={`${id}-hint`} className="mt-1 font-body text-sm text-slate-400">{hint}</p>}
-      {error && <p id={`${id}-error`} className="mt-1 font-body text-base text-red-300">{error}</p>}
+      {reserveFeedback ? <div className="min-h-14">{feedback}</div> : feedback}
     </div>
   );
 }
