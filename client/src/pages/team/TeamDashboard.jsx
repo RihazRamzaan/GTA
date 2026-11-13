@@ -432,7 +432,7 @@ export default function TeamDashboard() {
                       Not Submitted Yet
                     </p>
                     <p className="mt-1 text-sm text-slate-300">
-                      Submit your GitHub repo, playable link, and demo video.
+                      Submit your game title, description, and GitHub repository. Playable and video links are optional.
                     </p>
                   </>
                 )}

@@ -4,10 +4,14 @@ import { homePathFor, useAuth } from '../../context/AuthContext.jsx';
 import { eventContent } from '../../data/eventContent.js';
 import RegisterButton from '../event/RegisterButton.jsx';
 import Logo from '../ui/Logo.jsx';
+import useEventSettings from '../../hooks/useEventSettings.js';
+import { hasSponsors } from '../../utils/eventAgenda.js';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { settings } = useEventSettings();
+  const navLinks = eventContent.navLinks.filter(link => link.href !== '#sponsors' || hasSponsors(settings));
   const navigate = useNavigate();
   const close = () => setOpen(false);
 
@@ -21,12 +25,12 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-neon-purple/30 bg-night/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-        <Link to="/" aria-label={`${eventContent.name} home`}>
+        <Link to="/" aria-label={`${settings?.event?.name || eventContent.name} home`}>
           <Logo />
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-6 font-body text-lg font-semibold lg:flex">
-          {eventContent.navLinks.map((link) => (
+          {navLinks.map((link) => (
             <a key={link.label} href={`/${link.href}`} className="text-slate-200 transition hover:text-neon-cyan">
               {link.label}
             </a>
@@ -66,7 +70,7 @@ export default function Navbar() {
       {open && (
         <nav aria-label="Mobile navigation" className="border-t border-neon-purple/30 bg-night px-4 pb-5 pt-3 lg:hidden">
           <div className="flex flex-col gap-3 font-body text-xl font-semibold">
-            {eventContent.navLinks.map((link) => (
+            {navLinks.map((link) => (
               <a key={link.label} href={`/${link.href}`} onClick={close} className="text-slate-200">
                 {link.label}
               </a>

@@ -25,7 +25,7 @@ export default function SubmissionPage() {
   const [game, setGame] = useState(emptyGame);
   const [savedGame, setSavedGame] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState("pending");
-  const [registrationError, setRegistrationError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -34,50 +34,44 @@ export default function SubmissionPage() {
 
   // Load the saved submission and registration status
   useEffect(() => {
+    let cancelled = false;
     async function loadSubmission() {
       setIsLoading(true);
-      setRegistrationError("");
+      setLoadError("");
 
-      // Load the saved game submission
       try {
-        const response = await getSubmission();
-        const submission = response.data;
-
-        if (submission) {
-          setSavedGame(submission);
-          setGame({
-            title: submission.title || "",
-            description: submission.description || "",
-            repoUrl: submission.repoUrl || "",
-            playableUrl: submission.playableUrl || "",
-            videoUrl: submission.videoUrl || "",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load submission:", error);
-      }
-
-      // Load the actual team registration status
-      try {
-        const teamData = await teamApi.getMyTeam();
+        const [response, teamData] = await Promise.all([
+          getSubmission(),
+          teamApi.getMyTeam(),
+        ]);
+        if (cancelled) return;
         const actualStatus = teamData?.registration?.status;
 
         if (!actualStatus) {
           throw new Error("Team registration status is missing.");
         }
-
+        const submission = response.data;
+        setSavedGame(submission || null);
+        setGame(submission ? {
+          title: submission.title || "",
+          description: submission.description || "",
+          repoUrl: submission.repoUrl || "",
+          playableUrl: submission.playableUrl || "",
+          videoUrl: submission.videoUrl || "",
+        } : { ...emptyGame });
         setRegistrationStatus(actualStatus);
       } catch (error) {
-        console.error("Failed to load registration:", error);
-        setRegistrationError(
-          "Unable to load your team registration status. Please try again."
-        );
+        if (!cancelled) {
+          console.error("Failed to load submission details:", error);
+          setLoadError("We could not load your saved game and registration details. Please try again. Your saved game has not been changed.");
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     loadSubmission();
+    return () => { cancelled = true; };
   }, [retryCount]);
 
   function handleChange(event) {
@@ -171,7 +165,7 @@ export default function SubmissionPage() {
 
     if (registrationStatus !== "approved") {
       setMessage(
-        "Your team must be approved before submitting a game."
+        "Your team registration must be confirmed before submitting a game. Registration is free; contact the organizers if your team is not confirmed."
       );
       return;
     }
@@ -286,18 +280,18 @@ export default function SubmissionPage() {
     );
   }
 
-  // Registration error screen
-  if (registrationError) {
+  // A failed request must not be presented as an empty submission.
+  if (loadError) {
     return (
       <main className="submission-page">
         <div className="sp-container">
-          <section className="sp-locked">
-            <h2>Unable to Load Team Registration</h2>
-            <p>{registrationError}</p>
+          <section role="alert" className="mx-auto max-w-2xl rounded-xl border border-neon-pink/40 bg-night-card p-8 text-center text-white">
+            <h2 className="font-display text-2xl">Unable to Load Submission Details</h2>
+            <p className="mt-4 font-body text-lg">{loadError}</p>
 
             <button
               type="button"
-              className="sp-button"
+              className="mt-5 rounded-lg bg-neon-cyan px-6 py-3 font-body font-bold text-black"
               onClick={() => setRetryCount((count) => count + 1)}
             >
               Retry
@@ -643,19 +637,11 @@ export default function SubmissionPage() {
         {isOpen && registrationStatus !== "approved" && (
           <section className="sp-locked">
             <h2>
-              {registrationStatus === "waiting_for_approval"
-                ? "Your Team Is Waiting for Approval"
-                : registrationStatus === "rejected"
-                ? "Team Registration Rejected"
-                : "Team Registration Not Approved"}
+              Team Registration Needs Attention
             </h2>
 
             <p>
-              {registrationStatus === "waiting_for_approval"
-                ? "Your team registration is currently waiting for admin approval. You can submit your game once your team has been approved."
-                : registrationStatus === "rejected"
-                ? "Your team registration was rejected. Please contact the event administrators for more information."
-                : "Your team registration is not approved yet. Please complete the registration process before submitting your game."}
+              Registration is free and new teams are confirmed automatically. Your saved registration is not confirmed. Contact the organizers to check your registration; no payment is required.
             </p>
           </section>
         )}

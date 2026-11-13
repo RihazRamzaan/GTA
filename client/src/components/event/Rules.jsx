@@ -1,6 +1,9 @@
 import { eventContent } from '../../data/eventContent.js';
+import useEventSettings from '../../hooks/useEventSettings.js';
+import { resolveEventText } from '../../utils/eventAgenda.js';
 
 export default function Rules() {
+  const { settings } = useEventSettings();
   return (
     <section id="rules" className="bg-night py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -12,7 +15,7 @@ export default function Rules() {
             </h2>
           </div>
           <p className="max-w-md font-body text-lg text-slate-300">
-            Official guidelines approved by event organizers. All registered teams must adhere to these policies throughout the competition.
+            Review the current event guidelines below. Final policy details are subject to confirmation by the organizers.
           </p>
         </div>
 
@@ -45,7 +48,7 @@ export default function Rules() {
                     </h3>
                   )}
                   <p className="font-body text-lg leading-relaxed text-slate-300">
-                    {text}
+                    {resolveEventText(text, settings)}
                   </p>
                 </div>
               </li>

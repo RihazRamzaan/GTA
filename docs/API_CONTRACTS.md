@@ -34,3 +34,25 @@ On `PATCH /api/team/me`, `members` replaces the whole list and the same leader a
 Registration is free for this event. Payment uploads and reviews are switched off on the server; old payment details and slips are kept and can still be viewed.
 
 All `/api/team/*` routes need a team session and all `/api/admin/*` routes need an admin session: 401 when signed out, 403 for the wrong account type.
+
+## Editable event content
+
+The public settings response now includes `agenda`, `sponsors`, `event` (name and
+venue), and configured `teamSize` (min/max). Only published agenda entries and
+sponsors are public. Each agenda entry contains a stable `id`, `title`,
+`description`, `startsAt`, optional `endsAt`, `location`, `url`, `order` and
+optional `milestoneKey`. Public settings use `Cache-Control: no-store`.
+
+Admin settings include all drafts and `proposalDefaults` for an explicit reset
+preview. PATCH additionally accepts `agenda` (whole list), `submissionOpensAt`,
+`event` and `sponsors` (whole list). Sponsor fields are `id`, `name`, `category`,
+`logoUrl`, optional `websiteUrl` and `published`; ordering follows the submitted
+array. URLs are HTTP/HTTPS without embedded credentials. Lists and text have
+bounded lengths. An empty sponsor list is valid and hides the public section.
+
+Required agenda IDs map to existing gate milestones. Resolved dates come from
+the milestone fields, so legacy PATCH `milestones` and new PATCH `agenda` stay
+consistent. Do not send `milestones` and `agenda` in the same request. Core
+entries cannot be deleted or relinked; hiding them does not bypass gate rules.
+Invalid content returns 400 `INVALID_CONTENT`; inverted gate dates return 400
+`CHRONOLOGY_VIOLATION`. See [Event content administration](EVENT_CONTENT_ADMIN.md).

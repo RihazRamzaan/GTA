@@ -9,6 +9,7 @@ import Rules from '../components/event/Rules.jsx';
 import Sponsors from '../components/event/Sponsors.jsx';
 import Faq from '../components/event/Faq.jsx';
 import useEventSettings from '../hooks/useEventSettings.js';
+import { hasSponsors } from '../utils/eventAgenda.js';
 import VaultIntro, { shouldShowVault, VAULT_SESSION_KEY } from '../components/event/VaultIntro.jsx';
 
 function Divider() {
@@ -61,8 +62,7 @@ export default function Home() {
       <Prizes />
       <Divider />
       <Rules />
-      <Divider />
-      <Sponsors />
+      {hasSponsors(settings) && <><Divider /><Sponsors /></>}
       <Divider />
       <Faq />
     </div>

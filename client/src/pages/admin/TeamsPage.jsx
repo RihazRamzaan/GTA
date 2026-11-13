@@ -156,7 +156,7 @@ export default function TeamsPage() {
           <div className="px-4 py-2.5 rounded-xl bg-[#0d0f24] border border-emerald-500/20 text-xs">
             <span className="text-emerald-400 font-semibold">Confirmed: </span>
             <span className="font-bold text-white font-mono text-sm ml-1">
-              {teams.filter((t) => t.status === 'approved' || !t.status).length}
+              {teams.filter((t) => t.status === 'approved' || t.status === 'confirmed').length}
             </span>
           </div>
           <button

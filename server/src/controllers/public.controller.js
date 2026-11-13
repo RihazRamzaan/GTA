@@ -8,6 +8,7 @@ import { getEffectiveSettings } from '../services/gates.js';
 export async function getPublicSettings(_req, res, next) {
   try {
     const settings = await getEffectiveSettings();
+    res.setHeader('Cache-Control', 'no-store');
     return res.json({
       success: true,
       data: settings,

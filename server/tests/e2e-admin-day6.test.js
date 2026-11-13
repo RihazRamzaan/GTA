@@ -417,6 +417,7 @@ console.log('• Testing Event Date Chronology Validation in updateAdminSettings
       },
       registrationMode: 'auto',
       submissionMode: 'auto',
+      toObject() { return { milestones: this.milestones.toObject(), registrationMode: this.registrationMode, submissionMode: this.submissionMode }; },
       save: async () => true,
     };
     EventSettings.getOrCreateSingleton = async () => mockSettingsDoc;
@@ -464,6 +465,7 @@ console.log('• Testing Event Date Chronology Validation in updateAdminSettings
       },
       registrationMode: 'auto',
       submissionMode: 'auto',
+      toObject() { return { milestones: this.milestones.toObject(), registrationMode: this.registrationMode, submissionMode: this.submissionMode }; },
       save: async () => true,
     };
     EventSettings.getOrCreateSingleton = async () => mockSettingsDoc;

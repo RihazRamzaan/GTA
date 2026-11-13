@@ -59,6 +59,7 @@ export default function AdminNav({ activeTab = 'overview', badgeCounts = null })
       : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
 
   const navItems = [
+    { to: '/admin/sponsors', label: 'Sponsors', icon: <span aria-hidden="true">◇</span> },
     {
       to: '/admin',
       label: 'Overview',
