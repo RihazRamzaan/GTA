@@ -139,13 +139,81 @@
 .gamora-home .agenda-card p:first-child { font-size:12px; }
 .gamora-home .agenda-card time { color:#cac7e0; font-weight:600; }
 .home-prizes { position:relative; }
-.home-podium { gap:24px; align-items:start; }
-.home-podium li { background:linear-gradient(#8b3dff0b,transparent); border-top:1px solid #8b3dff40; border-radius:3px; padding:32px 20px; }
+.home-podium { gap:24px; align-items:stretch; }
+.home-podium li {
+  border-radius:6px;
+  padding:32px 20px;
+  position:relative;
+  transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.home-podium li:hover { transform:translateY(-4px); }
 .home-podium li+li { border-inline-start:0; margin-top:0; }
-.home-podium li:first-child { border-top-color:#ff2bd6; }
-.podium-rank { font-family:var(--font-display); color:#8b3dff40; }
-.home-podium li:first-child .podium-rank { color:#ff2bd640; }
+.podium-rank { font-family:var(--font-display); font-weight:700; margin-bottom:12px; }
+.podium-place { font-family:var(--font-body); font-weight:700; letter-spacing:0.12em; text-transform:uppercase; font-size:16px; display:inline-block; }
 .home-podium p,.home-podium li>span:nth-child(2) { font-size:16px; }
+
+/* 1st Place - Gold */
+.home-podium li:nth-child(1), .home-podium li.podium-gold {
+  background:linear-gradient(180deg, rgba(245, 184, 61, 0.12) 0%, rgba(245, 184, 61, 0.02) 65%, transparent 100%);
+  border-top:2px solid #f5b83d;
+}
+.home-podium li:nth-child(1) .podium-rank, .home-podium li.podium-gold .podium-rank {
+  color:rgba(245, 184, 61, 0.45);
+  text-shadow:0 0 24px rgba(245, 184, 61, 0.35);
+}
+.home-podium li:nth-child(1) .podium-place, .home-podium li.podium-gold .podium-place,
+.home-podium li:nth-child(1)>span:nth-child(2) {
+  color:#f5b83d;
+}
+.home-podium li:nth-child(1) h3, .home-podium li.podium-gold h3 {
+  text-shadow:0 0 20px rgba(245, 184, 61, 0.4);
+}
+.home-podium li:nth-child(1):hover, .home-podium li.podium-gold:hover {
+  border-top-color:#ffd470;
+  box-shadow:0 -4px 32px rgba(245, 184, 61, 0.25);
+}
+
+/* 2nd Place - Silver */
+.home-podium li:nth-child(2), .home-podium li.podium-silver {
+  background:linear-gradient(180deg, rgba(159, 196, 232, 0.1) 0%, rgba(159, 196, 232, 0.02) 65%, transparent 100%);
+  border-top:2px solid #9fc4e8;
+}
+.home-podium li:nth-child(2) .podium-rank, .home-podium li.podium-silver .podium-rank {
+  color:rgba(159, 196, 232, 0.4);
+  text-shadow:0 0 20px rgba(159, 196, 232, 0.3);
+}
+.home-podium li:nth-child(2) .podium-place, .home-podium li.podium-silver .podium-place,
+.home-podium li:nth-child(2)>span:nth-child(2) {
+  color:#9fc4e8;
+}
+.home-podium li:nth-child(2) h3, .home-podium li.podium-silver h3 {
+  text-shadow:0 0 16px rgba(159, 196, 232, 0.35);
+}
+.home-podium li:nth-child(2):hover, .home-podium li.podium-silver:hover {
+  border-top-color:#c4def7;
+  box-shadow:0 -4px 28px rgba(159, 196, 232, 0.2);
+}
+
+/* 3rd Place - Bronze */
+.home-podium li:nth-child(3), .home-podium li.podium-bronze {
+  background:linear-gradient(180deg, rgba(224, 121, 74, 0.1) 0%, rgba(224, 121, 74, 0.02) 65%, transparent 100%);
+  border-top:2px solid #e0794a;
+}
+.home-podium li:nth-child(3) .podium-rank, .home-podium li.podium-bronze .podium-rank {
+  color:rgba(224, 121, 74, 0.4);
+  text-shadow:0 0 20px rgba(224, 121, 74, 0.3);
+}
+.home-podium li:nth-child(3) .podium-place, .home-podium li.podium-bronze .podium-place,
+.home-podium li:nth-child(3)>span:nth-child(2) {
+  color:#e0794a;
+}
+.home-podium li:nth-child(3) h3, .home-podium li.podium-bronze h3 {
+  text-shadow:0 0 16px rgba(224, 121, 74, 0.35);
+}
+.home-podium li:nth-child(3):hover, .home-podium li.podium-bronze:hover {
+  border-top-color:#f09569;
+  box-shadow:0 -4px 28px rgba(224, 121, 74, 0.2);
+}
 .prize-total>p { font-family:var(--font-body); font-size:17px; }
 .home-accordions summary { font-size:18px; font-weight:600; }
 .home-accordions details>p { font-size:17px; line-height:1.6; }
@@ -241,7 +309,7 @@ html:has(.gamora-home) { scroll-padding-block-end:var(--home-dock-clearance,112p
   .agenda-card { padding:24px; }
   .home-podium { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .home-podium li { padding:28px 0; }
-  .home-podium li+li { border-inline-start:0; border-top:1px solid #ffffff13; }
+  .home-podium li+li { border-inline-start:0; }
   .podium-rank { font-size:40px; }
   .home-podium h3 { font-size:32px; }
   .home-accordions summary { font-size:16px; gap:14px; }
