@@ -6,7 +6,7 @@ import MemberList from '../../components/team/MemberList.jsx';
 import StatusBanner from '../../components/team/StatusBanner.jsx';
 import TeamNav from '../../components/team/TeamNav.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import useEventSettings from '../../hooks/useEventSettings.js';
+import useEventSettings, { refreshEventSettings } from '../../hooks/useEventSettings.js';
 import { formatColombo } from '../../utils/dates.js';
 
 // Formats the backend team payload returned by GET/PATCH /api/team/me for display.
@@ -35,14 +35,14 @@ function formatTeamFromBackend(backendTeam, fallbackEmail) {
       email: leaderEmail,
     },
     members: otherMembers,
-    maxMembers: 4,
-    minMembers: 2,
   };
 }
 
 export default function TeamDashboard() {
   const { user, loading: authLoading, refresh } = useAuth();
   const { status: settingsStatus, settings } = useEventSettings();
+  const teamSize = settings?.teamSize;
+  const validTeamSize = settingsStatus === 'ready' && Number.isInteger(teamSize?.min) && Number.isInteger(teamSize?.max) && teamSize.min >= 1 && teamSize.max >= teamSize.min;
 
   const [dashboard, setDashboard] = useState({
     team: null,
@@ -196,7 +196,8 @@ export default function TeamDashboard() {
   // Add a new member
   const handleAddMember = async (newMember) => {
     const currentMembers = dashboard.team?.members || [];
-    const maxMembers = dashboard.team?.maxMembers || 4;
+    if (!validTeamSize) throw new Error('Team-size requirements are unavailable. Please retry.');
+    const maxMembers = teamSize.max;
     if (1 + currentMembers.length >= maxMembers) {
       const msg = `Maximum team size reached (${maxMembers} members max).`;
       showToast(msg, 'error');
@@ -230,7 +231,8 @@ export default function TeamDashboard() {
   // Remove a member by roster index
   const handleDeleteMember = async (memberIndex) => {
     const currentMembers = dashboard.team?.members || [];
-    const minMembers = dashboard.team?.minMembers || 2;
+    if (!validTeamSize) throw new Error('Team-size requirements are unavailable. Please retry.');
+    const minMembers = teamSize.min;
     if (1 + currentMembers.length <= minMembers) {
       const msg = `Cannot remove: Teams must have at least ${minMembers} members.`;
       showToast(msg, 'error');
@@ -361,7 +363,7 @@ export default function TeamDashboard() {
               <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
                 Team Size
               </span>
-              <span className="text-white font-semibold">2 – 4 Members</span>
+              <span className="text-white font-semibold">{validTeamSize ? `${teamSize.min} – ${teamSize.max} Members` : 'Team size unavailable'}</span>
             </div>
             <div>
               <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
@@ -448,15 +450,19 @@ export default function TeamDashboard() {
           </div>
 
           {/* Editable Team Members & Info Section */}
-          <MemberList
-            team={team}
+          {validTeamSize ? <MemberList
+            team={{ ...team, minMembers: teamSize.min, maxMembers: teamSize.max }}
             canEditTeam={canEditTeam}
             registrationClosesAt={registrationClosesAt}
             onUpdateTeam={handleUpdateTeam}
             onAddMember={handleAddMember}
             onUpdateMember={handleUpdateMember}
             onDeleteMember={handleDeleteMember}
-          />
+          /> : <section role={settingsStatus === 'loading' ? 'status' : 'alert'} className="rounded-xl border border-neon-purple/40 bg-night-card p-5">
+            <h2 className="font-display text-lg text-white">Team roster</h2>
+            <p className="mt-2 text-slate-300">{settingsStatus === 'loading' ? 'Loading team-size requirements…' : 'We could not load the team-size requirements. Retry to manage your roster.'}</p>
+            {settingsStatus !== 'loading' && <button type="button" onClick={() => refreshEventSettings()} className="mt-3 rounded-lg border border-neon-cyan/60 px-4 py-2 font-bold text-neon-cyan">Retry team-size requirements</button>}
+          </section>}
         </>
       )}
     </div>

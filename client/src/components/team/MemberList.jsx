@@ -32,8 +32,8 @@ export default function MemberList({
 
   const members = Array.isArray(team?.members) ? team.members : [];
   const totalCount = 1 + members.length;
-  const maxMembers = team?.maxMembers || 4;
-  const minMembers = team?.minMembers || 2;
+  const maxMembers = team.maxMembers;
+  const minMembers = team.minMembers;
   const slotsRemaining = Math.max(0, maxMembers - totalCount);
   const canDelete = canEditTeam && totalCount > minMembers;
 
@@ -271,6 +271,7 @@ export default function MemberList({
         member={memberModal.member}
         memberIndex={memberModal.index}
         canDelete={canDelete}
+        minMembers={minMembers}
         existingEmails={existingEmails}
         onSave={(savedMember) => {
           if (memberModal.index !== null) {

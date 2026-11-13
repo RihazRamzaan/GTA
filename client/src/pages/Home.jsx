@@ -21,10 +21,12 @@ export default function Home() {
   const { settings, status } = useEventSettings();
   const { user } = useAuth();
   const { hash } = useLocation();
-  const [showIntro, setShowIntro] = useState(shouldShowHomeIntro);
+  const [introStage, setIntroStage] = useState(() => shouldShowHomeIntro() ? 'playing' : 'bypassed');
+  const showIntro = introStage === 'playing' || introStage === 'revealing';
+  const revealHero = useCallback(() => setIntroStage('revealing'), []);
   const finishIntro = useCallback(() => {
     try { sessionStorage.setItem(HOME_INTRO_SESSION_KEY, '1'); } catch { /* Storage may be disabled. */ }
-    setShowIntro(false);
+    setIntroStage(current => current === 'revealing' ? 'complete' : 'bypassed');
   }, []);
   const pageRef = useRef(null);
   const name = settings?.event?.name || eventContent.name;
@@ -88,8 +90,8 @@ export default function Home() {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, [hash, status, showIntro, finishIntro]);
 
-  return <div className="gamora-home" ref={pageRef}>
-    {showIntro && <HomeIntro onComplete={finishIntro} />}
+  return <div className="gamora-home" data-intro={introStage} ref={pageRef}>
+    {showIntro && <HomeIntro onComplete={finishIntro} onReveal={revealHero} />}
     <a className="home-skip" href="#about">Skip introduction</a>
     <section id="home" className="home-hero">
       <span className="hero-watermark" aria-hidden="true">{name}</span>

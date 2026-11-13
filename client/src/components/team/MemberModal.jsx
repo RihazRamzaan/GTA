@@ -9,6 +9,7 @@ export default function MemberModal({
   member = null,
   memberIndex = null,
   canDelete = false,
+  minMembers,
   existingEmails = [],
 }) {
   const isEditing = memberIndex !== null && member !== null;
@@ -203,7 +204,7 @@ export default function MemberModal({
                       ? 'border-red-500/40 text-red-400 hover:bg-red-500/10'
                       : 'border-slate-700 text-slate-500 cursor-not-allowed'
                   }`}
-                  title={!canDelete ? 'Teams must have at least 2 members' : 'Remove member'}
+                  title={!canDelete ? `Teams must have at least ${minMembers} members` : 'Remove member'}
                 >
                   Remove Member
                 </button>

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../../styles/home-intro.css';
 
-export default function HomeIntro({ onComplete }) {
-  const [closing, setClosing] = useState(false);
-  const [playing, setPlaying] = useState(false);
+const fadeDuration = 3.5;
+
+export default function HomeIntro({ onComplete, onReveal }) {
+  const [phase, setPhase] = useState('playing');
   const videoRef = useRef(null);
   const introRef = useRef(null);
 
@@ -49,15 +50,31 @@ export default function HomeIntro({ onComplete }) {
   }, [onComplete]);
 
   useEffect(() => {
-    if (!closing) return;
-    const timer = window.setTimeout(onComplete, 350);
-    return () => clearTimeout(timer);
-  }, [closing, onComplete]);
+    let frame;
+    let revealed = false;
+    const update = () => {
+      const video = videoRef.current;
+      if (!video || !introRef.current) return;
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        const duration = Math.min(fadeDuration, video.duration);
+        const remaining = video.duration - video.currentTime;
+        if (remaining <= duration && !revealed) {
+          revealed = true;
+          setPhase('reveal');
+          onReveal();
+        }
+        introRef.current.style.opacity = String(Math.max(0, Math.min(1, remaining / duration)));
+      }
+      frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [onReveal]);
 
   return createPortal(
-    <div ref={introRef} tabIndex={-1} className={`home-intro${closing ? ' home-intro--closing' : ''}`} role="dialog" aria-modal="true" aria-label="GAMORA opening animation" aria-describedby="home-intro-description">
+    <div ref={introRef} tabIndex={-1} className="home-intro" data-phase={phase} role="dialog" aria-modal="true" aria-label="GAMORA opening animation" aria-describedby="home-intro-description">
       <p id="home-intro-description" className="sr-only">A short dragon animation introducing GAMORA. Press Escape to enter the website.</p>
-      <video ref={videoRef} className="home-intro-video" src="/media/gamora-intro.mp4" muted playsInline preload="auto" aria-hidden="true" onPlaying={() => setPlaying(true)} onEnded={() => setClosing(true)} onError={onComplete} disablePictureInPicture />
+      <video ref={videoRef} className="home-intro-video" src="/media/gamora-intro.mp4" muted playsInline preload="auto" aria-hidden="true" onEnded={onComplete} onError={onComplete} disablePictureInPicture />
     </div>, document.body,
   );
 }
