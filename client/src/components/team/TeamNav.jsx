@@ -33,28 +33,28 @@ export default function TeamNav({ team, user, currentStatus }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           {/* Signed-in Account Identifier */}
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-slate-400">Account:</span>
-              <span className="text-white font-mono font-medium">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <span className="text-[#a7a6b8]">Account:</span>
+              <span className="text-[#f6f4fc] font-mono font-medium">
                 {user?.email || 'signed-in account'}
               </span>
             </div>
             {team?.code && (
-              <span className="text-xs font-bold tracking-[0.2em] text-neon-cyan uppercase">
+              <span className="text-xs font-bold tracking-[0.2em] text-[#00e5ff] uppercase px-2 py-0.5 rounded-full bg-[#00e5ff]/10 border border-[#00e5ff]/20">
                 {team.code}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
+            <h1 className="text-2xl sm:text-4xl font-black text-[#f6f4fc] font-display tracking-tight">
               {team?.name || 'Your Team'}
             </h1>
             {currentBadge && (
               <span
-                className={`px-3 py-0.5 rounded-full text-xs font-bold font-body border ${currentBadge.style}`}
+                className={`px-3.5 py-1 rounded-full text-xs font-bold font-body border tracking-wide ${currentBadge.style}`}
               >
                 {currentBadge.label}
               </span>
@@ -64,17 +64,17 @@ export default function TeamNav({ team, user, currentStatus }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 mt-4">
+      <div className="flex flex-wrap gap-2.5 mt-5">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             end={link.exact}
             className={({ isActive }) =>
-              `px-4 py-2 rounded-lg text-base font-bold font-body transition ${
+              `px-5 py-2 rounded-full text-sm sm:text-base font-bold font-body transition-all duration-200 ${
                 isActive
-                  ? 'bg-white/15 text-white border border-white/20 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-white/15 text-white border border-white/25 shadow-[0_0_16px_rgba(255,255,255,0.1)]'
+                  : 'text-[#a7a6b8] hover:text-white hover:bg-white/5 border border-transparent'
               }`
             }
           >

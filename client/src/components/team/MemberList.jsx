@@ -76,27 +76,27 @@ export default function MemberList({
       : null;
 
   return (
-    <div className="rounded-2xl border border-neon-purple/30 bg-night-card p-5 sm:p-6 font-body">
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 sm:p-8 shadow-xl backdrop-blur-md font-body">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/10 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-white/10 gap-3">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-xl sm:text-2xl font-bold text-white font-display">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#f6f4fc] font-display">
               Team Members &amp; Roster
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/10 text-slate-300">
+            <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-white/10 text-[#f6f4fc] border border-white/15">
               {totalCount} / {maxMembers}
             </span>
             {!canEditTeam && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 🔒 Roster Locked
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-sm text-[#a7a6b8] mt-1">
             Teams must have between {minMembers} and {maxMembers} members, including the team leader.
             {canEditTeam && formattedCutoff && (
-              <span className="text-slate-300">
+              <span className="text-[#cac7e0]">
                 {' '}Roster edits close on {formattedCutoff} (Sri Lanka time).
               </span>
             )}
@@ -104,11 +104,11 @@ export default function MemberList({
         </div>
 
         {canEditTeam && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button
               type="button"
               onClick={() => setIsTeamInfoOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-[#f6f4fc] text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5"
             >
               <span>✎ Edit Team Info</span>
             </button>
@@ -117,10 +117,10 @@ export default function MemberList({
               <button
                 type="button"
                 onClick={() => setMemberModal({ isOpen: true, member: null, index: null })}
-                className="px-3.5 py-1.5 rounded-lg bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan border border-neon-cyan/40 text-xs font-bold transition flex items-center gap-1.5"
+                className="px-5 py-2 rounded-full bg-[#ff2bd6] hover:brightness-110 text-[#070714] text-xs font-bold uppercase tracking-wider transition shadow-[0_0_16px_rgba(255,43,214,0.35)] flex items-center gap-1.5"
               >
                 <span>+ Add Member</span>
-                <span className="text-[10px] text-slate-300">({slotsRemaining} left)</span>
+                <span className="text-[10px] opacity-80">({slotsRemaining} left)</span>
               </button>
             )}
           </div>
@@ -144,29 +144,29 @@ export default function MemberList({
       {/* Members List */}
       <div className="mt-4 divide-y divide-white/5">
         {/* Team Leader Row */}
-        <div className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-neon-cyan/20 text-neon-cyan font-bold flex items-center justify-center font-display text-sm shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[#00e5ff]/15 text-[#00e5ff] font-bold border border-[#00e5ff]/30 flex items-center justify-center font-display text-sm shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
               {getInitials(leader.name)}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-lg font-bold text-white">{leader.name}</span>
-                <span className="px-2 py-0.5 rounded text-xs font-bold bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
+                <span className="text-lg font-bold text-[#f6f4fc]">{leader.name}</span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#00e5ff]/15 text-[#00e5ff] border border-[#00e5ff]/30 tracking-wide">
                   Team Leader
                 </span>
               </div>
-              <p className="text-sm text-slate-400">Primary contact &amp; account owner</p>
+              <p className="text-sm text-[#a7a6b8]">Primary contact &amp; account owner</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-slate-300 font-mono sm:text-right pl-13 sm:pl-0">
+          <div className="flex items-center gap-4 text-sm text-[#cac7e0] font-mono sm:text-right pl-13 sm:pl-0">
             <p>{leader.email}</p>
             {canEditTeam && (
               <button
                 type="button"
                 onClick={() => setIsTeamInfoOpen(true)}
-                className="text-xs font-bold text-neon-cyan hover:underline font-body shrink-0"
+                className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-[#f6f4fc] hover:bg-white/10 transition font-body shrink-0"
               >
                 Edit
               </button>
@@ -178,43 +178,42 @@ export default function MemberList({
         {members.map((member, index) => (
           <div
             key={member.email || index}
-            className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-neon-purple/20 text-[#b07bff] font-bold flex items-center justify-center font-display text-sm shrink-0">
+              <div className="w-10 h-10 rounded-full bg-white/5 text-[#f6f4fc] font-bold border border-white/10 flex items-center justify-center font-display text-sm shrink-0">
                 {getInitials(member.name)}
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-lg font-bold text-white">{member.name}</span>
-                  <span className="px-2 py-0.5 rounded text-xs font-semibold bg-white/10 text-slate-300">
+                  <span className="text-lg font-bold text-[#f6f4fc]">{member.name}</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[#cac7e0] border border-white/15">
                     Member #{index + 2}
                   </span>
                 </div>
-                <p className="text-sm text-slate-400">Registered team member</p>
+                <p className="text-sm text-[#a7a6b8]">Registered team member</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-slate-300 font-mono sm:text-right pl-13 sm:pl-0">
+            <div className="flex items-center gap-3 text-sm text-[#cac7e0] font-mono sm:text-right pl-13 sm:pl-0">
               <p>{member.email}</p>
               {canEditTeam && (
                 <div className="flex items-center gap-2 shrink-0 font-body text-xs">
                   <button
                     type="button"
                     onClick={() => setMemberModal({ isOpen: true, member, index })}
-                    className="font-bold text-neon-cyan hover:underline"
+                    className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-[#f6f4fc] hover:bg-white/10 transition"
                   >
                     Edit
                   </button>
-                  <span className="text-slate-600">|</span>
                   <button
                     type="button"
                     disabled={!canDelete || deletingIndex === index}
                     onClick={() => handleDeleteClick(member, index)}
-                    className={`font-bold transition ${
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                       canDelete && deletingIndex !== index
-                        ? 'text-red-400 hover:underline'
-                        : 'text-slate-600 cursor-not-allowed'
+                        ? 'border-red-400/30 text-red-300 hover:bg-red-500/10 hover:border-red-400'
+                        : 'border-white/10 text-white/30 cursor-not-allowed'
                     }`}
                     title={
                       totalCount <= minMembers
@@ -232,26 +231,24 @@ export default function MemberList({
 
         {/* Empty Slot Placeholder (only when editable and slots remain) */}
         {canEditTeam && slotsRemaining > 0 && (
-          <div className="py-3.5 flex items-center justify-between gap-3 text-slate-400 text-sm">
+          <div className="py-4 flex items-center justify-between gap-3 text-[#a7a6b8] text-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-dashed border-white/20 flex items-center justify-center text-slate-400 font-bold font-display">
+              <div className="w-10 h-10 rounded-full border border-dashed border-white/20 flex items-center justify-center text-[#a7a6b8] font-bold font-display">
                 +
               </div>
               <div>
-                <p className="text-slate-300 font-bold">Slot {totalCount + 1}: Available</p>
-                <p className="text-slate-400 text-xs">
-                  {slotsRemaining === 1
-                    ? 'Last slot available for your team'
-                    : `${slotsRemaining} slots remaining`}
+                <p className="font-semibold text-[#cac7e0]">Open Team Slot</p>
+                <p className="text-xs text-[#a7a6b8]">
+                  You can add {slotsRemaining} more member{slotsRemaining === 1 ? '' : 's'} to your team
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setMemberModal({ isOpen: true, member: null, index: null })}
-              className="text-neon-cyan hover:underline text-sm font-bold font-body"
+              className="rounded-full border border-[#00e5ff]/50 bg-[#00e5ff]/10 text-[#00e5ff] px-4 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00e5ff]/20 hover:border-[#00e5ff] transition"
             >
-              + Add Member
+              + Add
             </button>
           </div>
         )}

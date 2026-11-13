@@ -5,6 +5,7 @@ import { teamApi } from '../../api/team.js';
 import MemberList from '../../components/team/MemberList.jsx';
 import StatusBanner from '../../components/team/StatusBanner.jsx';
 import TeamNav from '../../components/team/TeamNav.jsx';
+import Dock from '../../components/layout/Dock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import useEventSettings, { refreshEventSettings } from '../../hooks/useEventSettings.js';
 import { formatColombo } from '../../utils/dates.js';
@@ -253,12 +254,15 @@ export default function TeamDashboard() {
   // Loading state
   if (authLoading || fetching) {
     return (
-      <div className="max-w-5xl mx-auto py-24 text-center font-body">
-        <div className="inline-block w-10 h-10 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xl font-bold text-white font-display">Loading Team Details...</p>
-        <p className="text-sm text-slate-400 mt-1">
-          Fetching your registration and roster from the server
-        </p>
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-24 pb-36 text-center font-body text-[#cac7e0]">
+        <div>
+          <div className="inline-block w-10 h-10 border-4 border-[#00e5ff] border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xl font-bold text-white font-display">Loading Team Details...</p>
+          <p className="text-sm text-[#a7a6b8] mt-1">
+            Fetching your registration and roster from the server
+          </p>
+        </div>
+        <Dock />
       </div>
     );
   }
@@ -266,38 +270,41 @@ export default function TeamDashboard() {
   // Real error state (never falls back to sample team data)
   if (fetchError) {
     return (
-      <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
-        <TeamNav team={null} user={user} currentStatus={null} />
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+        <div className="space-y-6">
+          <TeamNav team={null} user={user} currentStatus={null} />
 
-        <div
-          role="alert"
-          className="rounded-2xl border border-red-500/40 bg-night-card p-8 text-center max-w-2xl mx-auto space-y-4 shadow-xl"
-        >
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-2xl">
-            ⚠️
-          </div>
-          <h2 className="text-2xl font-bold text-white font-display">
-            Unable to Load Team Details
-          </h2>
-          <p className="text-slate-300 text-base">{fetchError.message}</p>
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => loadTeam()}
-              className="px-6 py-2.5 rounded-xl bg-neon-cyan hover:opacity-90 text-black font-bold text-sm transition"
-            >
-              Try Again
-            </button>
-            {fetchError.code === 'UNAUTHENTICATED' && (
-              <Link
-                to="/login"
-                className="px-6 py-2.5 rounded-xl border border-white/20 hover:border-white/40 text-white font-bold text-sm transition"
+          <div
+            role="alert"
+            className="rounded-2xl border border-red-500/40 bg-gradient-to-b from-[#141025] to-[#0c0b19] p-8 text-center max-w-2xl mx-auto space-y-4 shadow-xl backdrop-blur-md"
+          >
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-2xl">
+              ⚠️
+            </div>
+            <h2 className="text-2xl font-bold text-white font-display">
+              Unable to Load Team Details
+            </h2>
+            <p className="text-[#cac7e0] text-base leading-relaxed">{fetchError.message}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => loadTeam()}
+                className="px-6 py-2.5 rounded-full bg-[#00e5ff] hover:brightness-110 text-[#070714] font-bold text-xs uppercase tracking-wider transition"
               >
-                Log In Again
-              </Link>
-            )}
+                Try Again
+              </button>
+              {fetchError.code === 'UNAUTHENTICATED' && (
+                <Link
+                  to="/login"
+                  className="px-6 py-2.5 rounded-full border border-white/20 hover:border-white/40 text-white font-bold text-xs uppercase tracking-wider transition"
+                >
+                  Log In Again
+                </Link>
+              )}
+            </div>
           </div>
         </div>
+        <Dock />
       </div>
     );
   }
@@ -314,15 +321,18 @@ export default function TeamDashboard() {
       : null;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-16 font-body">
+    <div className="relative min-h-screen max-w-5xl mx-auto px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+      {/* Subtle atmospheric ambient glow matching Home art direction */}
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[360px] w-[580px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
+
       {/* Toast Notification */}
       {toast && (
-        <div role="status" className="fixed bottom-6 right-6 z-50">
+        <div role="status" className="fixed bottom-24 right-6 z-50">
           <div
-            className={`px-4 py-2.5 rounded-xl font-bold font-body text-sm shadow-xl flex items-center gap-2 ${
+            className={`px-5 py-3 rounded-full font-bold font-body text-sm shadow-xl flex items-center gap-2 backdrop-blur-md ${
               toast.type === 'error'
-                ? 'bg-red-500 text-white'
-                : 'bg-neon-cyan text-black'
+                ? 'bg-red-500/90 text-white border border-red-400/50'
+                : 'bg-emerald-500/90 text-[#070714] border border-emerald-400/50'
             }`}
           >
             <span>{toast.type === 'error' ? '⚠️' : '✓'}</span>
@@ -345,28 +355,28 @@ export default function TeamDashboard() {
       />
 
       {isUnregistered ? (
-        <div className="rounded-2xl border border-white/10 bg-night-card/80 backdrop-blur p-8 sm:p-10 text-center max-w-2xl mx-auto space-y-6 shadow-xl">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-3xl">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 backdrop-blur-md p-8 sm:p-10 text-center max-w-2xl mx-auto space-y-6 shadow-2xl">
+          <div className="w-16 h-16 mx-auto rounded-full bg-[#00e5ff]/10 border border-[#00e5ff]/30 flex items-center justify-center text-3xl">
             🎮
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white font-display">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#f6f4fc] font-display">
               Register Your Team to Begin
             </h2>
-            <p className="mt-2 text-slate-300 font-body text-base">
-              Welcome, <span className="text-neon-cyan font-mono font-medium">{user?.email}</span>. Your account is signed in, but no team registration was found for it.
+            <p className="mt-2 text-[#a7a6b8] font-body text-base">
+              Welcome, <span className="text-[#00e5ff] font-mono font-medium">{user?.email}</span>. Your account is signed in, but no team registration was found for it.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left p-4 rounded-xl bg-white/5 border border-white/10 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left p-5 rounded-xl bg-white/[0.03] border border-white/10 text-sm">
             <div>
-              <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
+              <span className="text-xs uppercase tracking-wider text-[#a7a6b8] font-bold block">
                 Team Size
               </span>
-              <span className="text-white font-semibold">{validTeamSize ? `${teamSize.min} – ${teamSize.max} Members` : 'Team size unavailable'}</span>
+              <span className="text-[#f6f4fc] font-semibold">{validTeamSize ? `${teamSize.min} – ${teamSize.max} Members` : 'Team size unavailable'}</span>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
+              <span className="text-xs uppercase tracking-wider text-[#a7a6b8] font-bold block">
                 Entry Fee
               </span>
               <span className="text-emerald-300 font-semibold">Free Registration</span>
@@ -376,7 +386,7 @@ export default function TeamDashboard() {
           <div className="flex items-center justify-center pt-2">
             <Link
               to="/register"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-neon-cyan hover:bg-neon-cyan/90 text-black font-bold font-display tracking-wider text-sm shadow-lg shadow-neon-cyan/20 transition transform hover:-translate-y-0.5 text-center"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#ff2bd6] hover:brightness-110 text-[#070714] font-bold font-body uppercase tracking-wider text-sm shadow-lg shadow-neon-pink/25 transition transform hover:-translate-y-0.5 text-center"
             >
               REGISTER TEAM NOW →
             </Link>
@@ -385,44 +395,44 @@ export default function TeamDashboard() {
       ) : (
         <>
           {/* Key Journey Summary & Game Submission Card */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-white/10 bg-night-card p-5">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-xl backdrop-blur-md">
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#a7a6b8] block">
                 Registration
               </span>
-              <p className="mt-1 text-lg font-bold text-white font-display">
+              <p className="mt-2 text-xl font-bold text-[#f6f4fc] font-display">
                 {registration?.status === 'approved' ? 'Confirmed' : 'Pending'}
               </p>
-              <p className="mt-1 text-sm text-emerald-300 font-semibold">
+              <p className="mt-2 text-sm text-emerald-300 font-semibold">
                 Free entry — no payment required
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-night-card p-5">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-xl backdrop-blur-md">
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#a7a6b8] block">
                 Roster Editing
               </span>
-              <p className="mt-1 text-lg font-bold text-white font-display">
+              <p className="mt-2 text-xl font-bold text-[#f6f4fc] font-display">
                 {canEditTeam ? 'Open' : 'Locked'}
               </p>
-              <p className="mt-1 text-sm text-slate-300">
+              <p className="mt-2 text-sm text-[#cac7e0] leading-relaxed">
                 {canEditTeam
                   ? 'You can edit team & member details until registration closes.'
                   : 'Registration has closed; roster changes are locked.'}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-neon-cyan/30 bg-night-card p-5 flex flex-col justify-between gap-3">
+            <div className="rounded-2xl border border-[#00e5ff]/35 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-xl backdrop-blur-md flex flex-col justify-between gap-4 hover:border-[#00e5ff]/60 hover:shadow-[0_0_24px_rgba(0,229,255,0.15)] transition">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#a7a6b8] block">
                   Game Submission
                 </span>
                 {submission ? (
                   <>
-                    <p className="mt-1 text-lg font-bold text-emerald-300 font-display truncate">
+                    <p className="mt-2 text-xl font-bold text-emerald-300 font-display truncate">
                       ✓ {submission.title}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[#a7a6b8]">
                       {formattedSubmissionTime
                         ? `Updated ${formattedSubmissionTime}`
                         : 'Saved to your team'}
@@ -430,11 +440,11 @@ export default function TeamDashboard() {
                   </>
                 ) : (
                   <>
-                    <p className="mt-1 text-lg font-bold text-white font-display">
+                    <p className="mt-2 text-xl font-bold text-[#f6f4fc] font-display">
                       Not Submitted Yet
                     </p>
-                    <p className="mt-1 text-sm text-slate-300">
-                      Submit your game title, description, and GitHub repository. Playable and video links are optional.
+                    <p className="mt-1 text-sm text-[#cac7e0] leading-relaxed">
+                      Submit your game title, description, and GitHub repository.
                     </p>
                   </>
                 )}
@@ -442,7 +452,7 @@ export default function TeamDashboard() {
 
               <Link
                 to="/team/submission"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-neon-cyan/15 hover:bg-neon-cyan/25 text-neon-cyan border border-neon-cyan/40 text-sm font-bold transition"
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#00e5ff]/10 hover:bg-[#00e5ff] text-[#00e5ff] hover:text-[#070714] border border-[#00e5ff]/40 text-xs font-bold uppercase tracking-wider transition"
               >
                 {submission ? 'Manage Submission →' : 'Go to Game Submission →'}
               </Link>
@@ -458,13 +468,23 @@ export default function TeamDashboard() {
             onAddMember={handleAddMember}
             onUpdateMember={handleUpdateMember}
             onDeleteMember={handleDeleteMember}
-          /> : <section role={settingsStatus === 'loading' ? 'status' : 'alert'} className="rounded-xl border border-neon-purple/40 bg-night-card p-5">
-            <h2 className="font-display text-lg text-white">Team roster</h2>
-            <p className="mt-2 text-slate-300">{settingsStatus === 'loading' ? 'Loading team-size requirements…' : 'We could not load the team-size requirements. Retry to manage your roster.'}</p>
-            {settingsStatus !== 'loading' && <button type="button" onClick={() => refreshEventSettings()} className="mt-3 rounded-lg border border-neon-cyan/60 px-4 py-2 font-bold text-neon-cyan">Retry team-size requirements</button>}
+          /> : <section role={settingsStatus === 'loading' ? 'status' : 'alert'} className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-xl backdrop-blur-md">
+            <h2 className="font-display text-xl text-[#f6f4fc] font-bold">Team roster</h2>
+            <p className="mt-2 text-[#a7a6b8]">{settingsStatus === 'loading' ? 'Loading team-size requirements…' : 'We could not load the team-size requirements. Retry to manage your roster.'}</p>
+            {settingsStatus !== 'loading' && <button type="button" onClick={() => refreshEventSettings()} className="mt-4 rounded-full border border-[#00e5ff]/60 px-5 py-2 font-bold text-xs uppercase tracking-wider text-[#00e5ff] hover:bg-[#00e5ff]/10 transition">Retry team-size requirements</button>}
           </section>}
         </>
       )}
+
+      {/* Clean inline footer matching Register/Login */}
+      <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 font-body text-xs text-[#a7a6b8]">
+        <a href="https://www.sesa.lk" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#f6f4fc]">SESA × IEEE SB UOK ↗</a>
+        <span>© {new Date().getFullYear()} {settings?.event?.name || 'Cyberpunk Game Buildathon'}</span>
+        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="transition hover:text-[#f6f4fc]">Back to top ↑</button>
+      </footer>
+
+      {/* Floating Home Dock */}
+      <Dock />
     </div>
   );
 }

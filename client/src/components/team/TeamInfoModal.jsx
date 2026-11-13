@@ -77,10 +77,10 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="team-info-modal-title"
-        className="w-full max-w-lg rounded-2xl bg-night-card border border-white/20 p-6 shadow-2xl font-body text-slate-200"
+        className="w-full max-w-lg rounded-2xl bg-gradient-to-b from-[#141025] to-[#0c0b19] border border-white/15 p-6 sm:p-8 shadow-2xl font-body text-[#cac7e0] backdrop-blur-md"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <h3 id="team-info-modal-title" className="text-xl font-bold text-white font-display">
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <h3 id="team-info-modal-title" className="text-xl font-bold text-[#f6f4fc] font-display">
             Edit Team &amp; Leader Details
           </h3>
           <button
@@ -88,7 +88,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
             disabled={saving}
             onClick={onClose}
             aria-label="Close modal"
-            className="text-slate-400 hover:text-white text-lg font-bold p-1 disabled:opacity-50"
+            className="text-[#a7a6b8] hover:text-white text-lg font-bold p-1 disabled:opacity-50"
           >
             ✕
           </button>
@@ -98,7 +98,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
           {formError && (
             <p
               role="alert"
-              className="rounded-lg border border-red-400/50 bg-red-500/10 p-3 text-sm text-red-300 font-semibold"
+              className="rounded-xl border border-red-400/50 bg-red-500/10 p-3 text-sm text-red-300 font-semibold"
             >
               {formError}
             </p>
@@ -108,9 +108,9 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
           <div>
             <label
               htmlFor="edit-team-name"
-              className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1"
+              className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
             >
-              Team Name <span className="text-neon-pink">*</span>
+              Team Name <span className="text-[#ff2bd6]">*</span>
             </label>
             <input
               id="edit-team-name"
@@ -122,7 +122,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
                 if (errors.teamName) setErrors((prev) => ({ ...prev, teamName: '' }));
               }}
               placeholder="e.g. Neon Runners"
-              className="w-full rounded-lg bg-night border border-white/15 px-3.5 py-2 text-white font-body focus:outline-none focus:border-neon-cyan transition"
+              className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
             />
             {errors.teamName && (
               <p className="text-xs text-red-400 mt-1 font-semibold">{errors.teamName}</p>
@@ -130,7 +130,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
           </div>
 
           <div className="pt-2 border-t border-white/10 space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-neon-cyan font-display">
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-[#00e5ff] font-display">
               Team Leader
             </h4>
 
@@ -138,9 +138,9 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
             <div>
               <label
                 htmlFor="edit-leader-name"
-                className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1"
+                className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
               >
-                Leader Full Name <span className="text-neon-pink">*</span>
+                Leader Full Name <span className="text-[#ff2bd6]">*</span>
               </label>
               <input
                 id="edit-leader-name"
@@ -152,7 +152,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
                   if (errors.leaderName) setErrors((prev) => ({ ...prev, leaderName: '' }));
                 }}
                 placeholder="e.g. Example Leader"
-                className="w-full rounded-lg bg-night border border-white/15 px-3.5 py-2 text-white font-body focus:outline-none focus:border-neon-cyan transition"
+                className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
               />
               {errors.leaderName && (
                 <p className="text-xs text-red-400 mt-1 font-semibold">{errors.leaderName}</p>
@@ -163,7 +163,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
             <div>
               <label
                 htmlFor="edit-leader-email"
-                className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1"
+                className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
               >
                 Leader Email (Account Login)
               </label>
@@ -173,28 +173,28 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
                 value={leaderEmail}
                 readOnly
                 disabled
-                className="w-full rounded-lg bg-night/60 border border-white/10 px-3.5 py-2 text-slate-400 font-mono cursor-not-allowed"
+                className="w-full rounded-lg bg-[#070714]/60 border border-white/10 px-3.5 py-2.5 text-[#a7a6b8] font-mono cursor-not-allowed"
               />
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[#a7a6b8] mt-1">
                 This email is your team login ID and cannot be changed here.
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-2">
+          <div className="pt-5 border-t border-white/10 flex items-center justify-end gap-2.5">
             <button
               type="button"
               disabled={saving}
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition disabled:opacity-50"
+              className="px-5 py-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 rounded-lg bg-neon-cyan hover:opacity-90 text-black text-xs font-bold font-body transition shadow-sm disabled:opacity-60"
+              className="px-6 py-2 rounded-full bg-[#ff2bd6] hover:brightness-110 text-[#070714] text-xs font-bold uppercase tracking-wider font-body transition shadow-[0_0_16px_rgba(255,43,214,0.35)] disabled:opacity-60"
             >
               {saving ? 'Saving...' : 'Save Team Details'}
             </button>
