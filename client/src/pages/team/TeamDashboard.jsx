@@ -254,7 +254,7 @@ export default function TeamDashboard() {
   // Loading state
   if (authLoading || fetching) {
     return (
-      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-24 pb-36 text-center font-body text-[#cac7e0]">
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 sm:px-6 lg:px-8 pt-24 pb-36 text-center font-body text-[#cac7e0] bg-[#070714]">
         <div>
           <div className="inline-block w-10 h-10 border-4 border-[#00e5ff] border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-xl font-bold text-white font-display">Loading Team Details...</p>
@@ -270,7 +270,7 @@ export default function TeamDashboard() {
   // Real error state (never falls back to sample team data)
   if (fetchError) {
     return (
-      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 sm:px-6 lg:px-8 pt-8 pb-36 font-body text-[#cac7e0] bg-[#070714] space-y-8">
         <div className="space-y-6">
           <TeamNav team={null} user={user} currentStatus={null} />
 
@@ -321,7 +321,7 @@ export default function TeamDashboard() {
       : null;
 
   return (
-    <div className="relative min-h-screen max-w-5xl mx-auto px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+    <div className="relative min-h-screen max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-36 font-body text-[#cac7e0] bg-[#070714] space-y-8">
       {/* Subtle atmospheric ambient glow matching Home art direction */}
       <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[360px] w-[580px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
 
@@ -393,7 +393,7 @@ export default function TeamDashboard() {
           </div>
         </div>
       ) : (
-        <>
+        <div className="space-y-8">
           {/* Key Journey Summary & Game Submission Card */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-xl backdrop-blur-md">
@@ -473,7 +473,7 @@ export default function TeamDashboard() {
             <p className="mt-2 text-[#a7a6b8]">{settingsStatus === 'loading' ? 'Loading team-size requirements…' : 'We could not load the team-size requirements. Retry to manage your roster.'}</p>
             {settingsStatus !== 'loading' && <button type="button" onClick={() => refreshEventSettings()} className="mt-4 rounded-full border border-[#00e5ff]/60 px-5 py-2 font-bold text-xs uppercase tracking-wider text-[#00e5ff] hover:bg-[#00e5ff]/10 transition">Retry team-size requirements</button>}
           </section>}
-        </>
+        </div>
       )}
 
       {/* Clean inline footer matching Register/Login */}

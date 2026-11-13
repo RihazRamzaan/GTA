@@ -15,10 +15,20 @@
   --font-body: "Rajdhani", system-ui, sans-serif;
 }
 
-/* Starter styles (kept as they were, other pages use them) */
-:root { --color-bg: #0b1020; --color-surface: #141b2d; --color-text: #eef2ff; --color-muted: #9aa7c1; --color-accent: #67e8f9; }
+/* Global root & baseline theme matching Cyberpunk Gamora aesthetic */
+:root {
+  --color-bg: #070714;
+  --color-surface: #0d0f24;
+  --color-text: #f6f4fc;
+  --color-muted: #a7a6b8;
+  --color-accent: #00e5ff;
+}
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  background-color: #070714;
+  color: #f6f4fc;
+}
 
 /* A slim neon rail for the page scrollbar. */
 html::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -41,9 +51,19 @@ html::-webkit-scrollbar-corner { background: var(--color-night); }
   html::-webkit-scrollbar-thumb { background: ButtonText; }
 }
 
-body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
+body {
+  margin: 0;
+  background-color: #070714;
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
 @layer base { a { color: var(--color-accent); text-decoration: none; } }
-.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #070714;
+}
 .site-header, .site-footer { padding: 1rem 2rem; background: var(--color-surface); }
 .site-header { display: flex; justify-content: space-between; align-items: center; }
 .site-header nav { display: flex; gap: 1rem; }

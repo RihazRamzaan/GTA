@@ -251,7 +251,7 @@ export default function SubmissionPage() {
   // Loading screen
   if (isLoading || status === "loading") {
     return (
-      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-24 pb-36 text-center font-body text-[#cac7e0]">
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 sm:px-6 lg:px-8 pt-24 pb-36 text-center font-body text-[#cac7e0] bg-[#070714]">
         <div>
           <div className="inline-block w-10 h-10 border-4 border-[#00e5ff] border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-xl font-bold text-white font-display">Loading Game Submission...</p>
@@ -267,7 +267,7 @@ export default function SubmissionPage() {
   // Settings error screen
   if (status === "error") {
     return (
-      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-16 pb-36 font-body text-[#cac7e0]">
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 sm:px-6 lg:px-8 pt-16 pb-36 font-body text-[#cac7e0] bg-[#070714]">
         <div
           role="alert"
           className="max-w-xl mx-auto rounded-2xl border border-red-500/40 bg-gradient-to-b from-[#141025] to-[#0c0b19] p-8 text-center text-white shadow-2xl backdrop-blur-md space-y-4"
@@ -290,7 +290,7 @@ export default function SubmissionPage() {
   // A failed request must not be presented as an empty submission.
   if (loadError) {
     return (
-      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 pt-16 pb-36 font-body text-[#cac7e0]">
+      <div className="relative min-h-screen max-w-5xl mx-auto flex flex-col justify-between px-4 sm:px-6 lg:px-8 pt-16 pb-36 font-body text-[#cac7e0] bg-[#070714]">
         <div
           role="alert"
           className="max-w-xl mx-auto rounded-2xl border border-red-500/40 bg-gradient-to-b from-[#141025] to-[#0c0b19] p-8 text-center text-white shadow-2xl backdrop-blur-md space-y-4"
@@ -316,7 +316,7 @@ export default function SubmissionPage() {
   }
 
   return (
-    <div className="relative min-h-screen max-w-5xl mx-auto px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+    <div className="relative min-h-screen max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-36 font-body text-[#cac7e0] bg-[#070714] space-y-8">
       {/* Ambient top radial glow matching Home/Team art direction */}
       <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[360px] w-[580px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
 

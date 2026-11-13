@@ -18,7 +18,7 @@ export default function PaymentPage() {
     : null;
 
   return (
-    <div className="relative min-h-screen max-w-5xl mx-auto px-4 pt-8 pb-36 font-body text-[#cac7e0]">
+    <div className="relative min-h-screen max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-36 font-body text-[#cac7e0] bg-[#070714] space-y-8">
       {/* Subtle atmospheric ambient glow matching Home art direction */}
       <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[360px] w-[580px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
 
