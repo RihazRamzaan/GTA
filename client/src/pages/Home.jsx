@@ -97,7 +97,7 @@ export default function Home() {
       <span className="hero-watermark" aria-hidden="true">{name}</span>
       <div className="home-wrap hero-layout"><div className="hero-copy">
         <p className="home-eyebrow">GAME BUILDATHON & INTERACTIVE EXPO</p>
-        <h1 tabIndex={-1}><span>CREATE.</span><span className="home-outline">PLAY.</span><span className="home-pink">BEYOND.</span></h1>
+        <h1 tabIndex={-1}><span>IMAGINE</span><span className="home-outline">BUILD</span><span className="home-pink">UNLEASH</span></h1>
         <p className="hero-date">{dates}</p><p className="hero-caption">Your imagination. A world worth playing.</p>
       </div></div>
       <div className="hero-bottom home-wrap"><span>UNIVERSITY OF KELANIYA</span><span>FREE REGISTRATION · OPEN POSSIBILITIES</span></div>
@@ -109,7 +109,7 @@ export default function Home() {
       <p className="home-organizers" data-reveal>Organized by <strong>SESA × IEEE SB UOK</strong><br />University of Kelaniya</p>
     </section>
 
-    <div className="home-marquee" aria-hidden="true"><div>{Array.from({ length: 4 }, (_, i) => <span key={i}>IMAGINE <i>✳</i> BUILD <i>✳</i> PLAY <i>✳</i> </span>)}</div></div>
+    <div className="home-marquee" aria-hidden="true"><div>{Array.from({ length: 4 }, (_, i) => <span key={i}>IMAGINE <i>✳</i> BUILD <i>✳</i> UNLEASH <i>✳</i> </span>)}</div></div>
     <section className="home-rounds home-wrap home-section" aria-labelledby="rounds-title">
       <p className="home-eyebrow" data-reveal>FROM THE FIRST IDEA TO THE FINAL STAGE</p><h2 id="rounds-title" data-reveal>One journey.<br /><span className="home-outline">Two levels.</span></h2>
       <div className="round-levels">
@@ -120,7 +120,7 @@ export default function Home() {
 
     <section id="timeline" className="home-timeline home-section home-wrap"><header className="home-center" data-reveal><p className="home-eyebrow">EVERY STEP IS PART OF THE STORY</p><h2>The <span className="home-outline">roadmap.</span></h2><p className="home-muted">From your first hello to the final showcase. All times are Sri Lanka time.</p></header><div className="home-clock" data-reveal><Countdown settings={settings} status={status} /></div><Agenda settings={settings} status={status} /></section>
 
-    <section id="prizes" className="home-prizes home-section home-wrap"><p className="home-eyebrow" data-reveal>GOOD IDEAS DESERVE THE SPOTLIGHT</p><h2 data-reveal>Build for the love.<br /><span className="home-outline">Play for the podium.</span></h2><div className="prize-total" data-reveal><span className="prize-currency">LKR</span> <PrizeCounter total={prizeTotal} /><p>Total cash prize pool</p></div><ol className="home-podium" data-reveal>{eventContent.prizes.map((prize, i) => <li key={prize.place}><span className="podium-rank">0{i + 1}</span><span>{prize.place}</span><h3>{prize.amount}</h3><p>{prize.perks.join(' · ')}</p></li>)}</ol></section>
+    <section id="prizes" className="home-prizes home-section home-wrap"><p className="home-eyebrow" data-reveal>GOOD IDEAS DESERVE THE SPOTLIGHT</p><h2 data-reveal>Build for the love.<br /><span className="home-outline">Play for the podium.</span></h2><div className="prize-total" data-reveal><span className="prize-currency">LKR</span> <PrizeCounter total={prizeTotal} /><p>Total cash prize pool</p></div><ol className="home-podium" data-reveal>{eventContent.prizes.map((prize, i) => <li key={prize.place} className={`podium-tile podium-${prize.color || (i === 0 ? 'gold' : i === 1 ? 'silver' : 'bronze')}`}><span className="podium-rank">0{i + 1}</span><span className="podium-place">{prize.place}</span><h3 className="podium-amount">{prize.amount}</h3><p className="podium-perks">{prize.perks.join(' · ')}</p></li>)}</ol></section>
 
     <section id="rules" className="home-guidelines home-section home-wrap"><header data-reveal><p className="home-eyebrow">A FAIR GAME FOR EVERYONE</p><h2>Before you <span className="home-outline">begin.</span></h2><p className="home-muted">Current event guidelines. Final policy details are subject to organizer confirmation.</p></header><div className="home-accordions">{eventContent.rules.map((rule, i) => <details key={rule.title} data-reveal><summary><span className="accordion-number">{String(i + 1).padStart(2, '0')}</span>{rule.title}<span className="accordion-plus" aria-hidden="true">+</span></summary><p>{resolveEventText(rule.text, settings)}</p></details>)}</div></section>
 
