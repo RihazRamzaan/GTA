@@ -137,7 +137,7 @@ export const eventContent = {
     },
     {
       q: 'How will games be evaluated?',
-      a: 'Projects will be evaluated by an industry panel based on 4 core criteria: Game AI Systems, Software Architecture, UX/UI Polish, and Packaging.',
+      a: 'Projects will be evaluated by an industry panel based on core criteria like Game AI Systems, Software Architecture, UX/UI Polish, and Packaging.',
     },
     {
       q: 'How are finalists selected?',
