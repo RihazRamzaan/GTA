@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { getApiError } from '../api/http.js';
 import TextField from '../components/ui/TextField.jsx';
+import Dock from '../components/layout/Dock.jsx';
 import { homePathFor, useAuth } from '../context/AuthContext.jsx';
+import { eventContent } from '../data/eventContent.js';
+import useEventSettings from '../hooks/useEventSettings.js';
 
 export default function Login() {
   const { user, loading, login } = useAuth();
+  const { settings } = useEventSettings();
+  const name = settings?.event?.name || eventContent.name;
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -31,7 +36,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-md py-8 sm:py-12">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-between px-4 pt-14 pb-36 sm:pt-20">
       {/* Subtle atmospheric ambient glow matching Home art direction */}
       <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 h-[280px] w-[420px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
 
@@ -53,7 +58,14 @@ export default function Login() {
         <p className="mt-6 text-center font-body text-sm text-[#a7a6b8]">
           No team account yet? <Link to="/register" className="font-semibold text-[#00e5ff] hover:underline">Register your team ↗</Link>
         </p>
+
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 font-body text-xs text-[#a7a6b8]">
+          <a href="https://www.sesa.lk" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#f6f4fc]">SESA × IEEE SB UOK ↗</a>
+          <span>© {new Date().getFullYear()} {name}</span>
+        </footer>
       </div>
+
+      <Dock />
     </div>
   );
 }

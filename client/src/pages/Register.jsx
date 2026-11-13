@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { getApiError } from '../api/http.js';
 import TextField from '../components/ui/TextField.jsx';
+import Dock from '../components/layout/Dock.jsx';
 import { homePathFor, useAuth } from '../context/AuthContext.jsx';
+import { eventContent } from '../data/eventContent.js';
 import useEventSettings, { refreshEventSettings } from '../hooks/useEventSettings.js';
 
 const newMember = () => ({ id: crypto.randomUUID(), name: '', email: '' });
@@ -40,9 +42,12 @@ function rosterHint(count, min, max) {
 
 function Notice({ title, children }) {
   return (
-    <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md">
-      <h1 className="font-display text-2xl font-bold text-[#f6f4fc]">{title}</h1>
-      <p className="mt-3 font-body text-base leading-relaxed text-[#a7a6b8]">{children}</p>
+    <div className="relative mx-auto flex min-h-screen w-full max-w-xl flex-col justify-between px-4 pt-20 pb-36">
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md">
+        <h1 className="font-display text-2xl font-bold text-[#f6f4fc]">{title}</h1>
+        <p className="mt-3 font-body text-base leading-relaxed text-[#a7a6b8]">{children}</p>
+      </div>
+      <Dock />
     </div>
   );
 }
@@ -50,18 +55,26 @@ function Notice({ title, children }) {
 export default function Register() {
   const { user, loading } = useAuth();
   const { status, settings } = useEventSettings({ fresh: true });
-  if (loading || status === 'loading') return <p className="font-body text-base text-[#a7a6b8]">Checking registration...</p>;
+  if (loading || status === 'loading') {
+    return (
+      <div className="relative mx-auto flex min-h-screen w-full max-w-xl flex-col justify-between px-4 pt-24 pb-36">
+        <p className="text-center font-body text-base text-[#a7a6b8]">Checking registration...</p>
+        <Dock />
+      </div>
+    );
+  }
   if (user) return <Navigate to={homePathFor(user)} replace />;
   if (status === 'error') return <Notice title="Registration status unavailable">We could not check whether registration is open. Please try again soon.</Notice>;
   if (!settings.registrationOpen) return <Notice title="Registration is closed">Check the <Link to="/#timeline" className="text-[#00e5ff] hover:underline">event timeline ↗</Link> for the dates.</Notice>;
   const { min, max } = settings.teamSize || {};
   if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max < min) return <Notice title="Team size unavailable">We could not load the team-size requirements. Please try again soon.</Notice>;
-  return <RegistrationForm min={min} max={max} />;
+  return <RegistrationForm min={min} max={max} settings={settings} />;
 }
 
-function RegistrationForm({ min, max }) {
+function RegistrationForm({ min, max, settings }) {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const name = settings?.event?.name || eventContent.name;
   const [form, setForm] = useState({ teamName: '', leaderName: '', email: '', password: '', confirmPassword: '' });
   const [members, setMembers] = useState(() => Array.from({ length: min - 1 }, newMember));
   const [consent, setConsent] = useState(false);
@@ -195,7 +208,13 @@ function RegistrationForm({ min, max }) {
           </fieldset>
         </form>
         <p className="mt-6 text-center font-body text-sm text-[#a7a6b8]">Already registered? <Link to="/login" className="font-semibold text-[#00e5ff] hover:underline">Log in ↗</Link></p>
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 font-body text-xs text-[#a7a6b8]">
+          <a href="https://www.sesa.lk" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#f6f4fc]">SESA × IEEE SB UOK ↗</a>
+          <span>© {new Date().getFullYear()} {name}</span>
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="transition hover:text-[#f6f4fc]">Back to top ↑</button>
+        </footer>
       </div>
+      <Dock />
     </div>
   );
 }

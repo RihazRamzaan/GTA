@@ -11,10 +11,11 @@ import RegisterButton from '../components/event/RegisterButton.jsx';
 import RegistrationNotice from '../components/event/RegistrationNotice.jsx';
 import PrizeCounter from '../components/event/PrizeCounter.jsx';
 import HomeIntro from '../components/event/HomeIntro.jsx';
+import Dock from '../components/layout/Dock.jsx';
 import { HOME_INTRO_SESSION_KEY, shouldShowHomeIntro } from '../utils/homeIntro.js';
 import '../styles/home.css';
 
-const introduction = 'A meeting point for imagination and engineering. GAMORA brings university students together to build multiplayer games, explore game AI and turn ambitious ideas into interactive worlds.';
+const introduction = 'A meeting point for imagination and engineering. GAMORA brings university students together to build games, explore game AI and turn ambitious ideas into interactive worlds.';
 const prizeTotal = eventContent.prizes.reduce((sum, prize) => sum + Number(prize.amount.replace(/[^0-9.]/g, '')), 0);
 
 export default function Home() {
@@ -113,7 +114,7 @@ export default function Home() {
     <section className="home-rounds home-wrap home-section" aria-labelledby="rounds-title">
       <p className="home-eyebrow" data-reveal>FROM THE FIRST IDEA TO THE FINAL STAGE</p><h2 id="rounds-title" data-reveal>One journey.<br /><span className="home-outline">Two levels.</span></h2>
       <div className="round-levels">
-        <article className="round-copy" data-reveal><span className="round-index">01 / BUILD</span><h3>Make your<br />world playable.</h3><p>Start with the topic. Build an original multiplayer game. Bring your engineering, game AI and imagination together.</p><a href="#rules" className="home-text-link">Explore the guidelines ↗</a></article>
+        <article className="round-copy" data-reveal><span className="round-index">01 / BUILD</span><h3>Make your<br />world playable.</h3><p>Start with the topic. Build an original game. Bring your engineering, game AI and imagination together.</p><a href="#rules" className="home-text-link">Explore the guidelines ↗</a></article>
         <article className="round-copy" data-reveal><span className="round-index">02 / SHOWCASE</span><h3>Small beginnings.<br />A bigger stage.</h3><p>The finalists move into the next round. Refine your game, share your work and bring it to life at the buildathon finale and interactive expo.</p><a href="#timeline" className="home-text-link">Follow the journey ↗</a></article>
       </div>
     </section>
@@ -132,6 +133,6 @@ export default function Home() {
       <section className="home-finish home-section home-wrap" aria-labelledby="finish-title" data-reveal><p className="home-eyebrow">SEE YOU ON THE OTHER SIDE OF THE SCREEN</p><h2 id="finish-title">Your next world<br /><span className="home-outline">starts here.</span></h2><p className="finish-venue">{venue}</p><RegisterButton className="home-register" arrow /><RegistrationNotice /></section>
       <footer className="home-footer home-wrap"><a href="https://www.sesa.lk" target="_blank" rel="noopener noreferrer">SESA × IEEE SB UOK ↗</a><span>© {new Date().getFullYear()} {name}</span><a href="#home">Back to top ↑</a></footer>
     </div>
-    <nav className="home-dock" aria-label="Account navigation"><Link to="/" aria-label={`${name} home`} className="home-brand"><img src="/Logo-white.png" alt={name} /></Link><div className="dock-actions">{user ? <Link className="home-login" to={homePathFor(user)}>{user.role === 'admin' ? 'Admin dashboard' : 'My team'} ↗</Link> : <><RegisterButton className="home-register" /><Link className="home-login" to="/login">Login</Link></>}</div></nav>
+    <Dock />
   </div>;
 }
