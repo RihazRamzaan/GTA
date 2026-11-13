@@ -92,10 +92,12 @@
 .home-ending .home-footer { flex-shrink:0; }
 .home-finish h2 { font-size:clamp(34px,5.3vw,70px); }
 .finish-venue { color:var(--home-muted); font-size:15px; margin:32px auto; }
-.gamora-home .home-register,.gamora-home .home-login { display:inline-flex; justify-content:center; align-items:center; border-radius:999px; font:700 16px/1.4 var(--font-body); min-height:44px; padding:12px 25px; box-shadow:none; animation:none; text-align:center; }
+.gamora-home .home-register,.gamora-home .home-login,.gamora-home .home-logout { display:inline-flex; justify-content:center; align-items:center; border-radius:999px; font:700 16px/1.4 var(--font-body); min-height:44px; padding:12px 25px; box-shadow:none; animation:none; text-align:center; }
 .gamora-home a.home-register { background:#ff2bd6; color:#070714; }
 .gamora-home .home-login { border:1px solid #ffffff40; color:#eeeaf7; }
+.gamora-home .home-logout { border:1px solid #ffffff33; color:#cac7e0; background:transparent; cursor:pointer; }
 .gamora-home .home-register:hover,.gamora-home .home-login:hover { filter:brightness(1.15); }
+.gamora-home .home-logout:hover { border-color:#ff2bd6; color:#ff2bd6; background:#ff2bd61a; }
 .gamora-home .home-finish>p:last-child { margin:26px auto 0; font-family:inherit; font-size:13px; line-height:1.8; }
 .home-footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; padding-block:30px; border-top:1px solid #ffffff12; color:var(--home-muted); font-size:11px; }
 .gamora-home .home-footer a { color:var(--home-muted); }
@@ -317,7 +319,7 @@ html:has(.gamora-home) { scroll-padding-block-end:var(--home-dock-clearance,112p
   .home-dock { inset-inline:10px; padding:8px 10px; gap:8px; }
   .home-brand img { width:76px; height:36px; }
   .dock-actions { gap:6px; min-width:0; }
-  .gamora-home .home-dock .home-register,.gamora-home .home-dock .home-login { font-size:13px; padding:10px 12px; min-height:44px; }
+  .gamora-home .home-dock .home-register,.gamora-home .home-dock .home-login,.gamora-home .home-dock .home-logout { font-size:13px; padding:10px 12px; min-height:44px; }
   .home-dock .home-register { max-width:151px; }
   .home-footer { font-size:10px; gap:20px; }
   .home-about { display:block; }

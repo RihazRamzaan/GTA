@@ -153,15 +153,15 @@ section[id] { scroll-margin-top: 5rem; }
   }
 }
 
-/* Floating Navigation Dock (Home, Register, Login) */
+/* Floating Navigation Dock (Home, Register, Login, Team) */
 .home-dock {
   position: fixed;
   z-index: 60;
   inset-inline: 24px;
   inset-block-end: max(16px, env(safe-area-inset-bottom));
   background: #070714d9;
-  border: 1px solid #8b3dff55;
-  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
   padding: 10px 14px 10px 22px;
   display: flex;
   justify-content: space-between;
@@ -174,14 +174,15 @@ section[id] { scroll-margin-top: 5rem; }
 .home-brand img { display: block; width: 136px; height: 48px; object-fit: contain; }
 .dock-actions { display: flex; gap: 10px; align-items: center; }
 .home-dock .home-register,
-.home-dock .home-login {
+.home-dock .home-login,
+.home-dock .home-logout {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  border-radius: 8px;
-  font: 700 16px/1.4 var(--font-body);
+  border-radius: 999px;
+  font: 700 15px/1.4 var(--font-body);
   min-height: 44px;
-  padding: 12px 25px;
+  padding: 10px 24px;
   box-shadow: none;
   animation: none;
   text-align: center;
@@ -191,13 +192,33 @@ section[id] { scroll-margin-top: 5rem; }
 }
 .home-dock a.home-register { background: #ff2bd6; color: #070714; }
 .home-dock a.home-register:hover { filter: brightness(1.15); box-shadow: 0 0 16px rgba(255, 43, 214, 0.4); }
-.home-dock .home-login { border: 1px solid #00e5ff60; color: #00e5ff; background: transparent; }
-.home-dock .home-login:hover { border-color: #00e5ff; background: rgba(0, 229, 255, 0.1); color: #fff; box-shadow: 0 0 14px rgba(0, 229, 255, 0.25); }
+.home-dock .home-login {
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.05);
+}
+.home-dock .home-login:hover {
+  border-color: #00e5ff;
+  background: #00e5ff;
+  color: #070714;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+}
+.home-dock .home-logout {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cac7e0;
+  background: rgba(255, 255, 255, 0.04);
+}
+.home-dock .home-logout:hover {
+  border-color: rgba(255, 43, 214, 0.6);
+  color: #ff2bd6;
+  background: rgba(255, 43, 214, 0.1);
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.25);
+}
 
 @media (max-width: 560px) {
-  .home-dock { inset-inline: 10px; padding: 8px 10px; gap: 8px; }
+  .home-dock { inset-inline: 10px; padding: 8px 10px; gap: 8px; border-radius: 999px; }
   .home-brand img { width: 76px; height: 36px; }
   .dock-actions { gap: 6px; min-width: 0; }
-  .home-dock .home-register, .home-dock .home-login { font-size: 13px; padding: 10px 12px; min-height: 44px; }
+  .home-dock .home-register, .home-dock .home-login, .home-dock .home-logout { font-size: 13px; padding: 8px 12px; min-height: 40px; border-radius: 999px; }
   .home-dock .home-register { max-width: 151px; }
 }
