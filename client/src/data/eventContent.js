@@ -5,7 +5,7 @@ export const eventContent = {
   logo: { first: 'GAM', second: 'ORA' },
   label: 'GAMING BUILDATHON & INTERACTIVE EXPO',
   heroLines: ['CREATE', 'PLAY', 'BEYOND'],
-  tagline: "Sri Lanka's premier multiplayer game development buildathon and interactive gaming expo.",
+  tagline: "Sri Lanka's premier game development buildathon and interactive gaming expo.",
 
 
   navLinks: [
@@ -77,18 +77,18 @@ export const eventContent = {
       tag: 'Eligibility',
     },
     {
-      title: 'Original Multiplayer Game Work',
+      title: 'Original Game Work',
       text: 'All game projects must be original works developed during the buildathon window from {{round1Start}} to {{round1Deadline}}. Pre-existing games or source code created prior to topic release are strictly prohibited.',
       tag: 'Originality',
     },
     {
       title: 'Allowed Engines & Frameworks',
-      text: 'Any game development engine, framework, or programming language is permitted (Unity, Unreal Engine, Godot, Phaser, WebGL, Pygame, or custom engines). Both 2D and 3D multiplayer games are eligible.',
+      text: 'Game development engine, framework, or programming language is permitted (Only Unity and Unreal Engine)',
       tag: 'Technology',
     },
     {
       title: 'Technical Evaluation Rubric',
-      text: 'Projects will be judged on Multiplayer Replication & Network Reliability, Game AI Systems, Architecture & Software Engineering, UX/UI & Polish, and Deployment & Packaging.',
+      text: 'Projects will be judged on Game AI Systems, Architecture & Software Engineering, UX/UI & Polish, and Deployment & Packaging.',
       tag: 'Rubric',
     },
     {
@@ -103,7 +103,7 @@ export const eventContent = {
     },
     {
       title: 'Submission Requirements',
-      text: 'Every team must submit their game title, short description, and a link to a public GitHub repository. Playable build links and gameplay demonstration video links are completely optional.',
+      text: 'Every team must submit their game title, short description, link to a public GitHub repository and gameplay demonstration video links.',
       tag: 'Submission',
     },
     {
@@ -133,11 +133,11 @@ export const eventContent = {
     },
     {
       q: 'What do we need to submit for Round 1?',
-      a: 'Your team only needs to provide your game title, a short description, and a link to your public GitHub repository. A playable build URL and a gameplay video link are completely optional.',
+      a: 'Your team only needs to provide your game title, a short description, and a link to your public GitHub repository with a gameplay video link.',
     },
     {
       q: 'How will games be evaluated?',
-      a: 'Projects will be evaluated by an industry panel based on 5 core criteria: Multiplayer Replication & Network Reliability, Game AI Systems, Software Architecture, UX/UI Polish, and Packaging.',
+      a: 'Projects will be evaluated by an industry panel based on 4 core criteria: Game AI Systems, Software Architecture, UX/UI Polish, and Packaging.',
     },
     {
       q: 'How are finalists selected?',
