@@ -39,16 +39,21 @@ function rosterHint(count, min, max) {
 }
 
 function Notice({ title, children }) {
-  return <div className="mx-auto w-full max-w-xl rounded-xl border border-neon-purple/40 bg-night-card p-6 text-center"><h1 className="font-display text-2xl font-bold text-white">{title}</h1><p className="mt-2 font-body text-lg text-slate-300">{children}</p></div>;
+  return (
+    <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md">
+      <h1 className="font-display text-2xl font-bold text-[#f6f4fc]">{title}</h1>
+      <p className="mt-3 font-body text-base leading-relaxed text-[#a7a6b8]">{children}</p>
+    </div>
+  );
 }
 
 export default function Register() {
   const { user, loading } = useAuth();
   const { status, settings } = useEventSettings({ fresh: true });
-  if (loading || status === 'loading') return <p className="font-body text-lg text-slate-400">Checking registration...</p>;
+  if (loading || status === 'loading') return <p className="font-body text-base text-[#a7a6b8]">Checking registration...</p>;
   if (user) return <Navigate to={homePathFor(user)} replace />;
   if (status === 'error') return <Notice title="Registration status unavailable">We could not check whether registration is open. Please try again soon.</Notice>;
-  if (!settings.registrationOpen) return <Notice title="Registration is closed">Check the <Link to="/#timeline" className="text-neon-cyan hover:underline">event timeline</Link> for the dates.</Notice>;
+  if (!settings.registrationOpen) return <Notice title="Registration is closed">Check the <Link to="/#timeline" className="text-[#00e5ff] hover:underline">event timeline ↗</Link> for the dates.</Notice>;
   const { min, max } = settings.teamSize || {};
   if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max < min) return <Notice title="Team size unavailable">We could not load the team-size requirements. Please try again soon.</Notice>;
   return <RegistrationForm min={min} max={max} />;
@@ -133,46 +138,64 @@ function RegistrationForm({ min, max }) {
 
   const rosterMessage = rosterHint(count, min, max);
 
-  return <div className="mx-auto w-full max-w-2xl py-6">
-    <p className="mb-2 font-body text-sm font-bold tracking-[0.3em] text-neon-pink">TEAM REGISTRATION</p>
-    <h1 className="mb-6 font-display text-3xl font-black text-white md:text-4xl">JOIN THE <span className="text-neon-cyan">BUILDATHON</span></h1>
-    <form onSubmit={handleSubmit} noValidate className="rounded-xl border border-neon-purple/40 bg-night-card p-4 sm:p-6">
-      <fieldset disabled={submitting} className="min-w-0 space-y-8 disabled:opacity-70">
-        <section className="space-y-4" aria-labelledby="leader-title">
-          <h2 id="leader-title" className="font-display text-lg font-bold text-white">Team leader · Member 1</h2>
-          <TextField reserveFeedback id="teamName" label="Team name" maxLength={100} autoComplete="off" required value={form.teamName} onChange={handleChange} onBlur={() => touch('teamName')} error={errorFor('teamName')} />
-          <TextField reserveFeedback id="leaderName" label="Your full name" maxLength={100} autoComplete="name" required value={form.leaderName} onChange={handleChange} onBlur={() => touch('leaderName')} error={errorFor('leaderName')} />
-          <TextField reserveFeedback id="email" label="Email" type="email" maxLength={254} autoComplete="email" required value={form.email} onChange={handleChange} onBlur={() => touch('email')} error={errorFor('email')} hint="You will use this to log in." />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextField reserveFeedback id="password" label="Password" type="password" autoComplete="new-password" required value={form.password} onChange={handleChange} onBlur={() => touch('password')} error={errorFor('password')} hint="Use at least 8 characters." />
-            <TextField reserveFeedback id="confirmPassword" label="Confirm password" type="password" autoComplete="new-password" required value={form.confirmPassword} onChange={handleChange} onBlur={() => touch('confirmPassword')} error={errorFor('confirmPassword')} />
-          </div>
-        </section>
+  return (
+    <div className="relative mx-auto w-full max-w-2xl py-8 sm:py-12">
+      {/* Subtle atmospheric ambient glow matching Home art direction */}
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[340px] w-[560px] max-w-full rounded-full bg-gradient-to-b from-[#8b3dff]/15 via-[#00e5ff]/5 to-transparent blur-3xl" />
 
-        <section id="roster" tabIndex={-1} className="space-y-4 focus:outline-none" aria-labelledby="roster-title" aria-describedby="roster-status">
-          <h2 id="roster-title" className="font-display text-lg font-bold text-white">Other team members</h2>
-          <div className="rounded-lg border border-neon-cyan/30 bg-neon-cyan/5 p-4">
-            <p className="font-body text-lg font-bold text-white">Teams need {min}–{max} members, including the leader.</p>
-            <p className="font-body text-base text-slate-300">You are Member 1. Only add your other team members below.</p>
-            <p id="roster-status" role="status" aria-live="polite" aria-atomic="true" className={`mt-2 font-body text-base ${validSize ? 'text-neon-cyan' : 'text-amber-200'}`}>{count} / {max} members, including you. {rosterMessage}</p>
-          </div>
-          {members.map((member, index) => <fieldset key={member.id} className="min-w-0 rounded-lg border border-neon-purple/40 p-4">
-            <legend className="px-2 font-body text-lg font-bold text-neon-cyan">Member {index + 2}</legend>
-            <div className="mb-3 flex justify-end"><button type="button" onClick={() => removeMember(member.id)} aria-label={`Remove member ${index + 2}`} className="min-h-11 rounded-md border border-red-400/40 px-4 py-2 font-body text-base font-semibold text-red-200 transition hover:border-red-300 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-neon-cyan">Remove</button></div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextField reserveFeedback id={memberField(member, 'name')} label="Full name" maxLength={100} autoComplete="off" required value={member.name} onChange={e => updateMember(member.id, 'name', e.target.value)} onBlur={() => touch(memberField(member, 'name'))} error={errorFor(memberField(member, 'name'))} />
-              <TextField reserveFeedback id={memberField(member, 'email')} label="Email" type="email" maxLength={254} autoComplete="off" required value={member.email} onChange={e => updateMember(member.id, 'email', e.target.value)} onBlur={() => touch(memberField(member, 'email'))} error={errorFor(memberField(member, 'email'))} />
-            </div>
-          </fieldset>)}
-          {serverErrors.members && <p role="alert" className="font-body text-base text-red-300">{serverErrors.members}</p>}
-          <button id="add-member" type="button" onClick={addMember} disabled={full} aria-describedby="roster-status" className="min-h-11 rounded-lg border border-neon-cyan/60 px-4 py-2 font-body text-base font-semibold text-neon-cyan transition hover:bg-neon-cyan/10 disabled:cursor-not-allowed disabled:border-slate-600 disabled:text-slate-500">{full ? 'Team is full' : 'Add member'}</button>
-        </section>
+      <div className="relative">
+        <p className="mb-3 font-body text-xs font-bold tracking-[0.22em] text-[#a7a6b8] uppercase">TEAM REGISTRATION</p>
+        <h1 className="mb-8 font-display text-3xl font-black tracking-tight text-[#f6f4fc] sm:text-4xl md:text-5xl">
+          JOIN THE <span className="text-[#00e5ff]">BUILDATHON.</span>
+        </h1>
 
-        <div><label htmlFor="consent" className="flex items-start gap-3 font-body text-lg text-slate-200"><input id="consent" type="checkbox" checked={consent} aria-invalid={Boolean(errorFor('consent'))} aria-describedby={errorFor('consent') ? 'consent-error' : undefined} onChange={e => { setConsent(e.target.checked); touch('consent'); clearServerError('consent'); }} className="mt-1.5 h-4 w-4 shrink-0 accent-neon-pink" /><span>I confirm these details are correct and my team agrees to the event rules.</span></label>{errorFor('consent') && <p id="consent-error" role="alert" className="mt-1 font-body text-base text-red-300">{errorFor('consent')}</p>}</div>
-        {formError && <p id="registration-error" tabIndex={-1} role="alert" className="rounded-lg border border-red-400/50 bg-red-500/10 p-3 font-body text-base text-red-300">{formError}</p>}
-        <button type="submit" disabled={submitting || !validSize} aria-describedby={!validSize ? 'roster-status' : undefined} className="w-full rounded-lg bg-neon-pink px-5 py-3 font-body text-lg font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? 'Creating your team...' : 'Create team account'}</button>
-      </fieldset>
-    </form>
-    <p className="mt-5 text-center font-body text-lg text-slate-300">Already registered? <Link to="/login" className="font-semibold text-neon-cyan hover:underline">Log in</Link></p>
-  </div>;
+        <form onSubmit={handleSubmit} noValidate className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#141025]/90 to-[#0c0b19]/95 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md sm:p-8">
+          <fieldset disabled={submitting} className="min-w-0 space-y-8 disabled:opacity-70">
+            <section className="space-y-4" aria-labelledby="leader-title">
+              <div>
+                <span className="font-body text-xs font-bold tracking-[0.18em] text-[#00e5ff] uppercase">01 / Leader</span>
+                <h2 id="leader-title" className="mt-1 font-display text-lg font-bold text-[#f6f4fc] sm:text-xl">Team leader · Member 1</h2>
+              </div>
+              <TextField reserveFeedback id="teamName" label="Team name" maxLength={100} autoComplete="off" required value={form.teamName} onChange={handleChange} onBlur={() => touch('teamName')} error={errorFor('teamName')} />
+              <TextField reserveFeedback id="leaderName" label="Your full name" maxLength={100} autoComplete="name" required value={form.leaderName} onChange={handleChange} onBlur={() => touch('leaderName')} error={errorFor('leaderName')} />
+              <TextField reserveFeedback id="email" label="Email" type="email" maxLength={254} autoComplete="email" required value={form.email} onChange={handleChange} onBlur={() => touch('email')} error={errorFor('email')} hint="You will use this to log in." />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField reserveFeedback id="password" label="Password" type="password" autoComplete="new-password" required value={form.password} onChange={handleChange} onBlur={() => touch('password')} error={errorFor('password')} hint="Use at least 8 characters." />
+                <TextField reserveFeedback id="confirmPassword" label="Confirm password" type="password" autoComplete="new-password" required value={form.confirmPassword} onChange={handleChange} onBlur={() => touch('confirmPassword')} error={errorFor('confirmPassword')} />
+              </div>
+            </section>
+
+            <section id="roster" tabIndex={-1} className="space-y-5 focus:outline-none" aria-labelledby="roster-title" aria-describedby="roster-status">
+              <div>
+                <span className="font-body text-xs font-bold tracking-[0.18em] text-[#00e5ff] uppercase">02 / Roster</span>
+                <h2 id="roster-title" className="mt-1 font-display text-lg font-bold text-[#f6f4fc] sm:text-xl">Other team members</h2>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+                <p className="font-body text-base font-bold text-[#f6f4fc]">Teams need {min}–{max} members, including the leader.</p>
+                <p className="mt-1 font-body text-sm text-[#a7a6b8]">You are Member 1. Only add your other team members below.</p>
+                <p id="roster-status" role="status" aria-live="polite" aria-atomic="true" className={`mt-3 font-body text-sm font-semibold tracking-wide ${validSize ? 'text-[#00e5ff]' : 'text-amber-300'}`}>{count} / {max} members, including you. {rosterMessage}</p>
+              </div>
+              {members.map((member, index) => <fieldset key={member.id} className="min-w-0 rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-colors hover:border-white/20 sm:p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <legend className="px-1 font-display text-xs font-bold tracking-[0.18em] uppercase text-[#00e5ff]">Member {index + 2}</legend>
+                  <button type="button" onClick={() => removeMember(member.id)} aria-label={`Remove member ${index + 2}`} className="rounded-full border border-red-400/30 px-3.5 py-1 font-body text-xs font-semibold tracking-wider text-red-300 transition hover:border-red-400 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-[#00e5ff]">Remove</button>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextField reserveFeedback id={memberField(member, 'name')} label="Full name" maxLength={100} autoComplete="off" required value={member.name} onChange={e => updateMember(member.id, 'name', e.target.value)} onBlur={() => touch(memberField(member, 'name'))} error={errorFor(memberField(member, 'name'))} />
+                  <TextField reserveFeedback id={memberField(member, 'email')} label="Email" type="email" maxLength={254} autoComplete="off" required value={member.email} onChange={e => updateMember(member.id, 'email', e.target.value)} onBlur={() => touch(memberField(member, 'email'))} error={errorFor(memberField(member, 'email'))} />
+                </div>
+              </fieldset>)}
+              {serverErrors.members && <p role="alert" className="font-body text-sm text-red-300">{serverErrors.members}</p>}
+              <button id="add-member" type="button" onClick={addMember} disabled={full} aria-describedby="roster-status" className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#00e5ff]/50 px-5 py-2 font-body text-sm font-semibold tracking-wider text-[#00e5ff] transition hover:border-[#00e5ff] hover:bg-[#00e5ff]/10 hover:shadow-[0_0_16px_rgba(0,229,255,0.2)] disabled:cursor-not-allowed disabled:border-white/10 disabled:text-[#8e8ca0] disabled:hover:bg-transparent disabled:hover:shadow-none">{full ? 'Team is full' : '+ Add member'}</button>
+            </section>
+
+            <div><label htmlFor="consent" className="flex cursor-pointer items-start gap-3 font-body text-base text-[#cac7e0]"><input id="consent" type="checkbox" checked={consent} aria-invalid={Boolean(errorFor('consent'))} aria-describedby={errorFor('consent') ? 'consent-error' : undefined} onChange={e => { setConsent(e.target.checked); touch('consent'); clearServerError('consent'); }} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-white/5 accent-[#ff2bd6]" /><span>I confirm these details are correct and my team agrees to the event rules.</span></label>{errorFor('consent') && <p id="consent-error" role="alert" className="mt-1.5 font-body text-sm text-red-300">{errorFor('consent')}</p>}</div>
+            {formError && <p id="registration-error" tabIndex={-1} role="alert" className="rounded-xl border border-red-400/40 bg-red-500/10 p-4 font-body text-sm text-red-300">{formError}</p>}
+            <button type="submit" disabled={submitting || !validSize} aria-describedby={!validSize ? 'roster-status' : undefined} className="w-full rounded-full bg-[#ff2bd6] px-6 py-3.5 font-body text-base font-bold uppercase tracking-wider text-[#070714] transition hover:brightness-110 hover:shadow-[0_0_24px_rgba(255,43,214,0.45)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:shadow-none">{submitting ? 'Creating your team...' : 'Create team account'}</button>
+          </fieldset>
+        </form>
+        <p className="mt-6 text-center font-body text-sm text-[#a7a6b8]">Already registered? <Link to="/login" className="font-semibold text-[#00e5ff] hover:underline">Log in ↗</Link></p>
+      </div>
+    </div>
+  );
 }
