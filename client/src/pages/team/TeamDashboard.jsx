@@ -25,6 +25,7 @@ function formatTeamFromBackend(backendTeam, fallbackEmail) {
     .map((m) => ({
       name: m.name || '',
       email: m.email || '',
+      contactNumber: m.contactNumber || '',
     }));
 
   return {
@@ -34,7 +35,10 @@ function formatTeamFromBackend(backendTeam, fallbackEmail) {
     leader: {
       name: leaderName,
       email: leaderEmail,
+      contactNumber: backendTeam.contactNumber || '',
     },
+    university: backendTeam.university || '',
+    contactNumber: backendTeam.contactNumber || '',
     members: otherMembers,
   };
 }
@@ -186,10 +190,10 @@ export default function TeamDashboard() {
     }
   };
 
-  // Update team name and leader name
-  const handleUpdateTeam = async ({ teamName, leaderName }) => {
+  // Update team name, leader name, contact number, and university
+  const handleUpdateTeam = async ({ teamName, leaderName, contactNumber, university }) => {
     await saveTeamPatch(
-      { teamName, leaderName },
+      { teamName, leaderName, contactNumber, university },
       'Team details updated successfully.'
     );
   };
@@ -206,8 +210,8 @@ export default function TeamDashboard() {
     }
 
     const updatedMembers = [
-      ...currentMembers.map((m) => ({ name: m.name, email: m.email })),
-      { name: newMember.name, email: newMember.email },
+      ...currentMembers.map((m) => ({ name: m.name, email: m.email, contactNumber: m.contactNumber || '' })),
+      { name: newMember.name, email: newMember.email, contactNumber: newMember.contactNumber || '' },
     ];
     await saveTeamPatch(
       { members: updatedMembers },
@@ -220,8 +224,8 @@ export default function TeamDashboard() {
     const currentMembers = dashboard.team?.members || [];
     const updatedMembers = currentMembers.map((m, idx) =>
       idx === memberIndex
-        ? { name: updatedMember.name, email: updatedMember.email }
-        : { name: m.name, email: m.email }
+        ? { name: updatedMember.name, email: updatedMember.email, contactNumber: updatedMember.contactNumber || '' }
+        : { name: m.name, email: m.email, contactNumber: m.contactNumber || '' }
     );
     await saveTeamPatch(
       { members: updatedMembers },
@@ -243,7 +247,7 @@ export default function TeamDashboard() {
     const memberToRemove = currentMembers[memberIndex];
     const updatedMembers = currentMembers
       .filter((_, idx) => idx !== memberIndex)
-      .map((m) => ({ name: m.name, email: m.email }));
+      .map((m) => ({ name: m.name, email: m.email, contactNumber: m.contactNumber || '' }));
 
     await saveTeamPatch(
       { members: updatedMembers },

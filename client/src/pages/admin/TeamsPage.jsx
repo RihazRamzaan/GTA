@@ -32,6 +32,8 @@ export default function TeamsPage() {
             name: reg.teamName || t.name || 'Unnamed Squad',
             leaderName: reg.leaderName || t.leaderName || 'Unknown Leader',
             leaderEmail: reg.leaderEmail || t.leaderEmail || '',
+            contactNumber: reg.contactNumber || t.contactNumber || '',
+            university: reg.university || t.university || '',
             createdAt: reg.createdAt
               ? new Date(reg.createdAt).toLocaleDateString('en-US', {
                   month: 'short',
@@ -120,11 +122,20 @@ export default function TeamsPage() {
       (filter === 'approved'
         ? team.status === 'approved' || team.status === 'confirmed'
         : team.status === filter);
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.leaderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.leaderEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.paymentRef.toLowerCase().includes(searchQuery.toLowerCase());
+      team.name.toLowerCase().includes(q) ||
+      team.leaderName.toLowerCase().includes(q) ||
+      team.leaderEmail.toLowerCase().includes(q) ||
+      (team.university && team.university.toLowerCase().includes(q)) ||
+      (team.contactNumber && team.contactNumber.toLowerCase().includes(q)) ||
+      team.paymentRef.toLowerCase().includes(q) ||
+      team.members.some(
+        (m) =>
+          (m.name && m.name.toLowerCase().includes(q)) ||
+          (m.email && m.email.toLowerCase().includes(q)) ||
+          (m.contactNumber && m.contactNumber.toLowerCase().includes(q))
+      );
     return matchesFilter && matchesSearch;
   });
 
@@ -292,6 +303,11 @@ export default function TeamsPage() {
                         <div className="font-bold text-white text-sm font-['Orbitron',sans-serif] group-hover:text-[#00e5ff] transition-colors">
                           {team.name}
                         </div>
+                        {team.university && (
+                          <div className="text-[11px] text-[#00e5ff] font-medium truncate max-w-[200px]" title={team.university}>
+                            {team.university}
+                          </div>
+                        )}
                         <div className="text-[10px] text-[#9aa7c1] mt-0.5">
                           Registered: {team.createdAt}
                         </div>
@@ -301,6 +317,9 @@ export default function TeamsPage() {
                       <td className="py-4 px-4">
                         <div className="font-semibold text-white">{team.leaderName}</div>
                         <div className="text-[#9aa7c1] text-[11px] font-mono">{team.leaderEmail}</div>
+                        {team.contactNumber && (
+                          <div className="text-emerald-400 text-[11px] font-mono mt-0.5">{team.contactNumber}</div>
+                        )}
                       </td>
 
                       {/* Roster count */}
@@ -381,28 +400,40 @@ export default function TeamsPage() {
               </button>
             </div>
 
-            {/* Team Leader Card */}
-            <div className="my-5 p-4 rounded-xl bg-[#070714] border border-white/5 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-[#9aa7c1] font-bold">
-                  Designated Team Leader
+            {/* Team Leader & Contact Card */}
+            <div className="my-5 p-4 rounded-xl bg-[#070714] border border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#9aa7c1] font-bold">
+                    Designated Team Leader
+                  </div>
+                  <div className="text-base font-bold text-white mt-0.5">
+                    {selectedTeam.leaderName}
+                  </div>
+                  <div className="text-xs font-mono text-[#00e5ff]">{selectedTeam.leaderEmail}</div>
                 </div>
-                <div className="text-base font-bold text-white mt-0.5">
-                  {selectedTeam.leaderName}
+                <div className="text-right">
+                  <div className="text-[10px] uppercase tracking-wider text-[#9aa7c1] font-bold">
+                    Registration Status
+                  </div>
+                  <span
+                    className={`mt-1 inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-bold font-mono ${
+                      getStatusBadge(selectedTeam.status).classes
+                    }`}
+                  >
+                    {getStatusBadge(selectedTeam.status).label}
+                  </span>
                 </div>
-                <div className="text-xs font-mono text-[#00e5ff]">{selectedTeam.leaderEmail}</div>
               </div>
-              <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-[#9aa7c1] font-bold">
-                  Registration Status
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-white/5 text-xs">
+                <div>
+                  <span className="text-[#9aa7c1] uppercase text-[10px] tracking-wider font-bold block">Contact / WhatsApp</span>
+                  <span className="font-mono text-white mt-0.5 block">{selectedTeam.contactNumber || '—'}</span>
                 </div>
-                <span
-                  className={`mt-1 inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-bold font-mono ${
-                    getStatusBadge(selectedTeam.status).classes
-                  }`}
-                >
-                  {getStatusBadge(selectedTeam.status).label}
-                </span>
+                <div>
+                  <span className="text-[#9aa7c1] uppercase text-[10px] tracking-wider font-bold block">University / Institution</span>
+                  <span className="text-white mt-0.5 block">{selectedTeam.university || '—'}</span>
+                </div>
               </div>
             </div>
 
@@ -426,7 +457,14 @@ export default function TeamsPage() {
                         {idx + 1}
                       </span>
                       <div>
-                        <div className="text-xs font-bold text-white">{member.name}</div>
+                        <div className="text-xs font-bold text-white flex items-center gap-2">
+                          <span>{member.name}</span>
+                          {member.contactNumber && (
+                            <span className="font-mono text-emerald-400 font-normal text-[11px]">
+                              {member.contactNumber}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-[#9aa7c1] font-mono">{member.email}</div>
                       </div>
                     </div>

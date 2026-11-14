@@ -46,6 +46,11 @@ export default function TeamNav({ team, user, currentStatus }) {
                 {team.code}
               </span>
             )}
+            {team?.university && (
+              <span className="text-xs font-medium text-[#cac7e0] px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10">
+                {team.university}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
