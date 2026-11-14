@@ -198,7 +198,7 @@ function RegistrationForm({ min, max, settings }) {
               <TextField reserveFeedback id="university" label="University / Institution" maxLength={150} autoComplete="organization" required value={form.university} onChange={handleChange} onBlur={() => touch('university')} error={errorFor('university')} hint="Your university, institute, or school." />
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField reserveFeedback id="leaderName" label="Your full name" maxLength={100} autoComplete="name" required value={form.leaderName} onChange={handleChange} onBlur={() => touch('leaderName')} error={errorFor('leaderName')} />
-                <TextField reserveFeedback id="contactNumber" label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={form.contactNumber} onChange={handleChange} onBlur={() => touch('contactNumber')} error={errorFor('contactNumber')} hint="WhatsApp or mobile number." />
+                <TextField reserveFeedback id="contactNumber" label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={form.contactNumber} onChange={handleChange} onBlur={() => touch('contactNumber')} error={errorFor('contactNumber')} placeholder="e.g. 0771234567" hint="WhatsApp or mobile number." />
               </div>
               <TextField reserveFeedback id="email" label="Email" type="email" maxLength={254} autoComplete="email" required value={form.email} onChange={handleChange} onBlur={() => touch('email')} error={errorFor('email')} hint="You will use this to log in." />
               <div className="grid gap-4 sm:grid-cols-2">
@@ -225,7 +225,7 @@ function RegistrationForm({ min, max, settings }) {
                 <div className="space-y-4">
                   <TextField reserveFeedback id={memberField(member, 'name')} label="Full name" maxLength={100} autoComplete="off" required value={member.name} onChange={e => updateMember(member.id, 'name', e.target.value)} onBlur={() => touch(memberField(member, 'name'))} error={errorFor(memberField(member, 'name'))} />
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <TextField reserveFeedback id={memberField(member, 'contactNumber')} label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={member.contactNumber || ''} onChange={e => updateMember(member.id, 'contactNumber', e.target.value)} onBlur={() => touch(memberField(member, 'contactNumber'))} error={errorFor(memberField(member, 'contactNumber'))} hint="WhatsApp or mobile number." />
+                    <TextField reserveFeedback id={memberField(member, 'contactNumber')} label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={member.contactNumber || ''} onChange={e => updateMember(member.id, 'contactNumber', e.target.value)} onBlur={() => touch(memberField(member, 'contactNumber'))} error={errorFor(memberField(member, 'contactNumber'))} placeholder="e.g. 0771234567" hint="WhatsApp or mobile number." />
                     <TextField reserveFeedback id={memberField(member, 'email')} label="Email" type="email" maxLength={254} autoComplete="off" required value={member.email} onChange={e => updateMember(member.id, 'email', e.target.value)} onBlur={() => touch(memberField(member, 'email'))} error={errorFor(memberField(member, 'email'))} />
                   </div>
                 </div>

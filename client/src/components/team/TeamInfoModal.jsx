@@ -217,7 +217,7 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
                   setFormData((prev) => ({ ...prev, contactNumber: e.target.value }));
                   if (errors.contactNumber) setErrors((prev) => ({ ...prev, contactNumber: '' }));
                 }}
-                placeholder="e.g. +94 77 123 4567"
+                placeholder="e.g. 0771234567"
                 className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
               />
               {errors.contactNumber && (
