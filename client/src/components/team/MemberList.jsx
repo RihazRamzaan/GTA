@@ -155,8 +155,16 @@ export default function MemberList({
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#00e5ff]/15 text-[#00e5ff] border border-[#00e5ff]/30 tracking-wide">
                   Team Leader
                 </span>
+                {team?.university && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[#cac7e0] border border-white/15">
+                    {team.university}
+                  </span>
+                )}
               </div>
-              <p className="text-sm text-[#a7a6b8]">Primary contact &amp; account owner</p>
+              <p className="text-sm text-[#a7a6b8]">
+                Primary contact &amp; account owner
+                {team?.contactNumber && <span className="font-mono text-[#cac7e0]"> • {team.contactNumber}</span>}
+              </p>
             </div>
           </div>
 
@@ -191,7 +199,12 @@ export default function MemberList({
                     Member #{index + 2}
                   </span>
                 </div>
-                <p className="text-sm text-[#a7a6b8]">Registered team member</p>
+                <p className="text-sm text-[#a7a6b8]">
+                  Registered team member
+                  {member.contactNumber && (
+                    <span className="font-mono text-[#cac7e0]"> • {member.contactNumber}</span>
+                  )}
+                </p>
               </div>
             </div>
 

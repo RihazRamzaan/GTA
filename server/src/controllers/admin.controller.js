@@ -23,8 +23,15 @@ function adminRoster(team) {
   const members = Array.isArray(team.members) ? team.members : [];
   if (!team.leaderName) return members;
   const leaderEmail = String(team.leaderEmail ?? '').trim().toLowerCase();
+  const existingLeader = members.find(m => leaderEmail && String(m?.email ?? '').trim().toLowerCase() === leaderEmail);
+  const leaderContact = existingLeader?.contactNumber ?? team.contactNumber;
   return [
-    { name: team.leaderName, email: team.leaderEmail, role: 'Team Leader' },
+    {
+      name: team.leaderName,
+      email: team.leaderEmail,
+      ...(leaderContact !== undefined ? { contactNumber: leaderContact } : {}),
+      role: 'Team Leader',
+    },
     ...members.filter(member => !leaderEmail || String(member.email ?? '').trim().toLowerCase() !== leaderEmail),
   ];
 }
@@ -47,6 +54,8 @@ export function formatRegistrationRecord(reg) {
     teamName: team.name || 'Unnamed Team',
     leaderName: team.leaderName || 'Unknown Leader',
     leaderEmail: team.leaderEmail || '',
+    contactNumber: team.contactNumber || '',
+    university: team.university || '',
     members: allMembers,
     membersCount: allMembers.length,
     team: {
@@ -54,6 +63,8 @@ export function formatRegistrationRecord(reg) {
       name: team.name,
       leaderName: team.leaderName,
       leaderEmail: team.leaderEmail,
+      contactNumber: team.contactNumber || '',
+      university: team.university || '',
       members: allMembers,
       createdAt: team.createdAt,
     },
@@ -203,7 +214,13 @@ export async function getAdminRegistrations(req, res, next) {
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), 'i');
       const matchingTeams = await Team.find({
-        $or: [{ name: regex }, { leaderName: regex }, { leaderEmail: regex }],
+        $or: [
+          { name: regex },
+          { leaderName: regex },
+          { leaderEmail: regex },
+          { university: regex },
+          { contactNumber: regex },
+        ],
       }).select('_id');
 
       const teamIds = matchingTeams.map((t) => t._id);
@@ -464,6 +481,8 @@ export function formatSubmissionRecord(sub) {
     teamName: team.name || 'Unnamed Squad',
     leaderName: team.leaderName || 'Unknown Leader',
     leaderEmail: team.leaderEmail || '',
+    contactNumber: team.contactNumber || '',
+    university: team.university || '',
     members: allMembers,
     membersCount: allMembers.length,
     team: {
@@ -471,6 +490,8 @@ export function formatSubmissionRecord(sub) {
       name: team.name,
       leaderName: team.leaderName,
       leaderEmail: team.leaderEmail,
+      contactNumber: team.contactNumber || '',
+      university: team.university || '',
       members: allMembers,
     },
     title: sub.title || 'Untitled Project',
@@ -502,6 +523,8 @@ export async function getAdminSubmissions(req, res, next) {
           { name: { $regex: searchTerm, $options: 'i' } },
           { leaderName: { $regex: searchTerm, $options: 'i' } },
           { leaderEmail: { $regex: searchTerm, $options: 'i' } },
+          { university: { $regex: searchTerm, $options: 'i' } },
+          { contactNumber: { $regex: searchTerm, $options: 'i' } },
         ],
       }).select('_id');
 

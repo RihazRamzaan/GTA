@@ -160,6 +160,8 @@ export default function AdminDashboard() {
             teamName: reg.teamName || t.name || 'Unnamed Squad',
             leaderName: reg.leaderName || t.leaderName || 'Unknown Leader',
             leaderEmail: reg.leaderEmail || t.leaderEmail || '',
+            contactNumber: reg.contactNumber || t.contactNumber || '',
+            university: reg.university || t.university || '',
             membersCount: members.length > 0 ? members.length : 1,
             registeredAt: formatRelativeOrDate(reg.createdAt || reg.updatedAt),
             status: reg.status || 'pending',
@@ -511,9 +513,17 @@ export default function AdminDashboard() {
                   {recentTeams.map((item) => (
                     <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3 px-3">
-                        <div className="font-bold text-white">{item.teamName}</div>
+                        <div className="font-bold text-white flex items-center gap-2 flex-wrap">
+                          <span>{item.teamName}</span>
+                          {item.university && (
+                            <span className="text-[10px] text-[#00e5ff] font-medium font-sans px-1.5 py-0.5 rounded bg-[#00e5ff]/10 border border-[#00e5ff]/20">
+                              {item.university}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-[#9aa7c1]">
                           {item.leaderName} {item.leaderEmail ? `• ${item.leaderEmail}` : ''}
+                          {item.contactNumber ? ` • ${item.contactNumber}` : ''}
                         </div>
                       </td>
                       <td className="py-3 px-3">

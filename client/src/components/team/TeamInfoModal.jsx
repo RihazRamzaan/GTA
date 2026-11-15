@@ -5,6 +5,8 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
   const [formData, setFormData] = useState({
     teamName: '',
     leaderName: '',
+    university: '',
+    contactNumber: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -16,6 +18,8 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
       setFormData({
         teamName: team.name || '',
         leaderName: team.leader?.name || '',
+        university: team.university || '',
+        contactNumber: team.contactNumber || team.leader?.contactNumber || '',
       });
     }
     setErrors({});
@@ -31,6 +35,8 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
     const nextErrors = {};
     const trimmedTeamName = formData.teamName.trim();
     const trimmedLeaderName = formData.leaderName.trim();
+    const trimmedUni = formData.university.trim();
+    const trimmedPhone = formData.contactNumber.trim();
 
     if (!trimmedTeamName) {
       nextErrors.teamName = 'Enter a team name of up to 100 characters.';
@@ -42,6 +48,14 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
       nextErrors.leaderName = "Enter the leader's name.";
     } else if (trimmedLeaderName.length > 100) {
       nextErrors.leaderName = "Leader's name must be 100 characters or fewer.";
+    }
+
+    if (trimmedUni && trimmedUni.length > 150) {
+      nextErrors.university = 'University name must be 150 characters or fewer.';
+    }
+
+    if (trimmedPhone && !/^[+]?[\d\s\-()]{7,25}$/.test(trimmedPhone)) {
+      nextErrors.contactNumber = 'Enter a valid contact number (7 to 25 digits).';
     }
 
     setErrors(nextErrors);
@@ -60,6 +74,8 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
       await onSave({
         teamName: formData.teamName.trim(),
         leaderName: formData.leaderName.trim(),
+        university: formData.university.trim(),
+        contactNumber: formData.contactNumber.trim(),
       });
       onClose();
     } catch (err) {
@@ -129,6 +145,31 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
             )}
           </div>
 
+          {/* University / Institution */}
+          <div>
+            <label
+              htmlFor="edit-university"
+              className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
+            >
+              University / Institution
+            </label>
+            <input
+              id="edit-university"
+              type="text"
+              maxLength={150}
+              value={formData.university}
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, university: e.target.value }));
+                if (errors.university) setErrors((prev) => ({ ...prev, university: '' }));
+              }}
+              placeholder="e.g. University of Kelaniya"
+              className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
+            />
+            {errors.university && (
+              <p className="text-xs text-red-400 mt-1 font-semibold">{errors.university}</p>
+            )}
+          </div>
+
           <div className="pt-2 border-t border-white/10 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-[#00e5ff] font-display">
               Team Leader
@@ -156,6 +197,31 @@ export default function TeamInfoModal({ isOpen, onClose, onSave, team }) {
               />
               {errors.leaderName && (
                 <p className="text-xs text-red-400 mt-1 font-semibold">{errors.leaderName}</p>
+              )}
+            </div>
+
+            {/* Contact / WhatsApp Number */}
+            <div>
+              <label
+                htmlFor="edit-contact-number"
+                className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
+              >
+                Leader Contact / WhatsApp Number
+              </label>
+              <input
+                id="edit-contact-number"
+                type="tel"
+                maxLength={25}
+                value={formData.contactNumber}
+                onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, contactNumber: e.target.value }));
+                  if (errors.contactNumber) setErrors((prev) => ({ ...prev, contactNumber: '' }));
+                }}
+                placeholder="e.g. 0771234567"
+                className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
+              />
+              {errors.contactNumber && (
+                <p className="text-xs text-red-400 mt-1 font-semibold">{errors.contactNumber}</p>
               )}
             </div>
 

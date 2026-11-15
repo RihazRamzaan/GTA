@@ -7,15 +7,18 @@ import { homePathFor, useAuth } from '../context/AuthContext.jsx';
 import { eventContent } from '../data/eventContent.js';
 import useEventSettings, { refreshEventSettings } from '../hooks/useEventSettings.js';
 
-const newMember = () => ({ id: crypto.randomUUID(), name: '', email: '' });
+const newMember = () => ({ id: crypto.randomUUID(), name: '', email: '', contactNumber: '' });
 const validEmail = value => value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const validPhone = value => typeof value === 'string' && /^[+]?[\d\s\-()]{7,25}$/.test(value.trim());
 const normalizedEmail = value => value.trim().toLowerCase();
 const memberField = (member, field) => `member-${member.id}-${field}`;
 
 function validateForm(form, members, consent, min, max) {
   const errors = {};
   if (!form.teamName.trim() || form.teamName.trim().length > 100) errors.teamName = 'Enter a team name of up to 100 characters.';
+  if (!form.university.trim() || form.university.trim().length > 150) errors.university = 'Enter your university or institution (up to 150 characters).';
   if (!form.leaderName.trim() || form.leaderName.trim().length > 100) errors.leaderName = 'Enter your full name, up to 100 characters.';
+  if (!validPhone(form.contactNumber)) errors.contactNumber = 'Enter a valid contact number (7 to 25 digits).';
   if (!validEmail(form.email)) errors.email = 'Enter a valid email address.';
   if (form.password.length < 8) errors.password = 'Use at least 8 characters.';
   else if (new TextEncoder().encode(form.password).length > 72) errors.password = 'This password is too long. Use fewer characters.';
@@ -25,6 +28,7 @@ function validateForm(form, members, consent, min, max) {
   const emails = members.map(member => normalizedEmail(member.email));
   members.forEach((member, index) => {
     if (!member.name.trim() || member.name.trim().length > 100) errors[memberField(member, 'name')] = 'Enter a name (up to 100 characters).';
+    if (!validPhone(member.contactNumber)) errors[memberField(member, 'contactNumber')] = 'Enter a valid contact number (7 to 25 digits).';
     if (!validEmail(member.email)) errors[memberField(member, 'email')] = 'Enter a valid email address.';
     else if (emails[index] === normalizedEmail(form.email)) errors[memberField(member, 'email')] = 'Leader already counted. Use another email.';
     else if (emails.some((email, otherIndex) => otherIndex !== index && email === emails[index])) errors[memberField(member, 'email')] = 'This email is already on your team.';
@@ -75,7 +79,15 @@ function RegistrationForm({ min, max, settings }) {
   const { register } = useAuth();
   const navigate = useNavigate();
   const name = settings?.event?.name || eventContent.name;
-  const [form, setForm] = useState({ teamName: '', leaderName: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({
+    teamName: '',
+    leaderName: '',
+    university: '',
+    contactNumber: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [members, setMembers] = useState(() => Array.from({ length: min - 1 }, newMember));
   const [consent, setConsent] = useState(false);
   const [touched, setTouched] = useState({});
@@ -135,8 +147,21 @@ function RegistrationForm({ min, max, settings }) {
     setSubmitting(true);
     setFormError('');
     try {
-      const signedIn = await register({ email: normalizedEmail(form.email), password: form.password,
-        team: { name: form.teamName.trim(), leaderName: form.leaderName.trim(), members: members.map(member => ({ name: member.name.trim(), email: normalizedEmail(member.email) })) } });
+      const signedIn = await register({
+        email: normalizedEmail(form.email),
+        password: form.password,
+        team: {
+          name: form.teamName.trim(),
+          leaderName: form.leaderName.trim(),
+          university: form.university.trim(),
+          contactNumber: form.contactNumber.trim(),
+          members: members.map(member => ({
+            name: member.name.trim(),
+            email: normalizedEmail(member.email),
+            contactNumber: member.contactNumber.trim(),
+          })),
+        },
+      });
       navigate(homePathFor(signedIn), { replace: true });
     } catch (error) {
       const { code, message, fields } = getApiError(error);
@@ -170,11 +195,15 @@ function RegistrationForm({ min, max, settings }) {
                 <h2 id="leader-title" className="mt-1 font-display text-lg font-bold text-[#f6f4fc] sm:text-xl">Team leader · Member 1</h2>
               </div>
               <TextField reserveFeedback id="teamName" label="Team name" maxLength={100} autoComplete="off" required value={form.teamName} onChange={handleChange} onBlur={() => touch('teamName')} error={errorFor('teamName')} />
-              <TextField reserveFeedback id="leaderName" label="Your full name" maxLength={100} autoComplete="name" required value={form.leaderName} onChange={handleChange} onBlur={() => touch('leaderName')} error={errorFor('leaderName')} />
+              <TextField reserveFeedback id="university" label="University / Institution" maxLength={150} autoComplete="organization" required value={form.university} onChange={handleChange} onBlur={() => touch('university')} error={errorFor('university')} hint="Your university, institute, or school." />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField reserveFeedback id="leaderName" label="Your full name" maxLength={100} autoComplete="name" required value={form.leaderName} onChange={handleChange} onBlur={() => touch('leaderName')} error={errorFor('leaderName')} />
+                <TextField reserveFeedback id="contactNumber" label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={form.contactNumber} onChange={handleChange} onBlur={() => touch('contactNumber')} error={errorFor('contactNumber')} placeholder="e.g. 0771234567" hint="WhatsApp or mobile number." />
+              </div>
               <TextField reserveFeedback id="email" label="Email" type="email" maxLength={254} autoComplete="email" required value={form.email} onChange={handleChange} onBlur={() => touch('email')} error={errorFor('email')} hint="You will use this to log in." />
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField reserveFeedback id="password" label="Password" type="password" autoComplete="new-password" required value={form.password} onChange={handleChange} onBlur={() => touch('password')} error={errorFor('password')} hint="Use at least 8 characters." />
-                <TextField reserveFeedback id="confirmPassword" label="Confirm password" type="password" autoComplete="new-password" required value={form.confirmPassword} onChange={handleChange} onBlur={() => touch('confirmPassword')} error={errorFor('confirmPassword')} />
+                <TextField reserveFeedback id="confirmPassword" label="Confirm password" type="password" autoComplete="new-password" required value={form.confirmPassword} onChange={handleChange} onBlur={() => touch('confirmPassword')} />
               </div>
             </section>
 
@@ -193,9 +222,12 @@ function RegistrationForm({ min, max, settings }) {
                   <legend className="px-1 font-display text-xs font-bold tracking-[0.18em] uppercase text-[#00e5ff]">Member {index + 2}</legend>
                   <button type="button" onClick={() => removeMember(member.id)} aria-label={`Remove member ${index + 2}`} className="rounded-full border border-red-400/30 px-3.5 py-1 font-body text-xs font-semibold tracking-wider text-red-300 transition hover:border-red-400 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-[#00e5ff]">Remove</button>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-4">
                   <TextField reserveFeedback id={memberField(member, 'name')} label="Full name" maxLength={100} autoComplete="off" required value={member.name} onChange={e => updateMember(member.id, 'name', e.target.value)} onBlur={() => touch(memberField(member, 'name'))} error={errorFor(memberField(member, 'name'))} />
-                  <TextField reserveFeedback id={memberField(member, 'email')} label="Email" type="email" maxLength={254} autoComplete="off" required value={member.email} onChange={e => updateMember(member.id, 'email', e.target.value)} onBlur={() => touch(memberField(member, 'email'))} error={errorFor(memberField(member, 'email'))} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <TextField reserveFeedback id={memberField(member, 'contactNumber')} label="Contact number" type="tel" maxLength={25} autoComplete="tel" required value={member.contactNumber || ''} onChange={e => updateMember(member.id, 'contactNumber', e.target.value)} onBlur={() => touch(memberField(member, 'contactNumber'))} error={errorFor(memberField(member, 'contactNumber'))} placeholder="e.g. 0771234567" hint="WhatsApp or mobile number." />
+                    <TextField reserveFeedback id={memberField(member, 'email')} label="Email" type="email" maxLength={254} autoComplete="off" required value={member.email} onChange={e => updateMember(member.id, 'email', e.target.value)} onBlur={() => touch(memberField(member, 'email'))} error={errorFor(memberField(member, 'email'))} />
+                  </div>
                 </div>
               </fieldset>)}
               {serverErrors.members && <p role="alert" className="font-body text-sm text-red-300">{serverErrors.members}</p>}

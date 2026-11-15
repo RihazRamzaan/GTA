@@ -17,6 +17,7 @@ export default function MemberModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    contactNumber: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -28,11 +29,13 @@ export default function MemberModal({
       setFormData({
         name: member.name || '',
         email: member.email || '',
+        contactNumber: member.contactNumber || '',
       });
     } else {
       setFormData({
         name: '',
         email: '',
+        contactNumber: '',
       });
     }
     setErrors({});
@@ -46,11 +49,18 @@ export default function MemberModal({
     const nextErrors = {};
     const trimmedName = formData.name.trim();
     const trimmedEmail = formData.email.trim().toLowerCase();
+    const trimmedPhone = formData.contactNumber.trim();
 
     if (!trimmedName) {
       nextErrors.name = 'Member name is required.';
     } else if (trimmedName.length > 100) {
       nextErrors.name = 'Name must be 100 characters or fewer.';
+    }
+
+    if (!trimmedPhone) {
+      nextErrors.contactNumber = 'Contact number is required.';
+    } else if (!/^[+]?[\d\s\-()]{7,25}$/.test(trimmedPhone)) {
+      nextErrors.contactNumber = 'Enter a valid contact number (7 to 25 digits).';
     }
 
     if (!trimmedEmail) {
@@ -80,6 +90,7 @@ export default function MemberModal({
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
+        contactNumber: formData.contactNumber.trim(),
       });
       onClose();
     } catch (err) {
@@ -164,6 +175,31 @@ export default function MemberModal({
               className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
             />
             {errors.name && <p className="text-xs text-red-400 mt-1 font-semibold">{errors.name}</p>}
+          </div>
+
+          {/* Contact / WhatsApp Number */}
+          <div>
+            <label
+              htmlFor="member-contact-number"
+              className="block text-xs font-bold uppercase tracking-wider text-[#a7a6b8] mb-1.5"
+            >
+              Contact / WhatsApp Number <span className="text-[#ff2bd6]">*</span>
+            </label>
+            <input
+              id="member-contact-number"
+              type="tel"
+              maxLength={25}
+              value={formData.contactNumber}
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, contactNumber: e.target.value }));
+                if (errors.contactNumber) setErrors((prev) => ({ ...prev, contactNumber: '' }));
+              }}
+              placeholder="e.g. 0771234567"
+              className="w-full rounded-lg bg-[#070714] border border-white/15 px-3.5 py-2.5 text-white font-body focus:outline-none focus:border-[#00e5ff] focus:ring-1 focus:ring-[#00e5ff]/40 transition"
+            />
+            {errors.contactNumber && (
+              <p className="text-xs text-red-400 mt-1 font-semibold">{errors.contactNumber}</p>
+            )}
           </div>
 
           {/* Email Address */}
