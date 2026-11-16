@@ -126,12 +126,12 @@
 @supports not selector(::-webkit-scrollbar) {
   .guideline-table-wrap { scrollbar-width:thin; scrollbar-color:#00e5ff #070714; }
 }
-.guideline-table { width:100%; border-collapse:collapse; min-width:520px; font-size:14px; text-align:left; }
-.guideline-table th { font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#00e5ff; background:rgba(255,255,255,0.03); padding:13px 18px; border-bottom:1px solid #8b3dff4d; white-space:nowrap; }
-.guideline-table td { padding:12px 18px; border-bottom:1px solid #ffffff0d; color:#cac7e0; line-height:1.5; vertical-align:top; }
+.guideline-table { width:100%; border-collapse:collapse; min-width:520px; font-family:var(--font-body); font-size:15px; text-align:left; }
+.guideline-table th { font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#00e5ff; background:rgba(255,255,255,0.03); padding:13px 18px; border-bottom:1px solid #8b3dff4d; white-space:nowrap; }
+.guideline-table td { font-family:var(--font-body); font-size:15px; font-weight:500; padding:12px 18px; border-bottom:1px solid #ffffff0d; color:#cac7e0; line-height:1.6; vertical-align:top; }
 .guideline-table tbody tr:hover td { background:rgba(139,61,255,0.06); }
-.guideline-table td.col-primary { font-weight:600; color:#fff; font-family:var(--font-display); font-size:13px; letter-spacing:.01em; white-space:nowrap; }
-.guideline-table td.col-points { text-align:right; font-family:var(--font-display); font-weight:700; color:#00e5ff; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.guideline-table td.col-primary { font-family:var(--font-body); font-weight:700; font-size:16px; letter-spacing:.02em; color:#f6f4fc; }
+.guideline-table td.col-points { text-align:right; font-family:var(--font-display); font-weight:700; font-size:14px; color:#00e5ff; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .guideline-table th.col-points { text-align:right; }
 .guideline-table tr.row-total td { background:linear-gradient(90deg,rgba(0,229,255,0.12) 0%,rgba(255,43,214,0.08) 100%); border-top:1px solid #00e5ff66; border-bottom:none; font-family:var(--font-display); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#fff; padding:14px 18px; }
 .guideline-table tr.row-total td.col-points { color:#ff2bd6; font-size:14px; }

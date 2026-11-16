@@ -106,11 +106,12 @@ export default function Rules() {
               {section.table && <GuidelineTable table={section.table} />}
 
               {section.callout && (
-                <aside className="guideline-note">
-                  <p>
-                    <strong>{section.callout.label}:</strong> {section.callout.text}
-                  </p>
-                </aside>
+                <div className="guideline-callout">
+                  <span className="guideline-callout-label">
+                    {section.callout.label}
+                  </span>
+                  <p>{section.callout.text}</p>
+                </div>
               )}
 
               {Array.isArray(section.subsections) &&
@@ -125,11 +126,10 @@ export default function Rules() {
                 ))}
 
               {section.note && (
-                <aside className="guideline-note">
-                  <p>
-                    <strong>Note:</strong> {section.note}
-                  </p>
-                </aside>
+                <div className="guideline-note">
+                  <strong>Important Note</strong>
+                  {section.note}
+                </div>
               )}
             </div>
           </details>
