@@ -10,6 +10,7 @@ import Countdown from '../components/event/Countdown.jsx';
 import RegisterButton from '../components/event/RegisterButton.jsx';
 import RegistrationNotice from '../components/event/RegistrationNotice.jsx';
 import PrizeCounter from '../components/event/PrizeCounter.jsx';
+import Rules from '../components/event/Rules.jsx';
 import HomeIntro from '../components/event/HomeIntro.jsx';
 import Dock from '../components/layout/Dock.jsx';
 import { HOME_INTRO_SESSION_KEY, shouldShowHomeIntro } from '../utils/homeIntro.js';
@@ -123,7 +124,7 @@ export default function Home() {
 
     <section id="prizes" className="home-prizes home-section home-wrap"><p className="home-eyebrow" data-reveal>GOOD IDEAS DESERVE THE SPOTLIGHT</p><h2 data-reveal>Build for the love.<br /><span className="home-outline">Play for the podium.</span></h2><div className="prize-total" data-reveal><span className="prize-currency">LKR</span> <PrizeCounter total={prizeTotal} /><p>Total cash prize pool</p></div><ol className="home-podium" data-reveal>{eventContent.prizes.map((prize, i) => <li key={prize.place} className={`podium-tile podium-${prize.color || (i === 0 ? 'gold' : i === 1 ? 'silver' : 'bronze')}`}><span className="podium-rank">0{i + 1}</span><span className="podium-place">{prize.place}</span><h3 className="podium-amount">{prize.amount}</h3><p className="podium-perks">{prize.perks.join(' · ')}</p></li>)}</ol></section>
 
-    <section id="rules" className="home-guidelines home-section home-wrap"><header data-reveal><p className="home-eyebrow">A FAIR GAME FOR EVERYONE</p><h2>Before you <span className="home-outline">begin.</span></h2><p className="home-muted">Current event guidelines. Final policy details are subject to organizer confirmation.</p></header><div className="home-accordions">{eventContent.rules.map((rule, i) => <details key={rule.title} data-reveal><summary><span className="accordion-number">{String(i + 1).padStart(2, '0')}</span>{rule.title}<span className="accordion-plus" aria-hidden="true">+</span></summary><p>{resolveEventText(rule.text, settings)}</p></details>)}</div></section>
+    <Rules />
 
     {hasSponsors(settings) && <section id="sponsors" className="home-partners home-section home-wrap"><header className="home-center" data-reveal><p className="home-eyebrow">MAKING IT POSSIBLE, TOGETHER</p><h2>Our <span className="home-outline">partners.</span></h2></header><div className="home-sponsor-grid">{settings.sponsors.map(sponsor => <div key={sponsor.id} data-reveal><p className="home-eyebrow">{sponsor.category}</p><img src={sponsor.logoUrl} alt={`${sponsor.name} logo`} loading="lazy" />{sponsor.websiteUrl ? <a href={sponsor.websiteUrl} target="_blank" rel="noopener noreferrer">{sponsor.name} ↗</a> : <span>{sponsor.name}</span>}</div>)}</div></section>}
 

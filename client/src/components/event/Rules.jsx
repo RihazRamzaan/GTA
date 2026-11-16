@@ -1,61 +1,194 @@
-import { eventContent } from '../../data/eventContent.js';
-import useEventSettings from '../../hooks/useEventSettings.js';
-import { resolveEventText } from '../../utils/eventAgenda.js';
+import React, { useState } from 'react';
+import { competitorGuidelines } from '../../data/competitorGuidelines.js';
 
 export default function Rules() {
-  const { settings } = useEventSettings();
+  const { overview, sections } = competitorGuidelines;
+  const [expandAll, setExpandAll] = useState(false);
+
   return (
-    <section id="rules" className="bg-night py-16 md:py-24">
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <p className="mb-3 font-body text-sm font-bold tracking-[0.3em] text-neon-cyan">HACKATHON GUIDELINES</p>
-            <h2 className="font-display text-4xl font-black text-white md:text-5xl">
-              RULES & <span className="text-neon-pink">FAIR PLAY</span>
-            </h2>
-          </div>
-          <p className="max-w-md font-body text-lg text-slate-300">
-            Review the current event guidelines below. Final policy details are subject to confirmation by the organizers.
+    <section id="rules" className="home-guidelines home-section home-wrap">
+      <header data-reveal>
+        <p className="home-eyebrow">OFFICIAL COMPETITOR GUIDELINES</p>
+        <h2>
+          The rulebook.<br />
+          <span className="home-outline">Engineered for fair play.</span>
+        </h2>
+        <p className="home-muted">
+          Review the complete competition rules, engine regulations, official asset mandate, Google Drive submission format, and 100-point judging rubrics.
+        </p>
+      </header>
+
+      {/* Quick Metrics */}
+      <div className="guideline-metrics" data-reveal>
+        <div className="guideline-metric-card">
+          <span className="round-index">01 / SPRINT</span>
+          <h3 className="guideline-metric-val">{overview.period}</h3>
+          <p className="guideline-metric-desc">
+            10 days from kickoff announcement to submission deadline.
           </p>
         </div>
 
-        <ol className="mt-10 grid gap-5 md:grid-cols-2">
-          {eventContent.rules.map((rule, i) => {
-            const isObject = typeof rule === 'object' && rule !== null;
-            const title = isObject ? rule.title : null;
-            const text = isObject ? rule.text : rule;
-            const tag = isObject ? rule.tag : null;
+        <div className="guideline-metric-card">
+          <span className="round-index">02 / SQUAD</span>
+          <h3 className="guideline-metric-val">{overview.teamSize}</h3>
+          <p className="guideline-metric-desc">
+            Undergraduates contributing meaningfully to the game.
+          </p>
+        </div>
 
-            return (
-              <li
-                key={title || rule}
-                className="group relative flex flex-col justify-between rounded-xl border border-neon-purple/40 bg-night-card p-6 transition duration-200 hover:border-neon-cyan hover:shadow-[0_0_24px_rgba(0,229,255,0.15)]"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-display text-2xl font-black text-neon-pink group-hover:text-neon-cyan transition-colors">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    {tag && (
-                      <span className="rounded border border-neon-cyan/40 bg-neon-cyan/10 px-2.5 py-0.5 font-body text-xs font-bold tracking-wider text-neon-cyan">
-                        {tag.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  {title && (
-                    <h3 className="font-display text-xl font-bold text-white mb-2">
-                      {title}
-                    </h3>
-                  )}
-                  <p className="font-body text-lg leading-relaxed text-slate-300">
-                    {resolveEventText(text, settings)}
+        <div className="guideline-metric-card">
+          <span className="round-index">03 / ENGINE</span>
+          <h3 className="guideline-metric-val">{overview.gameType}</h3>
+          <p className="guideline-metric-desc">
+            Offline playable. Unreal Engine or Unity only.
+          </p>
+        </div>
+      </div>
+
+      {/* Critical Notices */}
+      <div className="guideline-notices" data-reveal>
+        <div className="guideline-notice-card">
+          <span className="round-index">KICKOFF PROTOCOL</span>
+          <h3>Topic Announcement</h3>
+          <p>{overview.topicAnnouncement}</p>
+        </div>
+
+        <div className="guideline-notice-card">
+          <span className="round-index">ASSET MANDATE</span>
+          <h3>Official Asset Pack Required</h3>
+          <p>{overview.assetSummary}</p>
+        </div>
+      </div>
+
+      {/* Guidelines Toolbar */}
+      <div className="guideline-toolbar" data-reveal>
+        <span className="guideline-toolbar-title">
+          Guidelines &amp; Rubrics ({sections.length} Sections)
+        </span>
+        <button
+          type="button"
+          onClick={() => setExpandAll((prev) => !prev)}
+          className="guideline-toggle-btn"
+        >
+          {expandAll ? 'Collapse All Sections ↑' : 'Expand All Sections ↓'}
+        </button>
+      </div>
+
+      {/* Accordion List */}
+      <div className="home-accordions">
+        {sections.map((section) => (
+          <details
+            key={section.id}
+            open={expandAll ? true : undefined}
+            data-reveal
+          >
+            <summary>
+              <span className="accordion-number">{section.number}</span>
+              <span className="accordion-title">{section.title}</span>
+              <span className="accordion-plus" aria-hidden="true">
+                +
+              </span>
+            </summary>
+
+            <div className="guideline-content">
+              {section.intro && (
+                <p className="guideline-intro">{section.intro}</p>
+              )}
+
+              {Array.isArray(section.bullets) && section.bullets.length > 0 && (
+                <ul className="guideline-bullets">
+                  {section.bullets.map((bullet, idx) => (
+                    <li key={idx}>{bullet}</li>
+                  ))}
+                </ul>
+              )}
+
+              {section.table && <GuidelineTable table={section.table} />}
+
+              {section.callout && (
+                <aside className="guideline-note">
+                  <p>
+                    <strong>{section.callout.label}:</strong> {section.callout.text}
                   </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                </aside>
+              )}
+
+              {Array.isArray(section.subsections) &&
+                section.subsections.map((sub, sIdx) => (
+                  <div key={sIdx} className="guideline-subsection">
+                    <h4>{sub.title}</h4>
+                    {sub.desc && (
+                      <p className="guideline-subsection-desc">{sub.desc}</p>
+                    )}
+                    {sub.table && <GuidelineTable table={sub.table} />}
+                  </div>
+                ))}
+
+              {section.note && (
+                <aside className="guideline-note">
+                  <p>
+                    <strong>Note:</strong> {section.note}
+                  </p>
+                </aside>
+              )}
+            </div>
+          </details>
+        ))}
       </div>
     </section>
+  );
+}
+
+function GuidelineTable({ table }) {
+  if (!table) return null;
+  const isPointsTable =
+    table.headers.includes('Max Points') || table.headers.includes('Points');
+
+  return (
+    <div className="guideline-table-wrap">
+      <table className="guideline-table">
+        <thead>
+          <tr>
+            {table.headers.map((header, hIdx) => {
+              const isLastPoints =
+                hIdx === table.headers.length - 1 && isPointsTable;
+              return (
+                <th key={hIdx} className={isLastPoints ? 'col-points' : ''}>
+                  {header}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rIdx) => (
+            <tr key={rIdx}>
+              {row.map((cell, cIdx) => {
+                const isPrimary = cIdx === 0;
+                const isPoints = cIdx === row.length - 1 && isPointsTable;
+                return (
+                  <td
+                    key={cIdx}
+                    className={`${isPrimary ? 'col-primary' : ''} ${
+                      isPoints ? 'col-points' : ''
+                    }`}
+                  >
+                    {cell}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+          {table.total && (
+            <tr className="row-total">
+              <td className="col-primary">{table.total[0]}</td>
+              <td className={isPointsTable ? 'col-points' : ''}>
+                {table.total[1]}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

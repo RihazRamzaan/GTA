@@ -1,4 +1,5 @@
 // Public event copy belongs to Yuwandhi. Keep this file as the shared content boundary.
+export { competitorGuidelines } from './competitorGuidelines.js';
 
 export const eventContent = {
   name: 'GAMORA',
